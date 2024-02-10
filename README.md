@@ -1,3 +1,3 @@
-Recipe Manger Web App
+Recipe Manager Web App
 ======================
 Fun!!!
