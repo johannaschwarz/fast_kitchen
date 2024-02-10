@@ -1,30 +1,24 @@
+from database import database
 from fastapi.routing import APIRouter
-from pydantic import BaseModel
+from models import Recipe
 
 recipe_router = APIRouter()
 
 
-class Recipe(BaseModel):
-    """A recipe model."""
-
-    id_: int = -1
-    name: str
-    description: str
-    ingredients: list[str]
-    steps: list[str]
-    labels: list[str]
+@recipe_router.post("/recipe/create")
+def create_recipe(recipe: Recipe):
+    """Create a new recipe."""
+    database.create_recipe(recipe)
 
 
-@recipe_router.get("/recipe/{recipe_id}")
+@recipe_router.get("/recipe/specific/{recipe_id}")
 def get_recipe(recipe_id: int) -> Recipe: ...
 
 
 @recipe_router.get("/recipe/all")
-def get_all_recipes() -> list[Recipe]: ...
-
-
-@recipe_router.post("/recipe/create")
-def create_recipe(recipe: Recipe): ...
+def get_all_recipes() -> list[Recipe]:
+    """Get all recipes."""
+    return database.get_all_recipes()
 
 
 @recipe_router.put("/recipe/{recipe_id}")
