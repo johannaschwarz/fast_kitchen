@@ -1,25 +1,17 @@
-import json
-
+import image_router
 import mysql.connector
+import recipe_router
 from fastapi import FastAPI
+from utils import load_config, load_credentials
 
-app = FastAPI()
-
-
-def load_config():
-    with open("assets/config.json", encoding="utf-8") as f:
-        return json.load(f)
-
-
-def load_credentials():
-    with open("assets/creds.json", encoding="utf-8") as f:
-        return json.load(f)
-
-
+app = FastAPI(title="FastKitchen")
 CONFIG = load_config()
 CREDENTIALS = load_credentials()
 
-mydb = mysql.connector.connect(
+app.include_router(recipe_router.recipe_router)
+app.include_router(image_router.image_router)
+
+recipes_database = mysql.connector.connect(
     host=CONFIG["database_ip"],
     port=int(CONFIG["database_port"]),
     user=CREDENTIALS["database_user"],
@@ -27,4 +19,4 @@ mydb = mysql.connector.connect(
     database=CREDENTIALS["database_name"],
 )
 
-print(mydb.get_server_version())
+print(recipes_database.get_server_version())
