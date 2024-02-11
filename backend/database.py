@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 import mysql.connector
 from exceptions import NotFoundException
-from models import Image, Recipe
+from models import Image, ImageBase, Recipe, RecipeBase
 from pydantic import ValidationError
 from utils import load_config, load_credentials
 
@@ -12,7 +12,7 @@ class Database(ABC):
     """A MySQL database class."""
 
     @abstractmethod
-    def create_recipe(self, recipe: dict):
+    def create_recipe(self, recipe: RecipeBase):
         """
         Create a new recipe in the database.
 
@@ -43,7 +43,7 @@ class Database(ABC):
         """
 
     @abstractmethod
-    def update_recipe(self, recipe_id: int, recipe: Recipe):
+    def update_recipe(self, recipe: Recipe):
         """
         Update a recipe in the database.
 
@@ -61,7 +61,7 @@ class Database(ABC):
         """
 
     @abstractmethod
-    def create_image(self, image: Image):
+    def create_image(self, image: ImageBase):
         """
         Create a new image in the database.
 
@@ -108,51 +108,53 @@ class MySQLDatabase(Database):
             database=self.CREDENTIALS["database_name"],
         )
 
-        self.cursor = self.recipes_database.cursor()
-
-    def create_recipe(self, recipe: Recipe) -> int:
+    def create_recipe(self, recipe: RecipeBase) -> int:
         """
         Create a new recipe in the database.
 
         Returns:
             The ID of the new recipe.
         """
+        cursor = self.recipes_database.cursor()
 
         sql = "INSERT INTO Recipes (Recipe) VALUES (%s)"
         val = (recipe.model_dump_json(),)
-        self.cursor.execute(sql, val)
+        cursor.execute(sql, val)
 
         self.recipes_database.commit()
 
-        return self.cursor.lastrowid
+        return cursor.lastrowid
 
     def get_recipe(self, recipe_id: int) -> Recipe:
         """
         Get a recipe from the database.
 
         Raises:
-            NotFoundException if the recipe could not be found.
-            ValidationError if the object could not be validated.
+            NotFoundException: if the recipe could not be found.
+            ValidationError: if the object could not be validated.
 
         Returns:
             The recipe object.
         """
 
-        sql = "SELECT (RecipeID, Recipe) FROM Recipes WHERE RecipeID = %s"
+        cursor = self.recipes_database.cursor()
+
+        sql = "SELECT RecipeID, Recipe FROM Recipes WHERE RecipeID = %s"
         val = (recipe_id,)
 
-        self.cursor.execute(sql, val)
+        cursor.execute(sql, val)
 
-        if self.cursor.rowcount == 0:
+        result = cursor.fetchone()
+
+        if cursor.rowcount == 0:
             raise NotFoundException(
                 f"Recipe with id {recipe_id} not found in database."
             )
 
-        id_, recipe = self.cursor.fetchone()
-
+        id_, recipe = result
         recipe = json.loads(recipe)
         recipe["id_"] = id_
-        return Recipe.model_validate(json.loads(recipe))
+        return Recipe(**recipe)
 
     def get_all_recipes(self) -> list[Recipe]:
         """
@@ -162,8 +164,10 @@ class MySQLDatabase(Database):
             A list of recipes.
         """
 
-        self.cursor.execute("SELECT (RecipeID, Recipe) FROM Recipes")
-        result = self.cursor.fetchall()
+        cursor = self.recipes_database.cursor()
+
+        cursor.execute("SELECT RecipeID, Recipe FROM Recipes")
+        result = cursor.fetchall()
 
         recipes = []
 
@@ -172,14 +176,14 @@ class MySQLDatabase(Database):
             recipe["id_"] = id_
 
             try:
-                recipe = Recipe.model_validate(recipe)
+                recipe = Recipe(**recipe)
                 recipes.append(recipe)
             except ValidationError:
                 continue
 
         return recipes
 
-    def update_recipe(self, recipe_id: int, recipe: Recipe) -> bool:
+    def update_recipe(self, recipe: Recipe) -> bool:
         """
         Update a recipe in the database.
 
@@ -187,13 +191,15 @@ class MySQLDatabase(Database):
             True if the recipe was updated, False otherwise.
         """
 
-        sql = "UPDATE Recipes SET Recipe = %s WHERE RecipeID = %s"
-        val = (recipe.model_dump_json(), recipe_id)
+        cursor = self.recipes_database.cursor()
 
-        self.cursor.execute(sql, val)
+        sql = "UPDATE Recipes SET Recipe = %s WHERE RecipeID = %s"
+        val = (recipe.model_dump_json(), recipe.id_)
+
+        cursor.execute(sql, val)
         self.recipes_database.commit()
 
-        return self.cursor.rowcount > 0
+        return cursor.rowcount > 0
 
     def delete_recipe(self, recipe_id: int) -> bool:
         """
@@ -203,15 +209,17 @@ class MySQLDatabase(Database):
             True if the recipe was deleted, False otherwise.
         """
 
+        cursor = self.recipes_database.cursor()
+
         sql = "DELETE FROM Recipes WHERE RecipeID = %s"
         val = (recipe_id,)
 
-        self.cursor.execute(sql, val)
+        cursor.execute(sql, val)
         self.recipes_database.commit()
 
-        return self.cursor.rowcount > 0
+        return cursor.rowcount > 0
 
-    def create_image(self, image: Image) -> int:
+    def create_image(self, image: ImageBase) -> int:
         """
         Create a new image in the database.
 
@@ -219,35 +227,40 @@ class MySQLDatabase(Database):
             The ID of the new image.
         """
 
+        cursor = self.recipes_database.cursor()
+
         sql = "INSERT INTO Images (Image) VALUES (%s)"
         val = (image.image,)
 
-        self.cursor.execute(sql, val)
+        cursor.execute(sql, val)
         self.recipes_database.commit()
 
-        return self.cursor.lastrowid
+        return cursor.lastrowid
 
     def get_image(self, image_id: int) -> Image:
         """
         Get an image from the database.
 
         Raises:
-            NotFoundException if the image could not be found.
-            ValidationError if the image could not be validated.
+            NotFoundException: if the image could not be found.
+            ValidationError: if the image could not be validated.
 
         Returns:
             The image object.
         """
 
-        sql = "SELECT (ImageID, Image) FROM Images WHERE ImageID = %s"
+        cursor = self.recipes_database.cursor()
+
+        sql = "SELECT ImageID, Image FROM Images WHERE ImageID = %s"
         val = (image_id,)
 
-        self.cursor.execute(sql, val)
+        cursor.execute(sql, val)
 
-        if self.cursor.rowcount == 0:
+        result = cursor.fetchone()
+        if cursor.rowcount == 0:
             raise NotFoundException(f"Image with id {image_id} not found in database.")
 
-        id_, image = self.cursor.fetchone()
+        id_, image = result
 
         return Image(id_=id_, image=image)
 
@@ -259,13 +272,15 @@ class MySQLDatabase(Database):
             True if the image was deleted, False otherwise.
         """
 
+        cursor = self.recipes_database.cursor()
+
         sql = "DELETE FROM Images WHERE ImageID = %s"
         val = (image_id,)
 
-        self.cursor.execute(sql, val)
+        cursor.execute(sql, val)
         self.recipes_database.commit()
 
-        return self.cursor.rowcount > 0
+        return cursor.rowcount > 0
 
 
 database = MySQLDatabase()
