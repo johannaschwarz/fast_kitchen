@@ -273,7 +273,7 @@ class MySQLDatabase(Database):
 
         return Image(id_=id_, image=image)
 
-    def delete_image(self, image_id: int) -> bool:
+    def delete_image(self, image_id: int):
         """
         Delete an image from the database.
 
@@ -289,7 +289,8 @@ class MySQLDatabase(Database):
         cursor.execute(sql, val)
         self.recipes_database.commit()
 
-        return cursor.rowcount > 0
+        if cursor.rowcount == 0:
+            raise NotFoundException(f"Image with id {image_id} not found in database.")
 
 
 database = MySQLDatabase()
