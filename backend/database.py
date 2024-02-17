@@ -98,6 +98,8 @@ class MySQLDatabase(Database):
     CONFIG = load_config()
     CREDENTIALS = load_credentials()
 
+    # TODO: Add title and description to recipe objects and in database.
+
     def __init__(self):
 
         self.recipes_database = mysql.connector.connect(
@@ -117,13 +119,18 @@ class MySQLDatabase(Database):
         """
         cursor = self.recipes_database.cursor()
 
-        sql = "INSERT INTO Recipes (Recipe) VALUES (%s)"
+        sql = "INSERT INTO Recipes (RecipeSteps) VALUES (%s)"
         val = (recipe.model_dump_json(),)
         cursor.execute(sql, val)
 
         self.recipes_database.commit()
+        id_ = cursor.lastrowid
 
-        return cursor.lastrowid
+        cursor.close()
+        for category in recipe.categories:
+            self.create_category(category, id_)
+
+        return id_
 
     def get_recipe(self, recipe_id: int) -> Recipe:
         """
@@ -136,10 +143,10 @@ class MySQLDatabase(Database):
         Returns:
             The recipe object.
         """
-
+        # TODO: Add categories to the recipe object.
         cursor = self.recipes_database.cursor()
 
-        sql = "SELECT RecipeID, Recipe FROM Recipes WHERE RecipeID = %s"
+        sql = "SELECT RecipeID, RecipeSteps FROM Recipes WHERE RecipeID = %s"
         val = (recipe_id,)
 
         cursor.execute(sql, val)
@@ -154,6 +161,8 @@ class MySQLDatabase(Database):
         id_, recipe = result
         recipe = json.loads(recipe)
         recipe["id_"] = id_
+
+        cursor.close()
         return Recipe(**recipe)
 
     def get_all_recipes(self) -> list[Recipe]:
@@ -163,10 +172,10 @@ class MySQLDatabase(Database):
         Returns:
             A list of recipes.
         """
-
+        # TODO: Add categories to the recipe objects.
         cursor = self.recipes_database.cursor()
 
-        cursor.execute("SELECT RecipeID, Recipe FROM Recipes")
+        cursor.execute("SELECT RecipeID, RecipeSteps FROM Recipes")
         result = cursor.fetchall()
 
         recipes = []
@@ -181,6 +190,7 @@ class MySQLDatabase(Database):
             except ValidationError:
                 continue
 
+        cursor.close()
         return recipes
 
     def update_recipe(self, recipe: Recipe):
@@ -196,7 +206,7 @@ class MySQLDatabase(Database):
 
         cursor = self.recipes_database.cursor()
 
-        sql = "UPDATE Recipes SET Recipe = %s WHERE RecipeID = %s"
+        sql = "UPDATE Recipes SET RecipeSteps = %s WHERE RecipeID = %s"
         val = (recipe.model_dump_json(), recipe.id_)
 
         cursor.execute(sql, val)
@@ -206,6 +216,8 @@ class MySQLDatabase(Database):
             raise UpdateFailedException(
                 f"Recipe with id {recipe.id_} could not be updated."
             )
+
+        cursor.close()
 
     def delete_recipe(self, recipe_id: int) -> bool:
         """
@@ -228,6 +240,8 @@ class MySQLDatabase(Database):
                 f"Recipe with id {recipe_id} not found in database."
             )
 
+        cursor.close()
+
     def create_image(self, image: ImageBase) -> int:
         """
         Create a new image in the database.
@@ -244,7 +258,10 @@ class MySQLDatabase(Database):
         cursor.execute(sql, val)
         self.recipes_database.commit()
 
-        return cursor.lastrowid
+        id_ = cursor.lastrowid
+
+        cursor.close()
+        return id_
 
     def get_image(self, image_id: int) -> Image:
         """
@@ -271,6 +288,7 @@ class MySQLDatabase(Database):
 
         id_, image = result
 
+        cursor.close()
         return Image(id_=id_, image=image)
 
     def get_images_by_recipe(self, recipe_id: int) -> list[int]:
@@ -290,6 +308,7 @@ class MySQLDatabase(Database):
 
         result = cursor.fetchall()
 
+        cursor.close()
         return list(result)
 
     def delete_image(self, image_id: int):
@@ -310,6 +329,23 @@ class MySQLDatabase(Database):
 
         if cursor.rowcount == 0:
             raise NotFoundException(f"Image with id {image_id} not found in database.")
+
+        cursor.close()
+
+    def create_category(self, category: str, recipe_id: int):
+        """
+        Create a new category in the database.
+        """
+
+        cursor = self.recipes_database.cursor()
+
+        sql = "INSERT INTO Categories (RecipeID, Category) VALUES (%s, %s)"
+        val = (recipe_id, category)
+
+        cursor.execute(sql, val)
+        self.recipes_database.commit()
+
+        cursor.close()
 
 
 database = MySQLDatabase()
