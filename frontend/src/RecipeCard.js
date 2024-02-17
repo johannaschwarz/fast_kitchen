@@ -8,7 +8,7 @@ function RecipeCard({ recipe }) {
             <h3>{recipe.name}</h3>
             <span className="creator">by {recipe.creator}</span>
             <p className="rating">{recipe.rating}</p>
-            {recipe.labels.map((label, index) => (
+            {recipe.categories.map((label, index) => (
                 <span key={index} className="label">{label}</span>
             ))}
         </div>
