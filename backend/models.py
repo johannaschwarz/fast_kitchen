@@ -8,7 +8,7 @@ class RecipeBase(BaseModel):
     description: str
     ingredients: list[str]
     steps: list[str]
-    labels: list[str]
+    categories: list[str]
 
 
 class Recipe(RecipeBase):
@@ -20,6 +20,7 @@ class Recipe(RecipeBase):
 class ImageBase(BaseModel):
     """An image model."""
 
+    recipe_id: int
     image: bytes
 
 

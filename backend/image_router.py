@@ -27,6 +27,12 @@ def get_image(image_id: int):
         ) from e
 
 
+@image_router.get("/image/recipe/{recipe_id}")
+def get_images_by_recipe(recipe_id: int):
+
+    return database.get_images_by_recipe(recipe_id)
+
+
 @image_router.delete("/image/{image_id}")
 def delete_image(image_id: int):
     try:

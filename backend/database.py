@@ -238,8 +238,8 @@ class MySQLDatabase(Database):
 
         cursor = self.recipes_database.cursor()
 
-        sql = "INSERT INTO Images (Image) VALUES (%s)"
-        val = (image.image,)
+        sql = "INSERT INTO Images (RecipeID, Image) VALUES (%s, %s)"
+        val = (image.recipe_id, image.image)
 
         cursor.execute(sql, val)
         self.recipes_database.commit()
@@ -260,7 +260,7 @@ class MySQLDatabase(Database):
 
         cursor = self.recipes_database.cursor()
 
-        sql = "SELECT ImageID, Image FROM Images WHERE ImageID = %s"
+        sql = "SELECT ImageID, RecipeID, Image FROM Images WHERE ImageID = %s"
         val = (image_id,)
 
         cursor.execute(sql, val)
@@ -272,6 +272,25 @@ class MySQLDatabase(Database):
         id_, image = result
 
         return Image(id_=id_, image=image)
+
+    def get_images_by_recipe(self, recipe_id: int) -> list[int]:
+        """
+        Get all images for a recipe from the database.
+
+        Returns:
+            A list of images.
+        """
+
+        cursor = self.recipes_database.cursor()
+
+        sql = "SELECT ImageID FROM Images WHERE RecipeID = %s"
+        val = (recipe_id,)
+
+        cursor.execute(sql, val)
+
+        result = cursor.fetchall()
+
+        return list(result)
 
     def delete_image(self, image_id: int):
         """
