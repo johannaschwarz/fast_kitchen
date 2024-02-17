@@ -2,7 +2,7 @@ import json
 from abc import ABC, abstractmethod
 
 import mysql.connector
-from exceptions import NotFoundException
+from exceptions import NotFoundException, UpdateFailedException
 from models import Image, ImageBase, Recipe, RecipeBase
 from pydantic import ValidationError
 from utils import load_config, load_credentials
@@ -183,9 +183,12 @@ class MySQLDatabase(Database):
 
         return recipes
 
-    def update_recipe(self, recipe: Recipe) -> bool:
+    def update_recipe(self, recipe: Recipe):
         """
         Update a recipe in the database.
+
+        Raises:
+            UpdateFailedException: if the recipe could not be updated.
 
         Returns:
             True if the recipe was updated, False otherwise.
@@ -199,7 +202,10 @@ class MySQLDatabase(Database):
         cursor.execute(sql, val)
         self.recipes_database.commit()
 
-        return cursor.rowcount > 0
+        if cursor.rowcount == 0:
+            raise UpdateFailedException(
+                f"Recipe with id {recipe.id_} could not be updated."
+            )
 
     def delete_recipe(self, recipe_id: int) -> bool:
         """
@@ -217,7 +223,10 @@ class MySQLDatabase(Database):
         cursor.execute(sql, val)
         self.recipes_database.commit()
 
-        return cursor.rowcount > 0
+        if cursor.rowcount == 0:
+            raise NotFoundException(
+                f"Recipe with id {recipe_id} not found in database."
+            )
 
     def create_image(self, image: ImageBase) -> int:
         """

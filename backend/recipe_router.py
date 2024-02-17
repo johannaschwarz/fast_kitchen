@@ -1,5 +1,5 @@
 from database import database
-from exceptions import NotFoundException
+from exceptions import NotFoundException, UpdateFailedException
 from fastapi import HTTPException, status
 from fastapi.routing import APIRouter
 from models import Recipe, RecipeBase
@@ -33,8 +33,18 @@ def get_all_recipes() -> list[Recipe]:
 
 
 @recipe_router.put("/recipe/{recipe_id}")
-def update_recipe(recipe_id: int, recipe: Recipe): ...
+def update_recipe(recipe: Recipe):
+    try:
+        database.update_recipe(recipe)
+    except UpdateFailedException as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        ) from e
 
 
 @recipe_router.delete("/recipe/{recipe_id}")
-def delete_recipe(recipe_id: int): ...
+def delete_recipe(recipe_id: int):
+    try:
+        database.delete_recipe(recipe_id)
+    except NotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
