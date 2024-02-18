@@ -215,6 +215,25 @@ class MySQLDatabase(Database):
 
         return recipes
 
+    def get_recipes_by_category(self, category: str) -> list[Recipe]:
+        """
+        Get all recipes by category from the database.
+
+        Returns:
+            A list of recipes.
+        """
+
+        cursor = self.recipes_database.cursor()
+
+        sql = "SELECT RecipeID FROM Categories WHERE Category = %s"
+        val = (category,)
+        cursor.execute(sql, val)
+
+        result = cursor.fetchall()
+
+        cursor.close()
+        return [recipe_id for recipe_id, in result]
+
     def update_recipe(self, recipe: Recipe):
         """
         Update a recipe in the database.
