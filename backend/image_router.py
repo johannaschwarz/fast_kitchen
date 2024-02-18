@@ -1,5 +1,3 @@
-from typing import Annotated
-
 from database import database
 from exceptions import NotFoundException
 from fastapi import HTTPException, UploadFile, status
@@ -11,15 +9,17 @@ image_router = APIRouter()
 
 
 @image_router.post("/image/create")
-def create_image(recipe_id: int, image: UploadFile):
+def create_image(recipe_id: int, image: UploadFile) -> int:
+
     image_data = ImageBase(recipe_id=recipe_id, image=image.file.read())
     id_ = database.create_image(image_data)
     image_data.image = ""
-    return image_data
+    return id_
 
 
 @image_router.get("/image/{image_id}")
-def get_image(image_id: int):
+def get_image(image_id: int) -> Image:
+
     try:
         return database.get_image(image_id)
     except NotFoundException as e:
@@ -31,13 +31,14 @@ def get_image(image_id: int):
 
 
 @image_router.get("/image/recipe/{recipe_id}")
-def get_images_by_recipe(recipe_id: int):
+def get_images_by_recipe(recipe_id: int) -> list[int]:
 
     return database.get_images_by_recipe(recipe_id)
 
 
 @image_router.delete("/image/{image_id}")
 def delete_image(image_id: int):
+
     try:
         database.delete_image(image_id)
     except NotFoundException as e:
