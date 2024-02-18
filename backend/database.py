@@ -215,12 +215,12 @@ class MySQLDatabase(Database):
 
         return recipes
 
-    def get_recipes_by_category(self, category: str) -> list[Recipe]:
+    def get_recipes_by_category(self, category: str) -> list[int]:
         """
         Get all recipes by category from the database.
 
         Returns:
-            A list of recipes.
+            A list of recipe IDs.
         """
 
         cursor = self.recipes_database.cursor()
@@ -309,7 +309,7 @@ class MySQLDatabase(Database):
         cursor.close()
         return id_
 
-    def get_image(self, image_id: int) -> Image:
+    def get_image(self, image_id: int) -> bytes:
         """
         Get an image from the database.
 
@@ -323,7 +323,7 @@ class MySQLDatabase(Database):
 
         cursor = self.recipes_database.cursor()
 
-        sql = "SELECT ImageID, RecipeID, Image FROM Images WHERE ImageID = %s"
+        sql = "SELECT Image FROM Images WHERE ImageID = %s"
         val = (image_id,)
 
         cursor.execute(sql, val)
@@ -333,10 +333,8 @@ class MySQLDatabase(Database):
             cursor.close()
             raise NotFoundException(f"Image with id {image_id} not found in database.")
 
-        id_, image = result
-
         cursor.close()
-        return Image(id_=id_, image=image)
+        return result[0]
 
     def get_images_by_recipe(self, recipe_id: int) -> list[int]:
         """
