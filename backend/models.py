@@ -4,7 +4,7 @@ from pydantic import BaseModel
 class RecipeBase(BaseModel):
     """A recipe model."""
 
-    name: str
+    title: str
     description: str
     ingredients: list[str]
     steps: list[str]
