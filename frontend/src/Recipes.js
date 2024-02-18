@@ -26,7 +26,7 @@ function Recipes() {
     const [recipes, setRecipies] = useState([]);
 
     useEffect(() => {
-        fetch('http://localhost:8080/recipe/all')
+        fetch('http://localhost:8000/recipe/all')
             .then((response) => response.json())
             .then((data) => {
                 console.log(data);

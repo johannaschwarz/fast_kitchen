@@ -4,8 +4,10 @@ import React from 'react';
 function RecipeCard({ recipe }) {
     return (
         <div className="recipe-card">
-            <img src={recipe.image} alt={recipe.name} />
-            <h3>{recipe.name}</h3>
+            {recipe.images.length > 0 &&
+                <img src={"http://localhost:8000/image/" + recipe.images[0]} alt={recipe.name} />
+            }
+            <h3>{recipe.title}</h3>
             <span className="creator">by {recipe.creator}</span>
             <p className="rating">{recipe.rating}</p>
             {recipe.categories.map((label, index) => (
