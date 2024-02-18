@@ -1,8 +1,9 @@
 import io
+from typing import Annotated
 
-from database import database
+from database import Database, MySQLDatabase
 from exceptions import NotFoundException
-from fastapi import HTTPException, Response, UploadFile, status
+from fastapi import Depends, HTTPException, Response, UploadFile, status
 from fastapi.routing import APIRouter
 from models import ImageBase
 from PIL import Image as PILImage
@@ -12,8 +13,20 @@ from utils import resize_image
 image_router = APIRouter()
 
 
+async def get_database_connection():
+    db = MySQLDatabase()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
 @image_router.post("/image/create")
-def create_image(recipe_id: int, image: UploadFile) -> int:
+def create_image(
+    recipe_id: int,
+    image: UploadFile,
+    database: Annotated[Database, Depends(get_database_connection)],
+) -> int:
 
     image = PILImage.open(image.file)
     image = resize_image(image)
@@ -29,7 +42,9 @@ def create_image(recipe_id: int, image: UploadFile) -> int:
 
 
 @image_router.get("/image/{image_id}")
-def get_image(image_id: int) -> Response:
+def get_image(
+    image_id: int, database: Annotated[Database, Depends(get_database_connection)]
+) -> Response:
 
     try:
         image = database.get_image(image_id)
@@ -43,13 +58,17 @@ def get_image(image_id: int) -> Response:
 
 
 @image_router.get("/image/recipe/{recipe_id}")
-def get_images_by_recipe(recipe_id: int) -> list[int]:
+def get_images_by_recipe(
+    recipe_id: int, database: Annotated[Database, Depends(get_database_connection)]
+) -> list[int]:
 
     return database.get_images_by_recipe(recipe_id)
 
 
 @image_router.delete("/image/{image_id}")
-def delete_image(image_id: int):
+def delete_image(
+    image_id: int, database: Annotated[Database, Depends(get_database_connection)]
+):
 
     try:
         database.delete_image(image_id)

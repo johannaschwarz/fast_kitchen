@@ -538,6 +538,3 @@ class MySQLDatabase(Database):
 
     def close(self):
         self.recipes_database.close()
-
-
-database = MySQLDatabase()
