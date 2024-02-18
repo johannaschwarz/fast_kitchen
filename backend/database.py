@@ -166,6 +166,7 @@ class MySQLDatabase(Database):
 
         categories = self.get_categories_by_recipe(id_)
         ingredients = self.get_ingredients_by_recipe(id_)
+        images = self.get_images_by_recipe(id_)
 
         cursor.close()
         return Recipe(
@@ -175,6 +176,7 @@ class MySQLDatabase(Database):
             ingredients=ingredients,
             steps=steps,
             categories=categories,
+            images=images,
         )
 
     def get_all_recipes(self) -> list[Recipe]:
@@ -197,6 +199,7 @@ class MySQLDatabase(Database):
 
             categories = self.get_categories_by_recipe(id_)
             ingredients = self.get_ingredients_by_recipe(id_)
+            images = self.get_images_by_recipe(id_)
 
             try:
                 recipes.append(
@@ -207,6 +210,7 @@ class MySQLDatabase(Database):
                         ingredients=ingredients,
                         steps=steps,
                         categories=categories,
+                        images=images,
                     )
                 )
             except ValidationError:
