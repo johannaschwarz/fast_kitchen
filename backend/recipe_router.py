@@ -48,3 +48,8 @@ def delete_recipe(recipe_id: int):
         database.delete_recipe(recipe_id)
     except NotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
+
+
+@recipe_router.get("/recipe/category/{category}")
+def get_recipes_by_category(category: str) -> list[int]:
+    return database.get_recipes_by_category(category)

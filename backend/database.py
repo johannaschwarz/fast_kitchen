@@ -98,8 +98,6 @@ class MySQLDatabase(Database):
     CONFIG = load_config()
     CREDENTIALS = load_credentials()
 
-    # TODO: Add title and description to recipe objects and in database.
-
     def __init__(self):
 
         self.recipes_database = mysql.connector.connect(
@@ -119,16 +117,21 @@ class MySQLDatabase(Database):
         """
         cursor = self.recipes_database.cursor()
 
-        sql = "INSERT INTO Recipes (RecipeSteps) VALUES (%s)"
-        val = (recipe.model_dump_json(),)
+        sql = (
+            "INSERT INTO Recipes (Title, Description, RecipeSteps) VALUES (%s, %s, %s)"
+        )
+        val = (recipe.title, recipe.description, json.dumps(recipe.steps))
         cursor.execute(sql, val)
 
         self.recipes_database.commit()
         id_ = cursor.lastrowid
-
         cursor.close()
+
         for category in recipe.categories:
             self.create_category(category, id_)
+
+        for ingredient in recipe.ingredients:
+            self.create_ingredient(ingredient, id_)
 
         return id_
 
@@ -143,10 +146,9 @@ class MySQLDatabase(Database):
         Returns:
             The recipe object.
         """
-        # TODO: Add categories to the recipe object.
         cursor = self.recipes_database.cursor()
 
-        sql = "SELECT RecipeID, RecipeSteps FROM Recipes WHERE RecipeID = %s"
+        sql = "SELECT RecipeID, Title, Description, RecipeSteps FROM Recipes WHERE RecipeID = %s"
         val = (recipe_id,)
 
         cursor.execute(sql, val)
@@ -154,16 +156,26 @@ class MySQLDatabase(Database):
         result = cursor.fetchone()
 
         if cursor.rowcount == 0:
+            cursor.close()
             raise NotFoundException(
                 f"Recipe with id {recipe_id} not found in database."
             )
 
-        id_, recipe = result
-        recipe = json.loads(recipe)
-        recipe["id_"] = id_
+        id_, title, description, steps = result
+        steps = json.loads(steps)
+
+        categories = self.get_categories_by_recipe(id_)
+        ingredients = self.get_ingredients_by_recipe(id_)
 
         cursor.close()
-        return Recipe(**recipe)
+        return Recipe(
+            id_=id_,
+            title=title,
+            description=description,
+            ingredients=ingredients,
+            steps=steps,
+            categories=categories,
+        )
 
     def get_all_recipes(self) -> list[Recipe]:
         """
@@ -172,26 +184,55 @@ class MySQLDatabase(Database):
         Returns:
             A list of recipes.
         """
-        # TODO: Add categories to the recipe objects.
         cursor = self.recipes_database.cursor()
 
-        cursor.execute("SELECT RecipeID, RecipeSteps FROM Recipes")
+        cursor.execute("SELECT RecipeID, Title, Description, RecipeSteps FROM Recipes")
         result = cursor.fetchall()
+        cursor.close()
 
         recipes = []
 
-        for id_, recipe in result:
-            recipe = json.loads(recipe)
-            recipe["id_"] = id_
+        for id_, title, description, steps in result:
+            steps = json.loads(steps)
+
+            categories = self.get_categories_by_recipe(id_)
+            ingredients = self.get_ingredients_by_recipe(id_)
 
             try:
-                recipe = Recipe(**recipe)
-                recipes.append(recipe)
+                recipes.append(
+                    Recipe(
+                        id_=id_,
+                        title=title if title else "",
+                        description=description if description else "",
+                        ingredients=ingredients,
+                        steps=steps,
+                        categories=categories,
+                    )
+                )
             except ValidationError:
+                print(f"Recipe with id {id_} could not be validated.")
                 continue
 
-        cursor.close()
         return recipes
+
+    def get_recipes_by_category(self, category: str) -> list[Recipe]:
+        """
+        Get all recipes by category from the database.
+
+        Returns:
+            A list of recipes.
+        """
+
+        cursor = self.recipes_database.cursor()
+
+        sql = "SELECT RecipeID FROM Categories WHERE Category = %s"
+        val = (category,)
+        cursor.execute(sql, val)
+
+        result = cursor.fetchall()
+
+        cursor.close()
+        return [recipe_id for recipe_id, in result]
 
     def update_recipe(self, recipe: Recipe):
         """
@@ -206,18 +247,22 @@ class MySQLDatabase(Database):
 
         cursor = self.recipes_database.cursor()
 
-        sql = "UPDATE Recipes SET RecipeSteps = %s WHERE RecipeID = %s"
-        val = (recipe.model_dump_json(), recipe.id_)
+        sql = "UPDATE Recipes SET Title = %s, Description = %s, RecipeSteps = %s WHERE RecipeID = %s"
+        val = (recipe.title, recipe.description, json.dumps(recipe.steps), recipe.id_)
 
         cursor.execute(sql, val)
         self.recipes_database.commit()
 
         if cursor.rowcount == 0:
+            cursor.close()
             raise UpdateFailedException(
                 f"Recipe with id {recipe.id_} could not be updated."
             )
 
         cursor.close()
+
+        self.update_categories_by_recipe(recipe.id_, recipe.categories)
+        self.update_ingredients_by_recipe(recipe.id_, recipe.ingredients)
 
     def delete_recipe(self, recipe_id: int) -> bool:
         """
@@ -236,6 +281,7 @@ class MySQLDatabase(Database):
         self.recipes_database.commit()
 
         if cursor.rowcount == 0:
+            cursor.close()
             raise NotFoundException(
                 f"Recipe with id {recipe_id} not found in database."
             )
@@ -284,6 +330,7 @@ class MySQLDatabase(Database):
 
         result = cursor.fetchone()
         if cursor.rowcount == 0:
+            cursor.close()
             raise NotFoundException(f"Image with id {image_id} not found in database.")
 
         id_, image = result
@@ -315,8 +362,8 @@ class MySQLDatabase(Database):
         """
         Delete an image from the database.
 
-        Returns:
-            True if the image was deleted, False otherwise.
+        Raises:
+            NotFoundException: if the image could not be found.
         """
 
         cursor = self.recipes_database.cursor()
@@ -328,6 +375,7 @@ class MySQLDatabase(Database):
         self.recipes_database.commit()
 
         if cursor.rowcount == 0:
+            cursor.close()
             raise NotFoundException(f"Image with id {image_id} not found in database.")
 
         cursor.close()
@@ -346,6 +394,148 @@ class MySQLDatabase(Database):
         self.recipes_database.commit()
 
         cursor.close()
+
+    def get_categories_by_recipe(self, recipe_id: int) -> list[str]:
+        """
+        Get all categories for a recipe from the database.
+
+        Returns:
+            A list of categories.
+        """
+
+        cursor = self.recipes_database.cursor()
+
+        sql = "SELECT Category FROM Categories WHERE RecipeID = %s"
+        val = (recipe_id,)
+
+        cursor.execute(sql, val)
+
+        result = cursor.fetchall()
+
+        cursor.close()
+        return [category for category, in result]
+
+    def update_categories_by_recipe(self, recipe_id: int, categories: list[str]):
+        """
+        Update the categories for a recipe in the database.
+        """
+
+        cursor = self.recipes_database.cursor()
+
+        sql = "DELETE FROM Categories WHERE RecipeID = %s"
+        val = (recipe_id,)
+
+        cursor.execute(sql, val)
+        self.recipes_database.commit()
+
+        for category in categories:
+            self.create_category(category, recipe_id)
+
+        cursor.close()
+
+    def delete_category(self, category: str, recipe_id: int):
+        """
+        Delete a category from the database.
+
+        Raises:
+            NotFoundException: if the category could not be found.
+        """
+
+        cursor = self.recipes_database.cursor()
+
+        sql = "DELETE FROM Categories WHERE RecipeID = %s AND Category = %s"
+        val = (recipe_id, category)
+
+        cursor.execute(sql, val)
+        self.recipes_database.commit()
+
+        if cursor.rowcount == 0:
+            cursor.close()
+            raise NotFoundException(
+                f"Category {category} for recipe {recipe_id} not found."
+            )
+
+        cursor.close()
+
+    def create_ingredient(self, ingredient: str, recipe_id: int):
+        """
+        Create a new ingredient in the database.
+        """
+
+        cursor = self.recipes_database.cursor()
+
+        sql = "INSERT INTO Ingredients (RecipeID, Ingredient) VALUES (%s, %s)"
+        val = (recipe_id, ingredient)
+
+        cursor.execute(sql, val)
+        self.recipes_database.commit()
+
+        cursor.close()
+
+    def get_ingredients_by_recipe(self, recipe_id: int) -> list[str]:
+        """
+        Get all ingredients for a recipe from the database.
+
+        Returns:
+            A list of ingredients.
+        """
+
+        cursor = self.recipes_database.cursor()
+
+        sql = "SELECT Ingredient FROM Ingredients WHERE RecipeID = %s"
+        val = (recipe_id,)
+
+        cursor.execute(sql, val)
+
+        result = cursor.fetchall()
+
+        cursor.close()
+        return [ingredient for ingredient, in result]
+
+    def update_ingredients_by_recipe(self, recipe_id: int, ingredients: list[str]):
+        """
+        Update the ingredients for a recipe in the database.
+        """
+
+        cursor = self.recipes_database.cursor()
+
+        sql = "DELETE FROM Ingredients WHERE RecipeID = %s"
+        val = (recipe_id,)
+
+        cursor.execute(sql, val)
+        self.recipes_database.commit()
+
+        for ingredient in ingredients:
+            self.create_ingredient(ingredient, recipe_id)
+
+        cursor.close()
+
+    def delete_ingredient(self, ingredient: str, recipe_id: int):
+        """
+        Delete an ingredient from the database.
+
+        Raises:
+            NotFoundException: if the ingredient could not be found.
+        """
+
+        cursor = self.recipes_database.cursor()
+
+        sql = "DELETE FROM Ingredients WHERE RecipeID = %s AND Ingredient = %s"
+        val = (recipe_id, ingredient)
+
+        cursor.execute(sql, val)
+        self.recipes_database.commit()
+
+        if cursor.rowcount == 0:
+            cursor.close()
+            raise NotFoundException(
+                f"Ingredient {ingredient} for recipe {recipe_id} not found."
+            )
+
+        cursor.close()
+
+    def close(self):
+        self.recipes_database.close()
 
 
 database = MySQLDatabase()
