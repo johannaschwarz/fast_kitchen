@@ -202,14 +202,15 @@ class MySQLDatabase(Database):
                 recipes.append(
                     Recipe(
                         id_=id_,
-                        title=title,
-                        description=description,
+                        title=title if title else "",
+                        description=description if description else "",
                         ingredients=ingredients,
                         steps=steps,
                         categories=categories,
                     )
                 )
             except ValidationError:
+                print(f"Recipe with id {id_} could not be validated.")
                 continue
 
         return recipes
@@ -393,7 +394,7 @@ class MySQLDatabase(Database):
         result = cursor.fetchall()
 
         cursor.close()
-        return list(result)
+        return [category for category, in result]
 
     def update_categories_by_recipe(self, recipe_id: int, categories: list[str]):
         """
@@ -470,7 +471,7 @@ class MySQLDatabase(Database):
         result = cursor.fetchall()
 
         cursor.close()
-        return list(result)
+        return [ingredient for ingredient, in result]
 
     def update_ingredients_by_recipe(self, recipe_id: int, ingredients: list[str]):
         """
