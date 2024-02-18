@@ -7,6 +7,7 @@ from fastapi.routing import APIRouter
 from models import ImageBase
 from PIL import Image as PILImage
 from pydantic import ValidationError
+from utils import resize_image
 
 image_router = APIRouter()
 
@@ -15,9 +16,10 @@ image_router = APIRouter()
 def create_image(recipe_id: int, image: UploadFile) -> int:
 
     image = PILImage.open(image.file)
+    image = resize_image(image)
 
     with io.BytesIO() as output:
-        image.save(output, format="PNG")
+        image.save(output, format="PNG", optimize=True, quality=80)
         contents = output.getvalue()
 
     image_model = ImageBase(recipe_id=recipe_id, image=contents)
