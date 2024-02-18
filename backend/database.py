@@ -358,7 +358,7 @@ class MySQLDatabase(Database):
         result = cursor.fetchall()
 
         cursor.close()
-        return list(result)
+        return [image_id for (image_id,) in result]
 
     def delete_image(self, image_id: int):
         """
