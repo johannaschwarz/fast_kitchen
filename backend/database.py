@@ -166,6 +166,7 @@ class MySQLDatabase(Database):
 
         categories = self.get_categories_by_recipe(id_)
         ingredients = self.get_ingredients_by_recipe(id_)
+        images = self.get_images_by_recipe(id_)
 
         cursor.close()
         return Recipe(
@@ -175,6 +176,7 @@ class MySQLDatabase(Database):
             ingredients=ingredients,
             steps=steps,
             categories=categories,
+            images=images,
         )
 
     def get_all_recipes(self) -> list[Recipe]:
@@ -197,6 +199,7 @@ class MySQLDatabase(Database):
 
             categories = self.get_categories_by_recipe(id_)
             ingredients = self.get_ingredients_by_recipe(id_)
+            images = self.get_images_by_recipe(id_)
 
             try:
                 recipes.append(
@@ -207,6 +210,7 @@ class MySQLDatabase(Database):
                         ingredients=ingredients,
                         steps=steps,
                         categories=categories,
+                        images=images,
                     )
                 )
             except ValidationError:
@@ -215,12 +219,12 @@ class MySQLDatabase(Database):
 
         return recipes
 
-    def get_recipes_by_category(self, category: str) -> list[Recipe]:
+    def get_recipes_by_category(self, category: str) -> list[int]:
         """
         Get all recipes by category from the database.
 
         Returns:
-            A list of recipes.
+            A list of recipe IDs.
         """
 
         cursor = self.recipes_database.cursor()
@@ -309,7 +313,7 @@ class MySQLDatabase(Database):
         cursor.close()
         return id_
 
-    def get_image(self, image_id: int) -> Image:
+    def get_image(self, image_id: int) -> bytes:
         """
         Get an image from the database.
 
@@ -323,7 +327,7 @@ class MySQLDatabase(Database):
 
         cursor = self.recipes_database.cursor()
 
-        sql = "SELECT ImageID, RecipeID, Image FROM Images WHERE ImageID = %s"
+        sql = "SELECT Image FROM Images WHERE ImageID = %s"
         val = (image_id,)
 
         cursor.execute(sql, val)
@@ -333,10 +337,8 @@ class MySQLDatabase(Database):
             cursor.close()
             raise NotFoundException(f"Image with id {image_id} not found in database.")
 
-        id_, image = result
-
         cursor.close()
-        return Image(id_=id_, image=image)
+        return result[0]
 
     def get_images_by_recipe(self, recipe_id: int) -> list[int]:
         """
