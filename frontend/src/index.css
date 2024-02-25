@@ -52,11 +52,15 @@ a {
   margin-bottom: 20px;
 }
 
-input {
+/* INPUTS, FORMS */
+
+input,
+textarea,
+select {
   font-size: 16px;
   padding: 10px;
   border: 1px solid #ccc;
-  border-radius: 5px;
+  border-radius: 20px;
 }
 
 button {
@@ -71,6 +75,18 @@ button {
 button:hover {
   background-color: #c1daf0;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.inline-form>* {
+  margin: 0 5px;
+}
+
+.inline-form>*:first-child {
+  margin-left: 0;
+}
+
+.inline-form>*:last-child {
+  margin-right: 0;
 }
 
 .content {
