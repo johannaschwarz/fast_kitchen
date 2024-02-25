@@ -1,3 +1,7 @@
+.recipeContent {
+    margin: 0 15%;
+}
+
 .label {
     display: inline-block;
     padding: 5px 10px;
@@ -10,7 +14,8 @@
 }
 
 
-.card {
+.card,
+.imageCard {
     background-color: #fff;
     border-radius: 30px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
@@ -20,9 +25,21 @@
     margin: 20px 0;
 }
 
-.card>h2 {
+.card>h2,
+.imageCard>h2 {
     margin-top: 0;
     margin-bottom: 10px;
     font-size: 24px;
     font-weight: 400;
+}
+
+.imageCard {
+    overflow: hidden;
+}
+
+.imageCard>img {
+    width: 100%;
+    border-radius: 10px;
+    object-fit: cover;
+    max-height: 400px;
 }

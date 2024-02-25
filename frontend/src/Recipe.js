@@ -12,8 +12,13 @@ function Recipe(props) {
     const recipe = props.recipe;
 
     return (
-        <div>
-            <div>
+        <div className='recipeContent'>
+            <div className='imageCard'>
+                {recipe.images.length > 0 &&
+                    <img src={"http://localhost:8000/image/" + recipe.images[0]} alt={recipe.name} />
+                }
+                <h2>{recipe.title}</h2>
+
                 {recipe.categories.map((category, index) => (
                     <span className="label" key={index}>{category}</span>
                 ))}
@@ -27,6 +32,14 @@ function Recipe(props) {
                     ))}
                 </ul>
                 <span>Portionen: <input min={1} value={(!isNaN(ingredientMultiplier) ? ingredientMultiplier : "")} onChange={e => setIngredientMultiplier(parseInt(e.target.value))} type='number' /></span>
+            </div>
+            <div className='card'>
+                <h2>Instructions:</h2>
+                <ol>
+                    {recipe.steps.map((instruction, index) => (
+                        <li key={index}>{instruction}</li>
+                    ))}
+                </ol>
             </div>
         </div>
     );
@@ -51,7 +64,7 @@ function RecipePage() {
     return (
         <div>
             <header>
-                <h1>FastKitchen {recipe === null ? "" : "- " + recipe.title}</h1>
+                <h1>FastKitchen</h1>
             </header>
             <Recipe recipe={recipe} />
             <div style={{
