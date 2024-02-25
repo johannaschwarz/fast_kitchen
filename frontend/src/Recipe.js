@@ -1,17 +1,78 @@
-import { Link, useParams } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { ThreeDots } from 'react-loader-spinner';
+import { useParams } from 'react-router-dom';
 
-function Recipe() {
-    const { recipeId } = useParams();
+import './Recipe.css';
+
+function Recipe(props) {
+    const [ingredientMultiplier, setIngredientMultiplier] = useState(1);
+    if (props.recipe === null) {
+        return null;
+    }
+    const recipe = props.recipe;
+
     return (
         <div>
-
-            <header>
-                <h1>FastKitchen - Flammkuchen</h1>
-            </header>
-            <Link to="/">Back</Link>
-            <h1>I'm a recipe ({recipeId})!</h1>
+            <div>
+                {recipe.categories.map((category, index) => (
+                    <span className="label" key={index}>{category}</span>
+                ))}
+            </div>
+            <div className='card'>{recipe.description}</div>
+            <div className='card'>
+                <h2>Ingredients:</h2>
+                <ul>
+                    {recipe.ingredients.map((ingredient, index) => (
+                        <li key={index}>{ingredient}: {5 * (!isNaN(ingredientMultiplier) ? ingredientMultiplier : 1)} g</li>
+                    ))}
+                </ul>
+                <span>Portionen: <input min={1} value={(!isNaN(ingredientMultiplier) ? ingredientMultiplier : "")} onChange={e => setIngredientMultiplier(parseInt(e.target.value))} type='number' /></span>
+            </div>
         </div>
     );
 }
 
-export default Recipe;
+function RecipePage() {
+    const { recipeId } = useParams();
+    const [recipe, setRecipe] = useState(null);
+
+    useEffect(() => {
+        fetch('http://localhost:8000/recipe/specific/' + recipeId)
+            .then((response) => response.json())
+            .then((data) => {
+                console.log(data)
+                setRecipe(data)
+            })
+            .catch((err) => {
+                console.log(err.message)
+            });
+    }, [recipeId]);
+
+    return (
+        <div>
+            <header>
+                <h1>FastKitchen {recipe === null ? "" : "- " + recipe.title}</h1>
+            </header>
+            <Recipe recipe={recipe} />
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+            }}>
+                <ThreeDots
+                    visible={recipe === null}
+                    height="80"
+                    width="80"
+                    color="#4fa94d"
+                    radius="9"
+                    ariaLabel="three-dots-loading"
+                    wrapperStyle={{}}
+                    wrapperClass=""
+                />
+            </div>
+        </div>
+    );
+}
+
+export default RecipePage;

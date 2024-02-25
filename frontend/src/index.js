@@ -6,7 +6,7 @@ import {
 } from "react-router-dom";
 import './index.css';
 import Main from './Main.js';
-import Recipe from './Recipe.js';
+import RecipePage from './Recipe.js';
 import reportWebVitals from './reportWebVitals';
 
 const router = createBrowserRouter([
@@ -16,7 +16,7 @@ const router = createBrowserRouter([
   },
   {
     path: "recipe/:recipeId",
-    element: <Recipe />
+    element: <RecipePage />
   }
 ]);
 
