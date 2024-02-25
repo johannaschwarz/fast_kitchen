@@ -6,6 +6,7 @@ class RecipeBase(BaseModel):
 
     title: str
     description: str
+    # TODO: add ingredient model with name, unit and amount
     ingredients: list[str]
     steps: list[str]
     categories: list[str]
