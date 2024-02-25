@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+
+import Header from './Header.js';
 
 import './Recipe.css';
 
@@ -12,7 +14,7 @@ function Recipe(props) {
     const recipe = props.recipe;
 
     return (
-        <div className='recipeContent'>
+        <div>
             <div className='imageCard'>
                 {recipe.images.length > 0 &&
                     <img src={"http://localhost:8000/image/" + recipe.images[0]} alt={recipe.name} />
@@ -63,10 +65,10 @@ function RecipePage() {
 
     return (
         <div>
-            <header>
-                <h1><Link to="/">FastKitchen</Link></h1>
-            </header>
-            <Recipe recipe={recipe} />
+            <Header />
+            <div className='content'>
+                <Recipe recipe={recipe} />
+            </div>
             <div style={{
                 display: 'flex',
                 alignItems: 'center',

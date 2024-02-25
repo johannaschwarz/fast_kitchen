@@ -4,6 +4,8 @@ import { ThreeDots } from 'react-loader-spinner';
 import { Link } from "react-router-dom";
 import RecipeCard from './RecipeCard';
 
+import './Recipes.css';
+
 function Recipes() {
     const [recipes, setRecipies] = useState([]);
 

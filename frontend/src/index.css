@@ -1,3 +1,7 @@
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -9,9 +13,10 @@ body {
 }
 
 header {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
   align-items: center;
+  grid-template-columns: repeat(5, 1fr);
+  justify-items: center;
 }
 
 h1,
@@ -25,14 +30,20 @@ a {
   color: inherit;
 }
 
-#search-form {
-  width: 70%;
+#logo {
+  grid-column: 1/1;
 }
 
 #search-bar {
   padding: 10px;
   border: 1px solid #ccc;
-  border-radius: 5px;
+  border-radius: 30px;
+  width: 100%;
+  grid-column: 2/5;
+}
+
+#create-recipe {
+  grid-column: 5/5;
 }
 
 .filters {
@@ -41,15 +52,37 @@ a {
   margin-bottom: 20px;
 }
 
-#recipes {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-}
-
 input {
   font-size: 16px;
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
+}
+
+button {
+  font-size: 16px;
+  padding: 10px;
+  border: none;
+  border-radius: 30px;
+  background-color: #bbd2e8;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #c1daf0;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.content {
+  margin: 0 15%;
+}
+
+@media screen and (max-width: 1200px) {
+  header {
+    flex-direction: column;
+  }
+
+  .content {
+    margin: 0 7%;
+  }
 }
