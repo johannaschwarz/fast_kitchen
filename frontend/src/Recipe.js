@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 import './Recipe.css';
 
@@ -64,7 +64,7 @@ function RecipePage() {
     return (
         <div>
             <header>
-                <h1>FastKitchen</h1>
+                <h1><Link to="/">FastKitchen</Link></h1>
             </header>
             <Recipe recipe={recipe} />
             <div style={{
