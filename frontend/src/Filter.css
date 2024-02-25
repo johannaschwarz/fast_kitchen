@@ -1,0 +1,8 @@
+.filter-chip {
+    padding: 8px 16px;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    margin: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}

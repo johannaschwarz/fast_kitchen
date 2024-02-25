@@ -1,0 +1,28 @@
+.label {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 30px;
+    background-color: #bbd2e8;
+    margin-bottom: 5px;
+    transition: background-color 0.2s ease-out;
+    font-size: 14px;
+    font-weight: 200;
+}
+
+
+.card {
+    background-color: #fff;
+    border-radius: 30px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.2s ease-out, box-shadow 0.2s ease-out;
+    cursor: pointer;
+    padding: 20px;
+    margin: 20px 0;
+}
+
+.card>h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 24px;
+    font-weight: 400;
+}

@@ -1,5 +1,6 @@
 // RecipeCard.js
 import React from 'react';
+import './RecipeCard.css';
 
 function RecipeCard({ recipe }) {
     return (
