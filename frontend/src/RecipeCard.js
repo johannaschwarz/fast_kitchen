@@ -11,7 +11,7 @@ function RecipeCard({ recipe }) {
             }
             {
                 recipe.images.length === 0 &&
-                <div class="missingImage"><RamenDiningOutlinedIcon /></div>
+                <div className="missingImage"><RamenDiningOutlinedIcon /></div>
             }
             <h3>{recipe.title}</h3>
             <span className="creator">by {recipe.creator ? recipe.creator : "an unkown cook"}</span>
