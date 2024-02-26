@@ -4,10 +4,10 @@ import {
   createBrowserRouter,
   RouterProvider,
 } from "react-router-dom";
-import CreateRecipe from './CreateRecipe.js';
 import './index.css';
 import Main from './Main.js';
 import RecipePage from './Recipe.js';
+import RecipeEditor from './RecipeEditor.js';
 import reportWebVitals from './reportWebVitals';
 
 const router = createBrowserRouter([
@@ -21,7 +21,7 @@ const router = createBrowserRouter([
   },
   {
     path: "create",
-    element: <CreateRecipe />
+    element: <RecipeEditor />
   }
 ]);
 

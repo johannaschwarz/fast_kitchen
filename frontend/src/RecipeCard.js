@@ -3,6 +3,7 @@ import RamenDiningOutlinedIcon from '@mui/icons-material/RamenDiningOutlined';
 import React from 'react';
 import { API_BASE } from './Config';
 import './RecipeCard.css';
+
 function RecipeCard({ recipe }) {
     return (
         <div className="recipe-card">

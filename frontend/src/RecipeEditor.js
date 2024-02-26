@@ -114,7 +114,7 @@ const StepsList = ({ steps, setSteps }) => {
     );
 };
 
-function CreateRecipe() {
+function RecipeEditor() {
     const [ingredients, setIngredients] = useState([{ name: "", amount: "", unit: "" }]);
     const [steps, setSteps] = useState([{ description: "", duration: 0 }]);
     const [title, setTitle] = useState("");
@@ -240,4 +240,4 @@ function CreateRecipe() {
     )
 }
 
-export default CreateRecipe;
+export default RecipeEditor;
