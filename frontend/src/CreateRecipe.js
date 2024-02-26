@@ -157,7 +157,6 @@ function CreateRecipe() {
             categories: categories.split(",").map(category => category.trim()),
             ingredients: ingredients.filter(ingredient => ingredient.name !== "").map(ingredient => ingredient.name),
             steps: steps.filter(step => step.description !== "").map(step => step.description),
-            images: [],
         }
 
         // Post form data

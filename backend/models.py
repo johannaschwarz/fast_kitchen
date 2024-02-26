@@ -13,13 +13,13 @@ class RecipeBase(BaseModel):
     ingredients: list[str]
     steps: list[str]
     categories: list[str]
-    images: list[int]
 
 
 class Recipe(RecipeBase):
     """A recipe model."""
 
     id_: int = -1
+    images: list[int]
 
 
 class ImageBase(BaseModel):
