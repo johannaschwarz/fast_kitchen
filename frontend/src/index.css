@@ -63,6 +63,12 @@ select {
   border-radius: 20px;
 }
 
+textarea {
+  border-end-end-radius: 5px;
+  resize: vertical;
+  min-height: 40px;
+}
+
 button {
   font-size: 16px;
   padding: 10px;
@@ -77,16 +83,21 @@ button:hover {
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-.inline-form>* {
+.inlineForm>* {
   margin: 0 5px;
 }
 
-.inline-form>*:first-child {
+.inlineForm>*:first-child {
   margin-left: 0;
 }
 
-.inline-form>*:last-child {
+.inlineForm>*:last-child {
   margin-right: 0;
+}
+
+.formRow {
+  display: flex;
+  margin: 5px 0;
 }
 
 .content {
