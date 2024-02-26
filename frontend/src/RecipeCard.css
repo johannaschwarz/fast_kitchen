@@ -13,13 +13,35 @@
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2)
 }
 
-.recipe-card img {
+.recipe-card img,
+.recipe-card .missingImage {
+    display: flex;
     width: 100%;
     height: 180px;
     object-fit: cover;
     border-radius: 20px;
     margin-bottom: 10px;
 }
+
+.recipe-card .missingImage {
+    align-items: center;
+    justify-content: center;
+    background-color: #dfdfdf;
+    color: #fff;
+}
+
+.recipe-card .missingImage>svg {
+    display: block;
+    height: 40px;
+    width: 40px;
+    transition: all 0.2s ease-out;
+}
+
+.recipe-card:hover .missingImage>svg {
+    height: 50px;
+    width: 50px;
+}
+
 
 .recipe-card h3 {
     font-size: 18px;
@@ -43,6 +65,7 @@
     border-radius: 30px;
     background-color: #bbd2e8;
     margin-bottom: 5px;
+    margin-inline: 2px;
     cursor: pointer;
     transition: background-color 0.2s ease-out;
     font-size: 14px;

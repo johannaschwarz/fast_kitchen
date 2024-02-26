@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
+import { redirect } from "react-router-dom";
 import { API_BASE } from './Config';
 import Header from "./Header";
 
@@ -111,7 +112,7 @@ function CreateRecipe() {
         formData.append('image', file);
         formData.append('recipe_id', recipeId);
 
-        const response = await fetch(API_BASE + 'image/upload', {
+        const response = await fetch(API_BASE + 'image/create', {
             method: 'POST',
             body: formData,
         });
@@ -162,6 +163,7 @@ function CreateRecipe() {
             images.forEach(image => uploadImage(image, recipeId));
 
             console.log('Form submitted successfully');
+            return redirect("/");
         } else {
             console.error('Form submission failed');
         }

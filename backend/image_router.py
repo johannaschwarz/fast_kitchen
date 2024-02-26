@@ -3,7 +3,7 @@ from typing import Annotated
 
 from database import Database, MySQLDatabase
 from exceptions import NotFoundException
-from fastapi import Depends, HTTPException, Response, UploadFile, status
+from fastapi import Body, Depends, HTTPException, Response, UploadFile, status
 from fastapi.routing import APIRouter
 from models import ImageBase
 from PIL import Image as PILImage
@@ -23,7 +23,7 @@ async def get_database_connection():
 
 @image_router.post("/image/create")
 def create_image(
-    recipe_id: int,
+    recipe_id: Annotated[int, Body(embed=True)],
     image: UploadFile,
     database: Annotated[Database, Depends(get_database_connection)],
 ) -> int:
