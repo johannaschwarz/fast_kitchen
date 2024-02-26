@@ -226,6 +226,7 @@ function RecipeEditor() {
             <div className={"content " + (storing || (recipeId !== undefined && !loaded) ? 'hidden' : '')}>
                 <h1>{recipeId === undefined ? "Create a new recipe" : "Edit your recipe"}</h1>
                 <form onSubmit={handleSubmit}>
+                    {/* TODO: consider using https://mui.com/material-ui/react-text-field/ instead of input */}
                     <label htmlFor="title">Title:</label><br />
                     <input type="text" id="title" name="title" placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} required /><br />
                     <label htmlFor="description">Description:</label><br />
