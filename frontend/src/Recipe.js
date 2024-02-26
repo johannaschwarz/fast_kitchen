@@ -1,18 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
+
 import { API_BASE } from './Config';
 
 import Header from './Header.js';
 
 import './Recipe.css';
 
-function Recipe(props) {
+function Recipe({ recipe }) {
     const [ingredientMultiplier, setIngredientMultiplier] = useState(1);
-    if (props.recipe === null) {
+    if (recipe === null || recipe.id_ === undefined) {
         return null;
     }
-    const recipe = props.recipe;
+
+    const deleteRecipe = async () => {
+        const response = await fetch(API_BASE + 'recipe/' + recipe.id_, {
+            method: 'DELETE'
+        })
+
+        if (response.ok) {
+            window.location.href = '/';
+        }
+    }
 
     return (
         <div>
@@ -44,7 +54,15 @@ function Recipe(props) {
                     ))}
                 </ol>
             </div>
-        </div>
+            <div>
+                {/* TODO: show only to recipe owner */}
+                <h2>Options</h2>
+                <div className='inlineForm'>
+                    <Link to={"/edit/" + recipe.id_} ><button>Edit</button></Link>
+                    <button onClick={deleteRecipe}>Delete</button>
+                </div>
+            </div>
+        </div >
     );
 }
 
@@ -54,13 +72,19 @@ function RecipePage() {
 
     useEffect(() => {
         fetch(API_BASE + 'recipe/specific/' + recipeId)
-            .then((response) => response.json())
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json()
+            })
             .then((data) => {
                 console.log(data)
                 setRecipe(data)
             })
             .catch((err) => {
                 console.log(err.message)
+                window.location.href = '/';
             });
     }, [recipeId]);
 
