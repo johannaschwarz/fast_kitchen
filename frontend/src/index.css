@@ -104,6 +104,10 @@ button:hover {
   margin: 0 15%;
 }
 
+.hidden {
+  display: none !important;
+}
+
 @media screen and (max-width: 1200px) {
   header {
     flex-direction: column;

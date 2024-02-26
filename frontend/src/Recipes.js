@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
 import { Link } from "react-router-dom";
+import { API_BASE } from './Config';
 import RecipeCard from './RecipeCard';
 
 import './Recipes.css';
@@ -10,7 +11,7 @@ function Recipes() {
     const [recipes, setRecipies] = useState([]);
 
     useEffect(() => {
-        fetch('http://localhost:8000/recipe/all')
+        fetch(API_BASE + 'recipe/all')
             .then((response) => response.json())
             .then((data) => {
                 console.log(data);

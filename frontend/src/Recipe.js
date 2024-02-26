@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
 import { useParams } from 'react-router-dom';
+import { API_BASE } from './Config';
 
 import Header from './Header.js';
 
@@ -17,7 +18,7 @@ function Recipe(props) {
         <div>
             <div className='imageCard'>
                 {recipe.images.length > 0 &&
-                    <img src={"http://localhost:8000/image/" + recipe.images[0]} alt={recipe.name} />
+                    <img src={API_BASE + "image/" + recipe.images[0]} alt={recipe.name} />
                 }
                 <h2>{recipe.title}</h2>
 
@@ -52,7 +53,7 @@ function RecipePage() {
     const [recipe, setRecipe] = useState(null);
 
     useEffect(() => {
-        fetch('http://localhost:8000/recipe/specific/' + recipeId)
+        fetch(API_BASE + 'recipe/specific/' + recipeId)
             .then((response) => response.json())
             .then((data) => {
                 console.log(data)
