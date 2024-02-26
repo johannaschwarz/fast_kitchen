@@ -100,6 +100,18 @@ button:hover {
   margin: 5px 0;
 }
 
+.clearBtn,
+.clearBtn:hover {
+  background: none;
+  border: none;
+  box-shadow: none;
+  border-radius: 0;
+  display: flex;
+  color: #aaa;
+}
+
+/* COMMON */
+
 .content {
   margin: 0 15%;
 }

@@ -4,6 +4,7 @@
     border-radius: 30px;
     background-color: #bbd2e8;
     margin-bottom: 5px;
+    margin-inline: 2px;
     transition: background-color 0.2s ease-out;
     font-size: 14px;
     font-weight: 200;

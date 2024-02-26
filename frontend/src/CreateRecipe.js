@@ -1,24 +1,25 @@
+import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOutlineOutlined';
 import React, { useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
 import { redirect } from "react-router-dom";
 import { API_BASE } from './Config';
 import Header from "./Header";
-
-function Ingredient({ ingredient, onChangeIngredient, onChangeAmount, onChangeUnit }) {
+function Ingredient({ ingredient, onChangeIngredient, onChangeAmount, onChangeUnit, onDelete }) {
     if (ingredient === null) {
         ingredient = { name: "", amount: "", unit: "" };
     }
     return (
         <div className="formRow inlineForm">
-            <input type="text" id="ingredient" name="ingredient" placeholder="Ingredient" onChange={onChangeIngredient} defaultValue={ingredient.name} />
-            <input min="0" type="number" id="amount" name="amount" placeholder="Amount" onChange={onChangeAmount} defaultValue={ingredient.amount} />
-            <select id="unit" name="unit" onChange={onChangeUnit} defaultValue={ingredient.unit}>
+            <input type="text" id="ingredient" name="ingredient" placeholder="Ingredient" onChange={onChangeIngredient} value={ingredient.name} />
+            <input min="0" type="number" id="amount" name="amount" placeholder="Amount" onChange={onChangeAmount} value={ingredient.amount} />
+            <select id="unit" name="unit" onChange={onChangeUnit} value={ingredient.unit}>
                 <option value="g">g</option>
                 <option value="kg">kg</option>
                 <option value="ml">ml</option>
                 <option value="l">l</option>
                 <option value="pcs">pcs</option>
             </select>
+            {ingredient.name !== "" && < button type='button' onClick={onDelete} className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>}
         </div>
     )
 }
@@ -41,6 +42,12 @@ const IngredientList = ({ ingredients, setIngredients }) => {
         setIngredients(newIngredients);
     };
 
+    const handleDeleteIngredient = (index) => (_event) => {
+        const newIngredients = [...ingredients];
+        newIngredients.splice(index, 1);
+        setIngredients(newIngredients);
+    }
+
     return (
         <div>
             {ingredients.map((ingredient, index) => (
@@ -50,17 +57,19 @@ const IngredientList = ({ ingredients, setIngredients }) => {
                     onChangeIngredient={handleIngredientChange(index, "name")}
                     onChangeAmount={handleIngredientChange(index, "amount")}
                     onChangeUnit={handleIngredientChange(index, "unit")}
+                    onDelete={handleDeleteIngredient(index)}
                 />
             ))}
         </div>
     );
 };
 
-function Step({ index, step, onChangeDesciption, onChangeDuration }) {
+function Step({ index, step, onChangeDesciption, onChangeDuration, onDelete }) {
     return (
         <div className='formRow inlineForm'>
             <span>{index}.</span>
-            <textarea type="text" id="step" name="step" placeholder="Instruction" onChange={onChangeDesciption} defaultValue={step.description}></textarea>
+            <textarea type="text" id="step" name="step" placeholder="Instruction" onChange={onChangeDesciption} value={step.description}></textarea>
+            {step.description !== "" && < button type='button' onClick={onDelete} className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>}
         </div>
     )
 }
@@ -83,6 +92,12 @@ const StepsList = ({ steps, setSteps }) => {
         setSteps(newSteps);
     };
 
+    const handleDeleteStep = (index) => (_event) => {
+        const newSteps = [...steps];
+        newSteps.splice(index, 1);
+        setSteps(newSteps);
+    }
+
     return (
         <div>
             {steps.map((step, index) => (
@@ -92,6 +107,7 @@ const StepsList = ({ steps, setSteps }) => {
                     step={step}
                     onChangeDesciption={handleStepChange(index, "description")}
                     onChangeDuration={handleStepChange(index, "duration")}
+                    onDelete={handleDeleteStep(index)}
                 />
             ))}
         </div>
