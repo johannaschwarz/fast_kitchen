@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 import mysql.connector
 from exceptions import NotFoundException, UpdateFailedException
-from models import Image, ImageBase, Recipe, RecipeBase
+from models import Image, ImageBase, Recipe, RecipeBase, RecipeStored
 from pydantic import ValidationError
 from utils import load_config, load_credentials
 
@@ -43,7 +43,7 @@ class Database(ABC):
         """
 
     @abstractmethod
-    def update_recipe(self, recipe: Recipe):
+    def update_recipe(self, recipe: RecipeStored):
         """
         Update a recipe in the database.
 
@@ -238,7 +238,7 @@ class MySQLDatabase(Database):
         cursor.close()
         return [recipe_id for recipe_id, in result]
 
-    def update_recipe(self, recipe: Recipe):
+    def update_recipe(self, recipe: RecipeStored):
         """
         Update a recipe in the database.
 

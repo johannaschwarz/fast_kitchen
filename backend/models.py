@@ -15,10 +15,15 @@ class RecipeBase(BaseModel):
     categories: list[str]
 
 
-class Recipe(RecipeBase):
+class RecipeStored(RecipeBase):
     """A recipe model."""
 
     id_: int = -1
+
+
+class Recipe(RecipeStored):
+    """A recipe model."""
+
     images: list[int]
 
 
