@@ -1,7 +1,7 @@
 import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOutlineOutlined';
 import React, { useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
-import { redirect } from "react-router-dom";
+import { redirect, useParams } from "react-router-dom";
 import { API_BASE } from './Config';
 import Header from "./Header";
 function Ingredient({ ingredient, onChangeIngredient, onChangeAmount, onChangeUnit, onDelete }) {
@@ -115,6 +115,7 @@ const StepsList = ({ steps, setSteps }) => {
 };
 
 function RecipeEditor() {
+    const { recipeId } = useParams();
     const [ingredients, setIngredients] = useState([{ name: "", amount: "", unit: "" }]);
     const [steps, setSteps] = useState([{ description: "", duration: 0 }]);
     const [title, setTitle] = useState("");
@@ -122,11 +123,37 @@ function RecipeEditor() {
     const [categories, setCategories] = useState("");
     const [images, setImages] = useState([]);
     const [storing, setStoring] = useState(false);
+    const [loaded, setLoaded] = useState(false);
 
-    const uploadImage = async (file, recipeId) => {
+    useEffect(() => {
+        if (recipeId === undefined) {
+            return;
+        }
+        fetch(API_BASE + 'recipe/specific/' + recipeId)
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json()
+            })
+            .then((data) => {
+                setTitle(data.title);
+                setDescription(data.description);
+                setCategories(data.categories.join(", "));
+                setIngredients(data.ingredients.map(ingredient => ({ name: ingredient, amount: "", unit: "" })));
+                setSteps(data.steps.map(step => ({ description: step, duration: 0 })));
+                setLoaded(true);
+            })
+            .catch((err) => {
+                console.log(err.message)
+                window.location.href = '/';
+            });
+    }, [recipeId]);
+
+    const uploadImage = async (file, associatedRecipeId) => {
         const formData = new FormData();
         formData.append('image', file);
-        formData.append('recipe_id', recipeId);
+        formData.append('recipe_id', associatedRecipeId);
 
         const response = await fetch(API_BASE + 'image/create', {
             method: 'POST',
@@ -151,17 +178,19 @@ function RecipeEditor() {
             formData.append(`ingredient${index}`, ingredient);
         });
 
-        const data = {
+        var data = {
             title: title,
             description: description,
             categories: categories.split(",").map(category => category.trim()),
             ingredients: ingredients.filter(ingredient => ingredient.name !== "").map(ingredient => ingredient.name),
             steps: steps.filter(step => step.description !== "").map(step => step.description),
         }
+        if (recipeId !== undefined)
+            data.id_ = recipeId;
 
         // Post form data
-        const response = await fetch(API_BASE + 'recipe/create', {
-            method: 'POST',
+        const response = await fetch(API_BASE + (recipeId === undefined ? 'recipe/create' : 'recipe/' + recipeId), {
+            method: recipeId === undefined ? 'POST' : 'PUT',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -172,13 +201,15 @@ function RecipeEditor() {
 
         if (response.ok) {
             const responseData = await response.json();
-            const recipeId = responseData.id_;
+            const createdRecipeId = responseData.id_;
 
             // Upload images
-            images.forEach(image => uploadImage(image, recipeId));
+            if (recipeId !== undefined) {
+                images.forEach(image => uploadImage(image, createdRecipeId));
+            }
 
             console.log('Form submitted successfully');
-            return redirect("/");
+            return redirect("/recipe/" + createdRecipeId);
         } else {
             console.error('Form submission failed');
         }
@@ -192,8 +223,8 @@ function RecipeEditor() {
     return (
         <div>
             <Header />
-            <div className={"content " + (storing ? 'hidden' : '')}>
-                <h1>Create a new recipe</h1>
+            <div className={"content " + (storing || (recipeId !== undefined && !loaded) ? 'hidden' : '')}>
+                <h1>{recipeId === undefined ? "Create a new recipe" : "Edit your recipe"}</h1>
                 <form onSubmit={handleSubmit}>
                     <label htmlFor="title">Title:</label><br />
                     <input type="text" id="title" name="title" placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} required /><br />
@@ -215,7 +246,7 @@ function RecipeEditor() {
                         <StepsList steps={steps} setSteps={setSteps} />
                     </div>
                     <br />
-                    <button type="submit">Create</button><br />
+                    <button type="submit">{recipeId === undefined ? "Create" : "Change"}</button><br />
                 </form>
             </div>
 
@@ -226,7 +257,7 @@ function RecipeEditor() {
                 width: '100%',
             }}>
                 <ThreeDots
-                    visible={storing}
+                    visible={storing || (recipeId !== undefined && !loaded)}
                     height="80"
                     width="80"
                     color="#4fa94d"

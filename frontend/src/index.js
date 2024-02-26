@@ -22,6 +22,10 @@ const router = createBrowserRouter([
   {
     path: "create",
     element: <RecipeEditor />
+  },
+  {
+    path: "edit/:recipeId",
+    element: <RecipeEditor />
   }
 ]);
 
