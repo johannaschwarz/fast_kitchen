@@ -9,7 +9,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  padding: 20px;
+  padding: 0;
 }
 
 header {
@@ -134,7 +134,13 @@ button:hover {
 
 @media screen and (max-width: 1200px) {
   header {
+    display: flex;
     flex-direction: column;
+    padding: 20px;
+  }
+
+  #search-bar {
+    margin-bottom: 20px;
   }
 
   .content {
