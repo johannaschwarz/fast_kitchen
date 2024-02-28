@@ -123,6 +123,15 @@ button:hover {
   display: none !important;
 }
 
+.link {
+  color: #007bff;
+  cursor: pointer;
+}
+
+.link:hover {
+  color: #49a1ff;
+}
+
 @media screen and (max-width: 1200px) {
   header {
     flex-direction: column;
