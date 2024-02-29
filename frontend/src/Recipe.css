@@ -1,0 +1,116 @@
+.label {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 30px;
+    background-color: #bbd2e8;
+    margin-bottom: 5px;
+    margin-inline: 2px;
+    transition: background-color 0.2s ease-out;
+    font-size: 14px;
+    font-weight: 200;
+}
+
+
+.card,
+.imageCard {
+    background-color: #fff;
+    border-radius: 30px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    transition: background-color 0.2s ease-out, box-shadow 0.2s ease-out;
+    padding: 20px;
+    margin: 20px 0;
+
+
+    scroll-snap-stop: normal;
+    scroll-snap-align: center;
+}
+
+.card>h2,
+.imageCard>h2 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-size: 24px;
+    font-weight: 400;
+}
+
+.imageCard {
+    overflow: hidden;
+}
+
+.imageCard>img {
+    width: 100%;
+    border-radius: 10px;
+    object-fit: cover;
+    max-height: 400px;
+}
+
+.recipePage {
+    /* display: flex;
+    flex-direction: column; */
+    scroll-snap-type: both mandatory;
+    overscroll-behavior-x: contain;
+
+    width: 100%;
+    height: 100vh;
+    scroll-behavior: smooth;
+    overflow: auto;
+    scroll-snap-type: y mandatory;
+}
+
+
+.recipeStep {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    position: relative;
+}
+
+.recipeStepContent {
+    margin: 100px 0;
+    flex-grow: 1;
+}
+
+.stepCounterCircle {
+    border: 5px solid #bbd2e8;
+    background-color: #fff;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    line-height: 30px;
+    font-weight: 800;
+    margin-right: 50px;
+}
+
+.recipeStep:not(:first-child) .stepCounterTopLine {
+    position: absolute;
+    top: 0;
+    left: 18px;
+    width: 4px;
+    height: 50%;
+    background-color: #bbd2e8;
+    z-index: -1;
+}
+
+
+.recipeStep:not(:last-child) .stepCounterBottomLine {
+    position: absolute;
+    bottom: 0;
+    left: 18px;
+    width: 4px;
+    height: 50%;
+    background-color: #bbd2e8;
+    z-index: -1;
+}
+
+.instructionText {
+    display: block;
+    margin-top: 8px;
+}
+
+
+@media screen and (max-width: 1200px) {
+    .stepCounterCircle {
+        margin-right: 10px;
+    }
+}
