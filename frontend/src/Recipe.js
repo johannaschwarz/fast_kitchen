@@ -58,7 +58,7 @@ function Recipe({ recipe }) {
                             {recipe.images.length > 0 &&
                                 <img src={API_BASE + "image/" + recipe.images[0]} alt={recipe.name} />
                             }
-                            <p>{instruction}</p>
+                            <span className="instructionText">{instruction}</span>
                         </div>
                     </div>
                 ))}

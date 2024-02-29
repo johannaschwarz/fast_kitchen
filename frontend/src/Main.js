@@ -6,10 +6,10 @@ function Main() {
   return (
     <div className="Main">
       <Header />
-      <main>
+      <div className='content'>
         <Filters />
         <Recipes />
-      </main>
+      </div>
     </div>
   );
 }
