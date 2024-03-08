@@ -4,11 +4,13 @@ from pydantic import BaseModel
 
 
 class UnitEnum(StrEnum):
-    g = "g"
-    kg = "kg"
-    ml = "ml"
-    l = "l"
-    pcs = "pcs"
+    G = "g"
+    KG = "kg"
+    ML = "ml"
+    L = "l"
+    PCS = "pcs"
+    TBSP = "tbsp"
+    TSP = "tsp"
 
 
 class Ingredient(BaseModel):
@@ -17,6 +19,7 @@ class Ingredient(BaseModel):
     name: str
     unit: UnitEnum
     amount: float
+    group: str | None = None
 
 
 class Step(BaseModel):
@@ -26,7 +29,7 @@ class Step(BaseModel):
 
 
 class RecipeBase(BaseModel):
-    """A recipe model."""
+    """The base recipe model (used when creating a recipe)."""
 
     # TODO: add user/creator
 
@@ -34,14 +37,16 @@ class RecipeBase(BaseModel):
     description: str
     portions: int
     ingredients: list[Ingredient]
+    cooking_time: int
     steps: list[str]
     categories: list[str]
 
 
 class RecipeStored(RecipeBase):
-    """A recipe model with an id."""
+    """A recipe how it is represented in the database."""
 
     id_: int = -1
+    cover_image: int
 
 
 class Recipe(RecipeStored):
@@ -65,9 +70,3 @@ class ImageBase(BaseModel):
 
     recipe_id: int
     image: bytes
-
-
-class Image(ImageBase):
-    """An image model."""
-
-    id_: int = -1

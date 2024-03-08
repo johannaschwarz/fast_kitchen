@@ -3,7 +3,15 @@ from abc import ABC, abstractmethod
 
 import mysql.connector
 from exceptions import NotFoundException, UpdateFailedException
-from models import Image, ImageBase, Recipe, RecipeBase, RecipeStored
+from models import (
+    ImageBase,
+    Ingredient,
+    Recipe,
+    RecipeBase,
+    RecipeListing,
+    RecipeStored,
+    UnitEnum,
+)
 from pydantic import ValidationError
 from utils import load_config, load_credentials
 
@@ -70,7 +78,7 @@ class Database(ABC):
         """
 
     @abstractmethod
-    def get_image(self, image_id: int) -> Image:
+    def get_image(self, image_id: int) -> bytes:
         """
         Get an image from the database.
 
@@ -117,10 +125,13 @@ class MySQLDatabase(Database):
         """
         cursor = self.recipes_database.cursor()
 
-        sql = (
-            "INSERT INTO Recipes (Title, Description, RecipeSteps) VALUES (%s, %s, %s)"
+        sql = "INSERT INTO Recipes (Title, Description, RecipeSteps, CookingTime) VALUES (%s, %s, %s, %s)"
+        val = (
+            recipe.title,
+            recipe.description,
+            json.dumps(recipe.steps),
+            recipe.cooking_time,
         )
-        val = (recipe.title, recipe.description, json.dumps(recipe.steps))
         cursor.execute(sql, val)
 
         self.recipes_database.commit()
@@ -148,7 +159,7 @@ class MySQLDatabase(Database):
         """
         cursor = self.recipes_database.cursor()
 
-        sql = "SELECT RecipeID, Title, Description, RecipeSteps FROM Recipes WHERE RecipeID = %s"
+        sql = "SELECT RecipeID, Title, Description, RecipeSteps, CookingTime, CoverImage FROM Recipes WHERE RecipeID = %s"
         val = (recipe_id,)
 
         cursor.execute(sql, val)
@@ -161,7 +172,7 @@ class MySQLDatabase(Database):
                 f"Recipe with id {recipe_id} not found in database."
             )
 
-        id_, title, description, steps = result
+        id_, title, description, steps, cooking_time, cover_image = result
         steps = json.loads(steps)
 
         categories = self.get_categories_by_recipe(id_)
@@ -174,12 +185,14 @@ class MySQLDatabase(Database):
             title=title,
             description=description,
             ingredients=ingredients,
+            cooking_time=cooking_time,
             steps=steps,
             categories=categories,
+            cover_image=cover_image,
             images=images,
         )
 
-    def get_all_recipes(self) -> list[Recipe]:
+    def get_all_recipes(self) -> list[RecipeListing]:
         """
         Get all recipes from the database.
 
@@ -188,29 +201,20 @@ class MySQLDatabase(Database):
         """
         cursor = self.recipes_database.cursor()
 
-        cursor.execute("SELECT RecipeID, Title, Description, RecipeSteps FROM Recipes")
+        cursor.execute("SELECT RecipeID, Title, Description, CoverImage FROM Recipes")
         result = cursor.fetchall()
         cursor.close()
 
         recipes = []
 
-        for id_, title, description, steps in result:
-            steps = json.loads(steps)
-
-            categories = self.get_categories_by_recipe(id_)
-            ingredients = self.get_ingredients_by_recipe(id_)
-            images = self.get_images_by_recipe(id_)
-
+        for id_, title, description, image in result:
             try:
                 recipes.append(
-                    Recipe(
+                    RecipeListing(
                         id_=id_,
                         title=title if title else "",
                         description=description if description else "",
-                        ingredients=ingredients,
-                        steps=steps,
-                        categories=categories,
-                        images=images,
+                        cover_image=image,
                     )
                 )
             except ValidationError:
@@ -251,8 +255,14 @@ class MySQLDatabase(Database):
 
         cursor = self.recipes_database.cursor()
 
-        sql = "UPDATE Recipes SET Title = %s, Description = %s, RecipeSteps = %s WHERE RecipeID = %s"
-        val = (recipe.title, recipe.description, json.dumps(recipe.steps), recipe.id_)
+        sql = "UPDATE Recipes SET Title = %s, Description = %s, RecipeSteps = %s, CoverImage = %s WHERE RecipeID = %s"
+        val = (
+            recipe.title,
+            recipe.description,
+            json.dumps(recipe.steps),
+            recipe.cover_image,
+            recipe.id_,
+        )
 
         cursor.execute(sql, val)
         self.recipes_database.commit()
@@ -459,22 +469,28 @@ class MySQLDatabase(Database):
 
         cursor.close()
 
-    def create_ingredient(self, ingredient: str, recipe_id: int):
+    def create_ingredient(self, ingredient: Ingredient, recipe_id: int):
         """
         Create a new ingredient in the database.
         """
 
         cursor = self.recipes_database.cursor()
 
-        sql = "INSERT INTO Ingredients (RecipeID, Ingredient) VALUES (%s, %s)"
-        val = (recipe_id, ingredient)
+        sql = "INSERT INTO Ingredients (RecipeID, Ingredient, Unit, Amount, IngredientGroup) VALUES (%s, %s, %s, %s, %s)"
+        val = (
+            recipe_id,
+            ingredient.name,
+            ingredient.unit,
+            ingredient.amount,
+            ingredient.group,
+        )
 
         cursor.execute(sql, val)
         self.recipes_database.commit()
 
         cursor.close()
 
-    def get_ingredients_by_recipe(self, recipe_id: int) -> list[str]:
+    def get_ingredients_by_recipe(self, recipe_id: int) -> list[Ingredient]:
         """
         Get all ingredients for a recipe from the database.
 
@@ -484,7 +500,7 @@ class MySQLDatabase(Database):
 
         cursor = self.recipes_database.cursor()
 
-        sql = "SELECT Ingredient FROM Ingredients WHERE RecipeID = %s"
+        sql = "SELECT Ingredient, Unit, Amount, IngredientGroup FROM Ingredients WHERE RecipeID = %s"
         val = (recipe_id,)
 
         cursor.execute(sql, val)
@@ -492,9 +508,14 @@ class MySQLDatabase(Database):
         result = cursor.fetchall()
 
         cursor.close()
-        return [ingredient for ingredient, in result]
+        return [
+            Ingredient(name=ingredient, unit=UnitEnum(unit), amount=amount, group=group)
+            for ingredient, unit, amount, group in result
+        ]
 
-    def update_ingredients_by_recipe(self, recipe_id: int, ingredients: list[str]):
+    def update_ingredients_by_recipe(
+        self, recipe_id: int, ingredients: list[Ingredient]
+    ):
         """
         Update the ingredients for a recipe in the database.
         """
@@ -509,30 +530,6 @@ class MySQLDatabase(Database):
 
         for ingredient in ingredients:
             self.create_ingredient(ingredient, recipe_id)
-
-        cursor.close()
-
-    def delete_ingredient(self, ingredient: str, recipe_id: int):
-        """
-        Delete an ingredient from the database.
-
-        Raises:
-            NotFoundException: if the ingredient could not be found.
-        """
-
-        cursor = self.recipes_database.cursor()
-
-        sql = "DELETE FROM Ingredients WHERE RecipeID = %s AND Ingredient = %s"
-        val = (recipe_id, ingredient)
-
-        cursor.execute(sql, val)
-        self.recipes_database.commit()
-
-        if cursor.rowcount == 0:
-            cursor.close()
-            raise NotFoundException(
-                f"Ingredient {ingredient} for recipe {recipe_id} not found."
-            )
 
         cursor.close()
 
