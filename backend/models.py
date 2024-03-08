@@ -46,7 +46,7 @@ class RecipeStored(RecipeBase):
     """A recipe how it is represented in the database."""
 
     id_: int = -1
-    cover_image: int
+    cover_image: int | None = None
 
 
 class Recipe(RecipeStored):
@@ -61,8 +61,8 @@ class RecipeListing(BaseModel):
     id_: int = -1
     title: str
     description: str
-    cover_image: int
-    rating: float
+    cover_image: int | None = None
+    rating: float | None = None
 
 
 class ImageBase(BaseModel):

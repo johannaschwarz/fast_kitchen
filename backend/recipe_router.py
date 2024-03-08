@@ -4,7 +4,7 @@ from database import Database, MySQLDatabase
 from exceptions import NotFoundException, UpdateFailedException
 from fastapi import Depends, HTTPException, status
 from fastapi.routing import APIRouter
-from models import Recipe, RecipeBase, RecipeStored
+from models import Recipe, RecipeBase, RecipeListing, RecipeStored
 from pydantic import ValidationError
 
 recipe_router = APIRouter()
@@ -21,7 +21,7 @@ async def get_database_connection():
 @recipe_router.post("/recipe/create")
 def create_recipe(
     recipe: RecipeBase, database: Annotated[Database, Depends(get_database_connection)]
-) -> Recipe:
+) -> RecipeStored:
     id_ = database.create_recipe(recipe)
 
     return RecipeStored(id_=id_, **recipe.model_dump())
@@ -44,7 +44,7 @@ def get_recipe(
 @recipe_router.get("/recipe/all")
 def get_all_recipes(
     database: Annotated[Database, Depends(get_database_connection)]
-) -> list[Recipe]:
+) -> list[RecipeListing]:
     return database.get_all_recipes()
 
 
