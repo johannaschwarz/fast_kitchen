@@ -113,7 +113,7 @@ function RecipePage() {
                     visible={recipe === null}
                     height="80"
                     width="80"
-                    color="#4fa94d"
+                    color="var(--dark-green)"
                     radius="9"
                     ariaLabel="three-dots-loading"
                     wrapperStyle={{}}
