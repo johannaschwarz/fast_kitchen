@@ -71,7 +71,7 @@
 }
 
 .stepCounterCircle {
-    border: 5px solid #bbd2e8;
+    border: 5px solid var(--primary-color);
     background-color: #fff;
     border-radius: 50%;
     width: 40px;
@@ -88,7 +88,7 @@
     left: 18px;
     width: 4px;
     height: 50%;
-    background-color: #bbd2e8;
+    background-color: var(--primary-color);
     z-index: -1;
 }
 
@@ -99,7 +99,7 @@
     left: 18px;
     width: 4px;
     height: 50%;
-    background-color: #bbd2e8;
+    background-color: var(--primary-color);
     z-index: -1;
 }
 
