@@ -1,3 +1,3 @@
 # Recipe Manager Web App
 
-Fun!!!
+A Web App to Manage your personal recipes!
