@@ -8,7 +8,7 @@ import RecipeCard from './RecipeCard';
 import './Recipes.css';
 
 function Recipes() {
-    const [recipes, setRecipies] = useState([]);
+    const [recipes, setRecipies] = useState(null);
 
     useEffect(() => {
         fetch(API_BASE + 'recipe/all')
@@ -25,10 +25,14 @@ function Recipes() {
     return (
         <div>
             <section id="recipes">
-                {recipes && recipes.map((recipe, index) => (
+                {recipes != null && recipes.length > 0 && recipes.map((recipe, index) => (
                     <Link key={index} to={'recipe/' + recipe.id_}><RecipeCard recipe={recipe} /></Link>
                 ))}
             </section>
+
+            {recipes != null && recipes.length === 0 && <div>
+                <p>There are no recipes yet, <Link className='link' to="/create">create the first one</Link>!</p>
+            </div>}
 
             <div style={{
                 display: 'flex',
@@ -37,7 +41,7 @@ function Recipes() {
                 width: '100%',
             }}>
                 <ThreeDots
-                    visible={recipes.length === 0}
+                    visible={recipes == null}
                     height="80"
                     width="80"
                     color="#4fa94d"

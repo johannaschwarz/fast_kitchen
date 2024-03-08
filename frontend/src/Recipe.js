@@ -46,15 +46,24 @@ function Recipe({ recipe }) {
                 </ul>
                 <span>Portionen: <input min={1} value={(!isNaN(ingredientMultiplier) ? ingredientMultiplier : "")} onChange={e => setIngredientMultiplier(parseInt(e.target.value))} type='number' /></span>
             </div>
-            <div className='card'>
-                <h2>Instructions:</h2>
-                <ol>
-                    {recipe.steps.map((instruction, index) => (
-                        <li key={index}>{instruction}</li>
-                    ))}
-                </ol>
+            <div className='recipeSteps'>
+                {recipe.steps.map((instruction, index) => (
+                    <div key={index} className="recipeStep">
+                        <div className="stepCounter">
+                            <div className="stepCounterTopLine"></div>
+                            <div className="stepCounterCircle">{index + 1}</div>
+                            <div className="stepCounterBottomLine"></div>
+                        </div>
+                        <div className='imageCard recipeStepContent'>
+                            {recipe.images.length > 0 &&
+                                <img src={API_BASE + "image/" + recipe.images[0]} alt={recipe.name} />
+                            }
+                            <span className="instructionText">{instruction}</span>
+                        </div>
+                    </div>
+                ))}
             </div>
-            <div>
+            <div className='card'>
                 {/* TODO: show only to recipe owner */}
                 <h2>Options</h2>
                 <div className='inlineForm'>
@@ -62,7 +71,7 @@ function Recipe({ recipe }) {
                     <button onClick={deleteRecipe}>Delete</button>
                 </div>
             </div>
-        </div >
+        </div>
     );
 }
 
@@ -89,7 +98,7 @@ function RecipePage() {
     }, [recipeId]);
 
     return (
-        <div>
+        <div className="recipePage">
             <Header />
             <div className='content'>
                 <Recipe recipe={recipe} />
