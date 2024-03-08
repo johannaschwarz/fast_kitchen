@@ -1,30 +1,68 @@
+from enum import StrEnum
+
 from pydantic import BaseModel
 
 
-class RecipeBase(BaseModel):
-    """A recipe model."""
+class UnitEnum(StrEnum):
+    G = "g"
+    KG = "kg"
+    ML = "ml"
+    L = "l"
+    PCS = "pcs"
+    TBSP = "tbsp"
+    TSP = "tsp"
 
-    # TODO: add rating
+
+class Ingredient(BaseModel):
+    """An ingredient model."""
+
+    name: str
+    unit: UnitEnum
+    amount: float
+    group: str | None = None
+
+
+class Step(BaseModel):
+    """A step model."""
+
+    instructions: str
+
+
+class RecipeBase(BaseModel):
+    """The base recipe model (used when creating a recipe)."""
+
     # TODO: add user/creator
 
     title: str
     description: str
-    # TODO: add ingredient model with name, unit and amount
-    ingredients: list[str]
+    portions: int
+    ingredients: list[Ingredient]
+    cooking_time: int
     steps: list[str]
     categories: list[str]
 
 
 class RecipeStored(RecipeBase):
-    """A recipe model."""
+    """A recipe how it is represented in the database."""
 
     id_: int = -1
+    cover_image: int | None = None
 
 
 class Recipe(RecipeStored):
-    """A recipe model."""
+    """A complete recipe model with images."""
 
     images: list[int]
+
+
+class RecipeListing(BaseModel):
+    """A slimmer recipe model for listings."""
+
+    id_: int = -1
+    title: str
+    description: str
+    cover_image: int | None = None
+    rating: float | None = None
 
 
 class ImageBase(BaseModel):
@@ -32,9 +70,3 @@ class ImageBase(BaseModel):
 
     recipe_id: int
     image: bytes
-
-
-class Image(ImageBase):
-    """An image model."""
-
-    id_: int = -1
