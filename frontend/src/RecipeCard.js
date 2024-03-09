@@ -7,11 +7,11 @@ import './RecipeCard.css';
 function RecipeCard({ recipe }) {
     return (
         <div className="recipe-card">
-            {recipe.images.length > 0 &&
-                <img src={API_BASE + "image/" + recipe.images[0]} alt={recipe.name} />
+            {recipe.cover_image !== null &&
+                <img src={API_BASE + "image/" + recipe.cover_image} alt={recipe.name} />
             }
             {
-                recipe.images.length === 0 &&
+                recipe.cover_image === null &&
                 <div className="missingImage"><RamenDiningOutlinedIcon /></div>
             }
             <h3>{recipe.title}</h3>

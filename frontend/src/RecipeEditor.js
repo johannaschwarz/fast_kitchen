@@ -4,9 +4,10 @@ import { ThreeDots } from 'react-loader-spinner';
 import { redirect, useParams } from "react-router-dom";
 import { API_BASE } from './Config';
 import Header from "./Header";
+
 function Ingredient({ ingredient, onChangeIngredient, onChangeAmount, onChangeUnit, onDelete }) {
     if (ingredient === null) {
-        ingredient = { name: "", amount: "", unit: "" };
+        ingredient = { name: "", amount: 0, unit: "" , group: ""};
     }
     return (
         <div className="formRow inlineForm">
@@ -18,6 +19,8 @@ function Ingredient({ ingredient, onChangeIngredient, onChangeAmount, onChangeUn
                 <option value="ml">ml</option>
                 <option value="l">l</option>
                 <option value="pcs">pcs</option>
+                <option value="tbsp">tbsp</option>
+                <option value="tsp">tsp</option>
             </select>
             {ingredient.name !== "" && < button type='button' onClick={onDelete} className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>}
         </div>
@@ -28,7 +31,7 @@ const IngredientList = ({ ingredients, setIngredients }) => {
     useEffect(() => {
         // If the last ingredient is filled, add a new empty ingredient
         if (ingredients[ingredients.length - 1].name !== "") {
-            setIngredients([...ingredients, { name: "", amount: "", unit: "" }]);
+            setIngredients([...ingredients, { name: "", amount: 0, unit: "", group: ""}]);
         }
         // If there are two empty ingredients at the end, remove the last one
         else if (ingredients.length > 1 && ingredients[ingredients.length - 2].name === "") {
@@ -38,7 +41,11 @@ const IngredientList = ({ ingredients, setIngredients }) => {
 
     const handleIngredientChange = (index, key) => (event) => {
         const newIngredients = [...ingredients];
-        newIngredients[index][key] = event.target.value;
+        if (key === "amount") {
+            newIngredients[index][key] = parseFloat(event.target.value);
+        } else {
+            newIngredients[index][key] = event.target.value;
+        }
         setIngredients(newIngredients);
     };
 
@@ -116,10 +123,12 @@ const StepsList = ({ steps, setSteps }) => {
 
 function RecipeEditor() {
     const { recipeId } = useParams();
-    const [ingredients, setIngredients] = useState([{ name: "", amount: "", unit: "" }]);
+    const [ingredients, setIngredients] = useState([{ name: "", amount: "", unit: "" , group: ""}]);
     const [steps, setSteps] = useState([{ description: "", duration: 0 }]);
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
+    const [cookingTime, setCookingTime] = useState(0);
+    const [portions, setPortions] = useState(1);
     const [categories, setCategories] = useState("");
     const [images, setImages] = useState([]);
     const [storing, setStoring] = useState(false);
@@ -140,6 +149,8 @@ function RecipeEditor() {
                 setTitle(data.title);
                 setDescription(data.description);
                 setCategories(data.categories.join(", "));
+                setPortions(data.portions);
+                setCookingTime(data.cooking_time);
                 setIngredients(data.ingredients.map(ingredient => ({ name: ingredient, amount: "", unit: "" })));
                 setSteps(data.steps.map(step => ({ description: step, duration: 0 })));
                 setLoaded(true);
@@ -173,20 +184,19 @@ function RecipeEditor() {
 
         setStoring(true);
 
-        const formData = new FormData();
-        ingredients.forEach((ingredient, index) => {
-            formData.append(`ingredient${index}`, ingredient);
-        });
-
         var data = {
             title: title,
             description: description,
             categories: categories.split(",").map(category => category.trim()),
-            ingredients: ingredients.filter(ingredient => ingredient.name !== "").map(ingredient => ingredient.name),
+            portions: portions,
+            cooking_time: cookingTime,
+            ingredients: ingredients.filter(ingredient => ingredient.name !== ""),
             steps: steps.filter(step => step.description !== "").map(step => step.description),
         }
         if (recipeId !== undefined)
             data.id_ = recipeId;
+
+        console.log(data)
 
         // Post form data
         const response = await fetch(API_BASE + (recipeId === undefined ? 'recipe/create' : 'recipe/' + recipeId), {
@@ -231,6 +241,8 @@ function RecipeEditor() {
                     <input type="text" id="title" name="title" placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} required /><br />
                     <label htmlFor="description">Description:</label><br />
                     <textarea id="description" name="description" placeholder="Description" value={description} onChange={e => setDescription(e.target.value)} required></textarea><br />
+                    <label htmlFor="cookingTime">Cooking Time:</label><br />
+                    <input type="number" id="cookingTime" name="cookingTime" placeholder="Cooking Time" defaultValue={0} required /><br />
                     <label htmlFor="categories">Categories:</label><br />
                     <input type="text" id="categories" name="categories" value={categories} onChange={e => setCategories(e.target.value.replace(/\s+/g, ' '))} required /><br />
                     <label htmlFor="images">Cover Image:</label><br />
