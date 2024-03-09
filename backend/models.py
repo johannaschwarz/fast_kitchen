@@ -52,7 +52,7 @@ class RecipeStored(RecipeBase):
 class Recipe(RecipeStored):
     """A complete recipe model with images."""
 
-    images: list[int]
+    images: list[int] | None = None
 
 
 class RecipeListing(BaseModel):
@@ -61,6 +61,7 @@ class RecipeListing(BaseModel):
     id_: int = -1
     title: str
     description: str
+    categories: list[str]
     cover_image: int | None = None
     rating: float | None = None
 

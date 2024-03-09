@@ -208,6 +208,7 @@ class MySQLDatabase(Database):
         recipes = []
 
         for id_, title, description, image in result:
+            categories = self.get_categories_by_recipe(id_)
             try:
                 recipes.append(
                     RecipeListing(
@@ -215,6 +216,7 @@ class MySQLDatabase(Database):
                         title=title if title else "",
                         description=description if description else "",
                         cover_image=image,
+                        categories=categories,
                     )
                 )
             except ValidationError:
