@@ -28,6 +28,7 @@ backend/assets/creds.json
 /frontend/build
 
 # misc
+.vscode
 .DS_Store
 .env.local
 .env.development.local
