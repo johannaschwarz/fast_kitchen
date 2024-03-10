@@ -23,7 +23,6 @@ def create_recipe(
     recipe: RecipeBase, database: Annotated[Database, Depends(get_database_connection)]
 ) -> RecipeStored:
     id_ = database.create_recipe(recipe)
-    print("recipe.model_dump():", recipe.model_dump())
 
     return RecipeStored(id_=id_, **recipe.model_dump())
 

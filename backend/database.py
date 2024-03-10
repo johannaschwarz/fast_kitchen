@@ -131,12 +131,13 @@ class MySQLDatabase(Database):
         """
         cursor = self.recipes_database.cursor()
 
-        sql = "INSERT INTO Recipes (Title, Description, RecipeSteps, CookingTime) VALUES (%s, %s, %s, %s)"
+        sql = "INSERT INTO Recipes (Title, Description, RecipeSteps, CookingTime, Portions) VALUES (%s, %s, %s, %s, %s)"
         val = (
             recipe.title,
             recipe.description,
             json.dumps(recipe.steps),
             recipe.cooking_time,
+            recipe.portions,
         )
         cursor.execute(sql, val)
 
@@ -274,12 +275,13 @@ class MySQLDatabase(Database):
 
         cursor = self.recipes_database.cursor()
 
-        sql = "UPDATE Recipes SET Title = %s, Description = %s, RecipeSteps = %s, CoverImage = %s WHERE RecipeID = %s"
+        sql = "UPDATE Recipes SET Title = %s, Description = %s, RecipeSteps = %s, CoverImage = %s, Portions = %s WHERE RecipeID = %s"
         val = (
             recipe.title,
             recipe.description,
             json.dumps(recipe.steps),
             recipe.cover_image,
+            recipe.portions,
             recipe.id_,
         )
 
