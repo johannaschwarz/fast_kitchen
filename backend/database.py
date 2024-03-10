@@ -29,7 +29,7 @@ class Database(ABC):
         """
 
     @abstractmethod
-    def get_recipe(self, recipe_id: int):
+    def get_recipe(self, recipe_id: int) -> Recipe:
         """
         Get a recipe from the database.
 
@@ -159,7 +159,7 @@ class MySQLDatabase(Database):
         """
         cursor = self.recipes_database.cursor()
 
-        sql = "SELECT RecipeID, Title, Description, RecipeSteps, CookingTime, CoverImage FROM Recipes WHERE RecipeID = %s"
+        sql = "SELECT RecipeID, Title, Description, RecipeSteps, CookingTime, CoverImage, Portions FROM Recipes WHERE RecipeID = %s"
         val = (recipe_id,)
 
         cursor.execute(sql, val)
@@ -172,7 +172,7 @@ class MySQLDatabase(Database):
                 f"Recipe with id {recipe_id} not found in database."
             )
 
-        id_, title, description, steps, cooking_time, cover_image = result
+        id_, title, description, steps, cooking_time, cover_image, portions = result
         steps = json.loads(steps)
 
         categories = self.get_categories_by_recipe(id_)
@@ -185,6 +185,7 @@ class MySQLDatabase(Database):
             title=title,
             description=description,
             ingredients=ingredients,
+            portions=portions,
             cooking_time=cooking_time,
             steps=steps,
             categories=categories,

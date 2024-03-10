@@ -41,7 +41,7 @@ function Recipe({ recipe }) {
                 <h2>Ingredients:</h2>
                 <ul>
                     {recipe.ingredients.map((ingredient, index) => (
-                        <li key={index}>{ingredient}: {5 * (!isNaN(ingredientMultiplier) ? ingredientMultiplier : 1)} g</li>
+                        <li key={index}>{ingredient.name}: {ingredient.amount * (!isNaN(ingredientMultiplier) ? ingredientMultiplier : 1)} {ingredient.unit}</li>
                     ))}
                 </ul>
                 <span>Portionen: <input min={1} value={(!isNaN(ingredientMultiplier) ? ingredientMultiplier : "")} onChange={e => setIngredientMultiplier(parseInt(e.target.value))} type='number' /></span>
