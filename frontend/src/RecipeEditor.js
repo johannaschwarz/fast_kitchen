@@ -7,13 +7,13 @@ import Header from "./Header";
 
 function Ingredient({ ingredient, onChangeIngredient, onChangeAmount, onChangeUnit, onDelete }) {
     if (ingredient === null) {
-        ingredient = { name: "", amount: 0, unit: "" , group: ""};
+        ingredient = { name: "", amount: 0, unit: "g" , group: ""};
     }
     return (
         <div className="formRow inlineForm">
             <input type="text" id="ingredient" name="ingredient" placeholder="Ingredient" onChange={onChangeIngredient} value={ingredient.name} />
             <input min="0" type="number" id="amount" name="amount" placeholder="Amount" onChange={onChangeAmount} value={ingredient.amount} />
-            <select id="unit" name="unit" onChange={onChangeUnit} value={ingredient.unit}>
+            <select id="unit" name="unit" onChange={onChangeUnit} value={ingredient.unit} defaultValue={"g"}>
                 <option value="g">g</option>
                 <option value="kg">kg</option>
                 <option value="ml">ml</option>
@@ -31,7 +31,7 @@ const IngredientList = ({ ingredients, setIngredients }) => {
     useEffect(() => {
         // If the last ingredient is filled, add a new empty ingredient
         if (ingredients[ingredients.length - 1].name !== "") {
-            setIngredients([...ingredients, { name: "", amount: 0, unit: "", group: ""}]);
+            setIngredients([...ingredients, { name: "", amount: 0, unit: "g", group: ""}]);
         }
         // If there are two empty ingredients at the end, remove the last one
         else if (ingredients.length > 1 && ingredients[ingredients.length - 2].name === "") {
@@ -123,7 +123,7 @@ const StepsList = ({ steps, setSteps }) => {
 
 function RecipeEditor() {
     const { recipeId } = useParams();
-    const [ingredients, setIngredients] = useState([{ name: "", amount: 0, unit: "" , group: ""}]);
+    const [ingredients, setIngredients] = useState([{ name: "", amount: 0, unit: "g" , group: ""}]);
     const [steps, setSteps] = useState([{ description: "", duration: 0 }]);
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -152,7 +152,7 @@ function RecipeEditor() {
                 setCategories(data.categories.join(", "));
                 setPortions(data.portions);
                 setCookingTime(data.cooking_time);
-                setIngredients(data.ingredients.map(ingredient => ({ name: ingredient, amount: "", unit: "" })));
+                setIngredients(data.ingredients.map(ingredient => ({ name: ingredient.name, amount: ingredient.amount, unit: ingredient.unit })));
                 setSteps(data.steps.map(step => ({ description: step, duration: 0 })));
                 setLoaded(true);
             })
@@ -162,6 +162,7 @@ function RecipeEditor() {
             });
     }, [recipeId]);
 
+    //TODO: add form to upload more images
     const uploadImage = async (file, associatedRecipeId) => {
         const formData = new FormData();
         formData.append('image', file);
