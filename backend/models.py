@@ -34,7 +34,7 @@ class RecipeBase(BaseModel):
     # TODO: add user/creator
 
     title: str
-    description: str
+    description: str | None = None
     portions: int
     ingredients: list[Ingredient]
     cooking_time: int

@@ -29,6 +29,12 @@ class Database(ABC):
         """
 
     @abstractmethod
+    def update_recipe_cover_image(self, recipe_id: int, image_id: int):
+        """
+        Update the cover image for a recipe in the database.
+        """
+
+    @abstractmethod
     def get_recipe(self, recipe_id: int) -> Recipe:
         """
         Get a recipe from the database.
@@ -145,6 +151,16 @@ class MySQLDatabase(Database):
             self.create_ingredient(ingredient, id_)
 
         return id_
+
+    def update_recipe_cover_image(self, recipe_id: int, image_id: int):
+        cursor = self.recipes_database.cursor()
+
+        sql = "UPDATE Recipes SET CoverImage = %s WHERE RecipeID = %s"
+        val = (image_id, recipe_id)
+        cursor.execute(sql, val)
+
+        self.recipes_database.commit()
+        cursor.close()
 
     def get_recipe(self, recipe_id: int) -> Recipe:
         """

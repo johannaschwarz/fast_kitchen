@@ -41,6 +41,27 @@ def create_image(
     return id_
 
 
+@image_router.post("/cover_image/create")
+def create_cover_image(
+    recipe_id: Annotated[int, Body(embed=True)],
+    image: UploadFile,
+    database: Annotated[Database, Depends(get_database_connection)],
+) -> int:
+
+    image = PILImage.open(image.file)
+    image = resize_image(image)
+
+    with io.BytesIO() as output:
+        image.save(output, format="PNG", optimize=True, quality=80)
+        contents = output.getvalue()
+
+    image_model = ImageBase(recipe_id=recipe_id, image=contents)
+    id_ = database.create_image(image_model)
+    database.update_recipe_cover_image(recipe_id, id_)
+
+    return id_
+
+
 @image_router.get("/image/{image_id}")
 def get_image(
     image_id: int, database: Annotated[Database, Depends(get_database_connection)]

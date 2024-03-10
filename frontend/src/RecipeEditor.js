@@ -123,13 +123,14 @@ const StepsList = ({ steps, setSteps }) => {
 
 function RecipeEditor() {
     const { recipeId } = useParams();
-    const [ingredients, setIngredients] = useState([{ name: "", amount: "", unit: "" , group: ""}]);
+    const [ingredients, setIngredients] = useState([{ name: "", amount: 0, unit: "" , group: ""}]);
     const [steps, setSteps] = useState([{ description: "", duration: 0 }]);
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [cookingTime, setCookingTime] = useState(0);
     const [portions, setPortions] = useState(1);
     const [categories, setCategories] = useState("");
+    const [coverImage, setCoverImage] = useState("");
     const [images, setImages] = useState([]);
     const [storing, setStoring] = useState(false);
     const [loaded, setLoaded] = useState(false);
@@ -179,6 +180,24 @@ function RecipeEditor() {
         }
     }
 
+    const uploadCoverImage = async (file, associatedRecipeId) => {
+        const formData = new FormData();
+        formData.append('image', file);
+        formData.append('recipe_id', associatedRecipeId);
+
+        const response = await fetch(API_BASE + 'cover_image/create', {
+            method: 'POST',
+            body: formData,
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            setCoverImage([coverImage, data.filename]);
+        } else {
+            console.error('Cover Image upload failed');
+        }
+    }
+
     const handleSubmit = async (event) => {
         event.preventDefault();
 
@@ -213,10 +232,14 @@ function RecipeEditor() {
             const responseData = await response.json();
             const createdRecipeId = responseData.id_;
 
-            // Upload images
-            if (recipeId !== undefined) {
-                images.forEach(image => uploadImage(image, createdRecipeId));
+            // Upload cover image
+            if (createdRecipeId !== undefined && coverImage !== "") {
+                uploadCoverImage(coverImage, createdRecipeId);
             }
+
+            // if (recipeId !== undefined) {
+            //     images.forEach(image => uploadImage(image, createdRecipeId));
+            // }
 
             console.log('Form submitted successfully');
             return redirect("/recipe/" + createdRecipeId);
@@ -228,6 +251,11 @@ function RecipeEditor() {
     const uploadImageOnChange = async (event) => {
         const file = event.target.files[0];
         setImages([file]);
+    }
+
+    const uploadCoverImageOnChange = async (event) => {
+        const file = event.target.files[0];
+        setCoverImage(file);
     }
 
     return (
@@ -246,7 +274,7 @@ function RecipeEditor() {
                     <label htmlFor="categories">Categories:</label><br />
                     <input type="text" id="categories" name="categories" value={categories} onChange={e => setCategories(e.target.value.replace(/\s+/g, ' '))} required /><br />
                     <label htmlFor="images">Cover Image:</label><br />
-                    <input type="file" id="images" name="images" accept="image/*" onChange={uploadImageOnChange} /><br />
+                    <input type="file" id="cover_image" name="cover_image" accept="image/*" onChange={uploadCoverImageOnChange} /><br />
 
                     <h3>Ingredients:</h3>
                     <div>
