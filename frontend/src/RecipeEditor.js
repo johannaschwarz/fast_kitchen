@@ -271,7 +271,7 @@ function RecipeEditor() {
                     <label htmlFor="description">Description:</label><br />
                     <textarea id="description" name="description" placeholder="Description" value={description} onChange={e => setDescription(e.target.value)} required></textarea><br />
                     <label htmlFor="cookingTime">Cooking Time:</label><br />
-                    <input type="number" id="cookingTime" name="cookingTime" placeholder="Cooking Time" defaultValue={0} required /><br />
+                    <input type="number" id="cookingTime" name="cookingTime" placeholder="Cooking Time" defaultValue={0} onChange={e => setCookingTime(e.target.value)} required /><br />
                     <label htmlFor="categories">Categories:</label><br />
                     <input type="text" id="categories" name="categories" value={categories} onChange={e => setCategories(e.target.value.replace(/\s+/g, ' '))} required /><br />
                     <label htmlFor="images">Cover Image:</label><br />
@@ -281,7 +281,7 @@ function RecipeEditor() {
                     <div>
                         <IngredientList ingredients={ingredients} setIngredients={setIngredients} />
                         <label htmlFor="portions">Portions:</label><br />
-                        <input min="1" type="number" id="portions" name="portions" placeholder="Portions" defaultValue={1} required /><br />
+                        <input min="1" type="number" id="portions" name="portions" placeholder="Portions" defaultValue={1} onChange={e => setPortions(e.target.value)} required /><br />
                     </div>
                     <h3>Steps:</h3>
                     <div>
