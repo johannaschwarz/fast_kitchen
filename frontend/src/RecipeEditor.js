@@ -1,19 +1,33 @@
 import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOutlineOutlined';
+import { Autocomplete, Stack, TextField } from '@mui/material';
+import styled from '@mui/material/styles/styled';
 import React, { useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
 import { redirect, useParams } from "react-router-dom";
 import { API_BASE } from './Config';
 import Header from "./Header";
 
+const VisuallyHiddenInput = styled('input')({
+    clip: 'rect(0 0 0 0)',
+    clipPath: 'inset(50%)',
+    height: 1,
+    overflow: 'hidden',
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    whiteSpace: 'nowrap',
+    width: 1,
+});
+
 function Ingredient({ ingredient, onChangeIngredient, onChangeAmount, onChangeUnit, onDelete }) {
     if (ingredient === null) {
-        ingredient = { name: "", amount: 0, unit: "g" , group: ""};
+        ingredient = { name: "", amount: 0, unit: "g", group: "" };
     }
     return (
         <div className="formRow inlineForm">
             <input type="text" id="ingredient" name="ingredient" placeholder="Ingredient" onChange={onChangeIngredient} value={ingredient.name} />
             <input min="0" type="number" id="amount" name="amount" placeholder="Amount" onChange={onChangeAmount} value={ingredient.amount} />
-            <select id="unit" name="unit" onChange={onChangeUnit} value={ingredient.unit} defaultValue={"g"}>
+            <select id="unit" name="unit" onChange={onChangeUnit} value={ingredient.unit} >
                 <option value="g">g</option>
                 <option value="kg">kg</option>
                 <option value="ml">ml</option>
@@ -31,7 +45,7 @@ const IngredientList = ({ ingredients, setIngredients }) => {
     useEffect(() => {
         // If the last ingredient is filled, add a new empty ingredient
         if (ingredients[ingredients.length - 1].name !== "") {
-            setIngredients([...ingredients, { name: "", amount: 0, unit: "g", group: ""}]);
+            setIngredients([...ingredients, { name: "", amount: 0, unit: "g", group: "" }]);
         }
         // If there are two empty ingredients at the end, remove the last one
         else if (ingredients.length > 1 && ingredients[ingredients.length - 2].name === "") {
@@ -123,17 +137,32 @@ const StepsList = ({ steps, setSteps }) => {
 
 function RecipeEditor() {
     const { recipeId } = useParams();
-    const [ingredients, setIngredients] = useState([{ name: "", amount: 0, unit: "g" , group: ""}]);
+    const [ingredients, setIngredients] = useState([{ name: "", amount: 0, unit: "g", group: "" }]);
     const [steps, setSteps] = useState([{ description: "", duration: 0 }]);
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
-    const [cookingTime, setCookingTime] = useState(0);
+    const [cookingTime, setCookingTime] = useState(20);
     const [portions, setPortions] = useState(1);
-    const [categories, setCategories] = useState("");
+    const [categories, setCategories] = useState([]);
     const [coverImage, setCoverImage] = useState("");
     const [images, setImages] = useState([]);
     const [storing, setStoring] = useState(false);
     const [loaded, setLoaded] = useState(false);
+
+    const defaultFilters = ['Vegan', 'Vegetarian', 'Quick & Easy'];
+    const [filters, setFilters] = useState(defaultFilters);
+
+    useEffect(() => {
+        fetch(API_BASE + 'category/all')
+            .then((response) => response.json())
+            .then((all_categories) => {
+                let newFilters = [...new Set([...defaultFilters, ...all_categories])];
+                setFilters(newFilters);
+            })
+            .catch((err) => {
+                console.log(err.message);
+            });
+    });
 
     useEffect(() => {
         if (recipeId === undefined) {
@@ -149,7 +178,7 @@ function RecipeEditor() {
             .then((data) => {
                 setTitle(data.title);
                 setDescription(data.description);
-                setCategories(data.categories.join(", "));
+                setCategories(data.categories);
                 setPortions(data.portions);
                 setCookingTime(data.cooking_time);
                 setIngredients(data.ingredients.map(ingredient => ({ name: ingredient.name, amount: ingredient.amount, unit: ingredient.unit })));
@@ -200,8 +229,8 @@ function RecipeEditor() {
         if (recipeId !== undefined)
             data.id_ = recipeId;
 
-            if (images.length > 0)
-                data.images = images;
+        if (images.length > 0)
+            data.images = images;
 
         console.log(data)
 
@@ -244,30 +273,52 @@ function RecipeEditor() {
             <div className={"content " + (storing || (recipeId !== undefined && !loaded) ? 'hidden' : '')}>
                 <h1>{recipeId === undefined ? "Create a new recipe" : "Edit your recipe"}</h1>
                 <form onSubmit={handleSubmit}>
-                    {/* TODO: consider using https://mui.com/material-ui/react-text-field/ instead of input */}
-                    <label htmlFor="title">Title:</label><br />
-                    <input type="text" id="title" name="title" placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} required /><br />
-                    <label htmlFor="description">Description:</label><br />
-                    <textarea id="description" name="description" placeholder="Description" value={description} onChange={e => setDescription(e.target.value)} required></textarea><br />
-                    <label htmlFor="cookingTime">Cooking Time:</label><br />
-                    <input type="number" id="cookingTime" name="cookingTime" placeholder="Cooking Time" defaultValue={0} onChange={e => setCookingTime(e.target.value)} required /><br />
-                    <label htmlFor="categories">Categories:</label><br />
-                    <input type="text" id="categories" name="categories" value={categories} onChange={e => setCategories(e.target.value.replace(/\s+/g, ' '))} required /><br />
-                    <label htmlFor="images">Cover Image:</label><br />
-                    <input type="file" id="cover_image" name="cover_image" accept="image/*" onChange={uploadCoverImageOnChange} /><br />
+                    <Stack>
+                        {/* TODO: consider using https://mui.com/material-ui/react-text-field/ instead of input */}
+                        <TextField id="title" name="title" label="Title" value={title} onChange={e => setTitle(e.target.value)} required /><br />
+                        <TextField id="description" name="description" label="Description" value={description} onChange={e => setDescription(e.target.value)} required /><br />
+                        <TextField id="cookingTime" name="cookingTime" label="Cooking time in minutes" type="number" value={cookingTime} onChange={e => setCookingTime(e.target.value)} required /><br />
+                        <Autocomplete
+                            disablePortal
+                            id="combo-box-demo"
+                            options={filters}
+                            sx={{ width: 300 }}
+                            freeSolo
+                            multiple
+                            value={categories}
+                            onChange={(_, value) => { setCategories(value) }}
+                            renderInput={(params) => <TextField {...params} label="Categories" />}
+                        /><br />
 
-                    <h3>Ingredients:</h3>
-                    <div>
-                        <IngredientList ingredients={ingredients} setIngredients={setIngredients} />
-                        <label htmlFor="portions">Portions:</label><br />
-                        <input min="1" type="number" id="portions" name="portions" placeholder="Portions" defaultValue={1} onChange={e => setPortions(e.target.value)} required /><br />
-                    </div>
-                    <h3>Steps:</h3>
-                    <div>
-                        <StepsList steps={steps} setSteps={setSteps} />
-                    </div>
-                    <br />
-                    <button type="submit">{recipeId === undefined ? "Create" : "Change"}</button><br />
+                        <label class="btn" htmlFor="cover_image">Upload cover image
+                            {/* <input type="file" id="cover_image" name="cover_image" accept="image/*" onChange={uploadCoverImageOnChange} /> */}
+                            <VisuallyHiddenInput type="file" id="cover_image" name="cover_image" accept="image/*" onChange={uploadCoverImageOnChange} />
+                        </label><br />
+                        <span id="cover-image-chosen">{coverImage && document.getElementById("cover_image").files.length > 0 ? "Cover-Image: " + document.getElementById("cover_image").files[0].name : "No file chosen"}</span><br />
+                        {/* <Button
+                            component="label"
+                            role={undefined}
+                            variant="contained"
+                            tabIndex={-1}
+                            startIcon={<CloudUploadIcon />}
+                        >
+                            Upload cover image
+                            <VisuallyHiddenInput type="file" id="cover_image" name="cover_image" accept="image/*" onChange={uploadCoverImageOnChange} />
+                        </Button> */}
+
+                        <h3>Ingredients:</h3>
+                        <div>
+                            <IngredientList ingredients={ingredients} setIngredients={setIngredients} />
+                            <label htmlFor="portions">Portions:</label><br />
+                            <input min="1" type="number" id="portions" name="portions" placeholder="Portions" onChange={e => setPortions(e.target.value)} required /><br />
+                        </div>
+                        <h3>Steps:</h3>
+                        <div>
+                            <StepsList steps={steps} setSteps={setSteps} />
+                        </div>
+                        <br />
+                        <button type="submit">{recipeId === undefined ? "Create" : "Change"}</button><br />
+                    </Stack>
                 </form>
             </div>
 

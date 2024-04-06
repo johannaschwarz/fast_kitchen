@@ -81,7 +81,9 @@ textarea {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-button {
+button,
+.btn {
+  text-align: center;
   font-size: 16px;
   font-weight: bold;
   color: white;
@@ -92,7 +94,8 @@ button {
   cursor: pointer;
 }
 
-button:hover {
+button:hover,
+.btn:hover {
   background-color: var(--secondary-color);
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }

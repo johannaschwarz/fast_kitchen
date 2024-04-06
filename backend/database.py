@@ -34,9 +34,13 @@ class Database(ABC):
         """
 
     @abstractmethod
-    def get_all_recipes(self):
+    def get_all_recipes(
+        self,
+        search_string: str | None = None,
+        filter_categories: list[str] | None = None,
+    ) -> list[RecipeListing]:
         """
-        Get all recipes from the database.
+        Get all recipes that respect the given filters from the database.
 
         Returns:
             A list of recipes.
@@ -80,6 +84,15 @@ class Database(ABC):
 
         Returns:
             The image object.
+        """
+
+    @abstractmethod
+    def get_categories(self) -> list[str]:
+        """
+        Get all categories from the database.
+
+        Returns:
+            A list of categories.
         """
 
 
@@ -183,16 +196,37 @@ class MySQLDatabase(Database):
             images=images,
         )
 
-    def get_all_recipes(self) -> list[RecipeListing]:
+    def get_all_recipes(
+        self,
+        search_string: str | None = None,
+        filter_categories: list[str] | None = None,
+    ) -> list[RecipeListing]:
         """
         Get all recipes from the database.
 
         Returns:
             A list of recipes.
         """
-        cursor = self.recipes_database.cursor()
+        if not search_string:
+            search_string = ""
 
-        cursor.execute("SELECT RecipeID, Title, Description, CoverImage FROM Recipes")
+        cursor = self.recipes_database.cursor(prepared=True)
+
+        if filter_categories:
+            cursor.execute(
+                f"SELECT DISTINCT r.RecipeID, r.Title, r.Description, r.CoverImage FROM Recipes r, Categories c WHERE (r.Title LIKE CONCAT('%', %s, '%') OR r.Description LIKE CONCAT('%', %s, '%')) AND c.RecipeID = r.RecipeID AND c.Category IN ({', '.join(['%s'] * len(filter_categories))}) GROUP BY r.RecipeID HAVING COUNT(c.Category) = %s;",
+                (
+                    search_string,
+                    search_string,
+                    *filter_categories,
+                    len(filter_categories),
+                ),
+            )
+        else:
+            cursor.execute(
+                "SELECT RecipeID, Title, Description, CoverImage FROM Recipes WHERE Title LIKE CONCAT('%', %s, '%') OR Description LIKE CONCAT('%', %s, '%')",
+                (search_string, search_string),
+            )
         result = cursor.fetchall()
         cursor.close()
 
@@ -594,6 +628,24 @@ class MySQLDatabase(Database):
             )
 
         cursor.close()
+
+    def get_categories(self) -> list[str]:
+        """
+        Get all categories from the database.
+
+        Returns:
+            A list of categories.
+        """
+
+        cursor = self.recipes_database.cursor()
+
+        sql = "SELECT DISTINCT Category FROM Categories"
+        cursor.execute(sql)
+
+        result = cursor.fetchall()
+
+        cursor.close()
+        return [category for category, in result]
 
     def _create_ingredient(self, ingredient: Ingredient, recipe_id: int):
         """
