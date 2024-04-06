@@ -17,7 +17,7 @@ function Filters({ setFilter }) {
             .catch((err) => {
                 console.log(err.message);
             });
-    }, []);
+    });
 
     return (
         <div className="filters">
