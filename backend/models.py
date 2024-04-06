@@ -42,7 +42,7 @@ class RecipeBase(BaseModel):
     cooking_time: int
     steps: list["RecipeStep"]
     categories: list[str]
-    images: list[int] | None = None
+    gallery_images: list[int] | None = None
     cover_image: int | None = None
 
 
