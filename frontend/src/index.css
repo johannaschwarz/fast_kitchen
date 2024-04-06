@@ -25,6 +25,14 @@ header {
   justify-items: center;
 }
 
+footer {
+  text-align: center;
+  margin-top: 50px;
+  padding: 20px;
+  color: gray;
+}
+
+
 h1,
 h2,
 h3 {

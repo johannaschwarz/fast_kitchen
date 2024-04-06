@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from "react-router-dom";
 import Filters from './Filters.js';
 import Header from './Header.js';
 import Recipes from './Recipes.js';
@@ -20,6 +21,7 @@ function Main() {
       <div className='content'>
         <Filters setFilter={setFilter} />
         <Recipes filters={filters} />
+        <footer><Link to="/legalnotice">Impressum</Link></footer>
       </div>
     </div>
   );
