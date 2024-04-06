@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 
 import mysql.connector
 from exceptions import NotFoundException
-from models import Ingredient, Recipe, RecipeBase, RecipeListing, UnitEnum
+from models import Ingredient, Recipe, RecipeBase, RecipeListing, RecipeStep, UnitEnum
 from pydantic import ValidationError
 from utils import load_config, load_credentials
 
@@ -108,11 +108,10 @@ class MySQLDatabase(Database):
         """
         cursor = self.recipes_database.cursor()
 
-        sql = "INSERT INTO Recipes (Title, Description, RecipeSteps, CookingTime, CoverImage, Portions) VALUES (%s, %s, %s, %s, %s, %s)"
+        sql = "INSERT INTO Recipes (Title, Description, CookingTime, CoverImage, Portions) VALUES (%s, %s, %s, %s, %s)"
         val = (
             recipe.title,
             recipe.description,
-            json.dumps(recipe.steps),
             recipe.cooking_time,
             recipe.cover_image,
             recipe.portions,
@@ -131,6 +130,9 @@ class MySQLDatabase(Database):
 
         for image_id in recipe.images:
             self._add_recipe_to_image(id_, image_id)
+
+        for step in recipe.steps:
+            self._create_recipe_step(step, id_)
 
         return id_
 
@@ -246,11 +248,10 @@ class MySQLDatabase(Database):
 
         cursor = self.recipes_database.cursor()
 
-        sql = "UPDATE Recipes SET Title = %s, Description = %s, RecipeSteps = %s, CoverImage = %s, Portions = %s WHERE RecipeID = %s"
+        sql = "UPDATE Recipes SET Title = %s, Description = %s, CoverImage = %s, Portions = %s WHERE RecipeID = %s"
         val = (
             recipe.title,
             recipe.description,
-            json.dumps(recipe.steps),
             recipe.cover_image,
             recipe.portions,
             recipe.id_,
@@ -261,9 +262,10 @@ class MySQLDatabase(Database):
 
         cursor.close()
 
-        self.update_categories_by_recipe(recipe.id_, recipe.categories)
-        self._update_ingredients_by_recipe(recipe.id_, recipe.ingredients)
+        self._update_categories_by_recipe(recipe)
+        self._update_ingredients_by_recipe(recipe)
         self._update_images_by_recipe(recipe)
+        self._update_recipe_steps_by_recipe(recipe)
 
     def delete_recipe(self, recipe_id: int) -> bool:
         """
@@ -288,6 +290,41 @@ class MySQLDatabase(Database):
             )
 
         cursor.close()
+
+    def _create_recipe_step(self, recipe_step: RecipeStep, recipe_id: int):
+        """
+        Create a new recipe step in the database.
+
+        Returns:
+            The ID of the new recipe step.
+        """
+
+        cursor = self.recipes_database.cursor()
+
+        sql = "INSERT INTO RecipeSteps (RecipeID, OrderID, Step) VALUES (%s, %s, %s)"
+        val = (recipe_id, recipe_step.order_id, recipe_step.step)
+
+        cursor.execute(sql, val)
+        self.recipes_database.commit()
+
+        id_ = cursor.lastrowid
+
+        cursor.close()
+
+        for image_id in recipe_step.images:
+            self._add_recipe_step_to_image(id_, image_id)
+
+    def _update_recipe_steps_by_recipe(self, recipe: Recipe):
+        """Update the steps for a recipe in the database."""
+        cursor = self.recipes_database.cursor()
+
+        sql = "Delete FROM RecipeSteps WHERE RecipeID = %s"
+        val = (recipe.id_,)
+        cursor.execute(sql, val)
+        self.recipes_database.commit()
+
+        for step in recipe.steps:
+            self._create_recipe_step(step, recipe.id_)
 
     def create_image(self, image: bytes) -> int:
         """
@@ -397,6 +434,20 @@ class MySQLDatabase(Database):
 
         cursor.close()
 
+    def _add_recipe_step_to_image(self, step_id: int, image_id: int):
+        """
+        Add a recipe step to an image in the database.
+        """
+        cursor = self.recipes_database.cursor()
+
+        sql = "UPDATE Images SET StepID = %s WHERE ImageID = %s"
+        val = (step_id, image_id)
+
+        cursor.execute(sql, val)
+        self.recipes_database.commit()
+
+        cursor.close()
+
     def _delete_image(self, image_id: int):
         """
         Delete an image from the database.
@@ -455,7 +506,7 @@ class MySQLDatabase(Database):
         cursor.close()
         return [category for category, in result]
 
-    def update_categories_by_recipe(self, recipe_id: int, categories: list[str]):
+    def _update_categories_by_recipe(self, recipe: Recipe):
         """
         Update the categories for a recipe in the database.
         """
@@ -463,13 +514,13 @@ class MySQLDatabase(Database):
         cursor = self.recipes_database.cursor()
 
         sql = "DELETE FROM Categories WHERE RecipeID = %s"
-        val = (recipe_id,)
+        val = (recipe.id_,)
 
         cursor.execute(sql, val)
         self.recipes_database.commit()
 
-        for category in categories:
-            self.create_category(category, recipe_id)
+        for category in recipe.categories:
+            self.create_category(category, recipe.id_)
 
         cursor.close()
 
@@ -541,9 +592,7 @@ class MySQLDatabase(Database):
             for ingredient, unit, amount, group in result
         ]
 
-    def _update_ingredients_by_recipe(
-        self, recipe_id: int, ingredients: list[Ingredient]
-    ):
+    def _update_ingredients_by_recipe(self, recipe: Recipe):
         """
         Update the ingredients for a recipe in the database.
         """
@@ -551,13 +600,13 @@ class MySQLDatabase(Database):
         cursor = self.recipes_database.cursor()
 
         sql = "DELETE FROM Ingredients WHERE RecipeID = %s"
-        val = (recipe_id,)
+        val = (recipe.id_,)
 
         cursor.execute(sql, val)
         self.recipes_database.commit()
 
-        for ingredient in ingredients:
-            self._create_ingredient(ingredient, recipe_id)
+        for ingredient in recipe.ingredients:
+            self._create_ingredient(ingredient, recipe.id_)
 
         cursor.close()
 
