@@ -280,7 +280,6 @@ function RecipeEditor() {
                         <TextField id="cookingTime" name="cookingTime" label="Cooking time in minutes" type="number" value={cookingTime} onChange={e => setCookingTime(e.target.value)} required /><br />
                         <Autocomplete
                             disablePortal
-                            id="combo-box-demo"
                             options={filters}
                             sx={{ width: 300 }}
                             freeSolo
@@ -290,21 +289,10 @@ function RecipeEditor() {
                             renderInput={(params) => <TextField {...params} label="Categories" />}
                         /><br />
 
-                        <label class="btn" htmlFor="cover_image">Upload cover image
-                            {/* <input type="file" id="cover_image" name="cover_image" accept="image/*" onChange={uploadCoverImageOnChange} /> */}
+                        <label className="btn" htmlFor="cover_image">Upload cover image
                             <VisuallyHiddenInput type="file" id="cover_image" name="cover_image" accept="image/*" onChange={uploadCoverImageOnChange} />
                         </label><br />
                         <span id="cover-image-chosen">{coverImage && document.getElementById("cover_image").files.length > 0 ? "Cover-Image: " + document.getElementById("cover_image").files[0].name : "No file chosen"}</span><br />
-                        {/* <Button
-                            component="label"
-                            role={undefined}
-                            variant="contained"
-                            tabIndex={-1}
-                            startIcon={<CloudUploadIcon />}
-                        >
-                            Upload cover image
-                            <VisuallyHiddenInput type="file" id="cover_image" name="cover_image" accept="image/*" onChange={uploadCoverImageOnChange} />
-                        </Button> */}
 
                         <h3>Ingredients:</h3>
                         <div>

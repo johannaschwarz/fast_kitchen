@@ -53,12 +53,15 @@ a {
   height: 80px;
 }
 
-#search-bar {
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 30px;
+.search-bar {
   width: 100%;
   grid-column: 2/5;
+}
+
+.search-result {
+  padding: 10px;
+  width: 100%;
+  display: inline-block;
 }
 
 #create-recipe {
@@ -70,6 +73,7 @@ a {
   flex-wrap: wrap;
   margin-bottom: 20px;
 }
+
 
 /* INPUTS, FORMS */
 
@@ -154,6 +158,10 @@ button:hover,
 
 .link:hover {
   color: #49a1ff;
+}
+
+.w100 {
+  width: 100%;
 }
 
 @media screen and (max-width: 1200px) {
