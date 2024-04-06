@@ -11,7 +11,7 @@ function Filters({ setFilter }) {
         fetch(API_BASE + 'category/all')
             .then((response) => response.json())
             .then((categories) => {
-                let newFilters = [...defaultFilters, ...categories];
+                let newFilters = [...new Set([...defaultFilters, ...categories])];
                 setFilters(newFilters);
             })
             .catch((err) => {
