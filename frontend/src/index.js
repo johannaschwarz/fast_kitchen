@@ -5,6 +5,7 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import './index.css';
+import LegalNotice from './LegalNotice.js';
 import Main from './Main.js';
 import RecipePage from './Recipe.js';
 import RecipeEditor from './RecipeEditor.js';
@@ -26,6 +27,10 @@ const router = createBrowserRouter([
   {
     path: "edit/:recipeId",
     element: <RecipeEditor />
+  },
+  {
+    path: "legalnotice",
+    element: <LegalNotice />
   }
 ]);
 

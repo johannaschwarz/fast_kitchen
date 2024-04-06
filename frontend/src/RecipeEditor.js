@@ -3,7 +3,7 @@ import { Autocomplete, Stack, TextField } from '@mui/material';
 import styled from '@mui/material/styles/styled';
 import React, { useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
-import { redirect, useParams } from "react-router-dom";
+import { Link, redirect, useParams } from "react-router-dom";
 import { API_BASE } from './Config';
 import Header from "./Header";
 
@@ -339,6 +339,7 @@ function RecipeEditor() {
                     wrapperClass=""
                 />
             </div>
+            <footer><Link to="/legalnotice">Impressum</Link></footer>
         </div>
     )
 }

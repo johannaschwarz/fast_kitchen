@@ -120,6 +120,7 @@ function RecipePage() {
                     wrapperClass=""
                 />
             </div>
+            <footer><Link to="/legalnotice">Impressum</Link></footer>
         </div>
     );
 }
