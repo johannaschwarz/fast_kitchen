@@ -40,7 +40,7 @@ class RecipeBase(BaseModel):
     portions: int
     ingredients: list[Ingredient]
     cooking_time: int
-    steps: list[str]
+    steps: list["RecipeStep"]
     categories: list[str]
     images: list[int] | None = None
     cover_image: int | None = None
@@ -61,6 +61,14 @@ class RecipeListing(BaseModel):
     categories: list[str]
     cover_image: int | None = None
     rating: float | None = None
+
+
+class RecipeStep(BaseModel):
+    """A recipe step model."""
+
+    order_id: int
+    step: str
+    images: list[int] | None = None
 
 
 class ImageID(BaseModel):
