@@ -16,9 +16,7 @@ function Recipes({ filters, search }) {
             let params = new URLSearchParams()
 
             if (filters != null && filters.length > 0) {
-                filters.map((filter) => {
-                    params.append("categories", filter)
-                })
+                filters.map((filter) => params.append("categories", filter))
             }
             if (search != null && search.length > 0) {
                 params.append("search", search)
