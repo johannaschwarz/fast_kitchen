@@ -1,9 +1,16 @@
 // Filter.js
-import React from 'react';
+import React, { useState } from 'react';
 import './Filter.css';
 
-function Filter({ label }) {
-    return <span className="filter-chip">{label}</span>;
+function Filter({ label, setFilter }) {
+    const [active, setActive] = useState(false);
+
+    const handleClick = () => {
+        setActive(!active);
+        setFilter(label, !active);
+    };
+
+    return <span className={"filter-chip" + (active ? " active" : "")} onClick={handleClick}>{label}</span>;
 }
 
 export default Filter;

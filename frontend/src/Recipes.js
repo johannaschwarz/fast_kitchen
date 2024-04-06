@@ -7,20 +7,43 @@ import RecipeCard from './RecipeCard';
 
 import './Recipes.css';
 
-function Recipes() {
-    const [recipes, setRecipies] = useState(null);
+function Recipes({ filters, search }) {
+    const [recipes, setRecipies] = useState(null)
 
     useEffect(() => {
-        fetch(API_BASE + 'recipe/all')
-            .then((response) => response.json())
-            .then((data) => {
-                console.log(data);
-                setRecipies(data);
-            })
-            .catch((err) => {
-                console.log(err.message);
-            });
-    }, []);
+        if ((filters != null && filters.length > 0) || (search != null && search.length > 0)) {
+            setRecipies(null)
+            let params = new URLSearchParams()
+
+            if (filters != null && filters.length > 0) {
+                filters.map((filter) => {
+                    params.append("categories", filter)
+                })
+            }
+            if (search != null && search.length > 0) {
+                params.append("search", search)
+            }
+
+            fetch(API_BASE + 'recipe/filtered?' + new URLSearchParams(params))
+                .then((response) => response.json())
+                .then((data) => {
+                    setRecipies(data)
+                })
+                .catch((err) => {
+                    console.log(err.message)
+                });
+        } else {
+            setRecipies(null);
+            fetch(API_BASE + 'recipe/all')
+                .then((response) => response.json())
+                .then((data) => {
+                    setRecipies(data)
+                })
+                .catch((err) => {
+                    console.log(err.message)
+                });
+        }
+    }, [filters, search]);
 
     return (
         <div>
@@ -31,7 +54,7 @@ function Recipes() {
             </section>
 
             {recipes != null && recipes.length === 0 && <div>
-                <p>There are no recipes yet, <Link className='link' to="/create">create the first one</Link>!</p>
+                <p>There are no recipes{filters != null || search != null ? " with those properties" : ""} yet, <Link className='link' to="/create">create the first one</Link>!</p>
             </div>}
 
             <div style={{
@@ -48,8 +71,7 @@ function Recipes() {
                     radius="9"
                     ariaLabel="three-dots-loading"
                     wrapperStyle={{}}
-                    wrapperClass=""
-                />
+                    wrapperClass="" />
             </div>
         </div>
     );

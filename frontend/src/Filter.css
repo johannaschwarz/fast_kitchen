@@ -5,4 +5,11 @@
     margin: 5px;
     cursor: pointer;
     font-size: 14px;
+    user-select: none;
+}
+
+.filter-chip.active {
+    background-color: #b4c2b3;
+    color: white;
+    font-weight: bold;
 }
