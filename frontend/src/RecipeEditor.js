@@ -154,6 +154,8 @@ function RecipeEditor() {
                 setCookingTime(data.cooking_time);
                 setIngredients(data.ingredients.map(ingredient => ({ name: ingredient.name, amount: ingredient.amount, unit: ingredient.unit })));
                 setSteps(data.steps.map(step => ({ description: step, duration: 0 })));
+                setImages(data.images);
+                setCoverImage(data.cover_image);
                 setLoaded(true);
             })
             .catch((err) => {
@@ -163,10 +165,9 @@ function RecipeEditor() {
     }, [recipeId]);
 
     //TODO: add form to upload more images
-    const uploadImage = async (file, associatedRecipeId) => {
+    const uploadImage = async (file) => {
         const formData = new FormData();
         formData.append('image', file);
-        formData.append('recipe_id', associatedRecipeId);
 
         const response = await fetch(API_BASE + 'image/create', {
             method: 'POST',
@@ -175,27 +176,10 @@ function RecipeEditor() {
 
         if (response.ok) {
             const data = await response.json();
-            setImages([...images, data.filename]);
+            setImages([...images, data.id_]);
+            return data.id_;
         } else {
             console.error('Image upload failed');
-        }
-    }
-
-    const uploadCoverImage = async (file, associatedRecipeId) => {
-        const formData = new FormData();
-        formData.append('image', file);
-        formData.append('recipe_id', associatedRecipeId);
-
-        const response = await fetch(API_BASE + 'cover_image/create', {
-            method: 'POST',
-            body: formData,
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            setCoverImage([coverImage, data.filename]);
-        } else {
-            console.error('Cover Image upload failed');
         }
     }
 
@@ -216,6 +200,9 @@ function RecipeEditor() {
         if (recipeId !== undefined)
             data.id_ = recipeId;
 
+            if (images.length > 0)
+                data.images = images;
+
         console.log(data)
 
         // Post form data
@@ -233,15 +220,6 @@ function RecipeEditor() {
             const responseData = await response.json();
             const createdRecipeId = responseData.id_;
 
-            // Upload cover image
-            if (createdRecipeId !== undefined && coverImage !== "") {
-                uploadCoverImage(coverImage, createdRecipeId);
-            }
-
-            // if (recipeId !== undefined) {
-            //     images.forEach(image => uploadImage(image, createdRecipeId));
-            // }
-
             console.log('Form submitted successfully');
             return redirect("/recipe/" + createdRecipeId);
         } else {
@@ -256,7 +234,8 @@ function RecipeEditor() {
 
     const uploadCoverImageOnChange = async (event) => {
         const file = event.target.files[0];
-        setCoverImage(file);
+        const id_ = uploadImage(file);
+        setCoverImage(id_);
     }
 
     return (

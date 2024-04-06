@@ -4,6 +4,8 @@ from pydantic import BaseModel
 
 
 class UnitEnum(StrEnum):
+    """Enum for units of measurement."""
+
     G = "g"
     KG = "kg"
     ML = "ml"
@@ -40,19 +42,14 @@ class RecipeBase(BaseModel):
     cooking_time: int
     steps: list[str]
     categories: list[str]
-
-
-class RecipeStored(RecipeBase):
-    """A recipe how it is represented in the database."""
-
-    id_: int = -1
+    images: list[int] | None = None
     cover_image: int | None = None
 
 
-class Recipe(RecipeStored):
-    """A complete recipe model with images."""
+class Recipe(RecipeBase):
+    """A recipe with all attributes."""
 
-    images: list[int] | None = None
+    id_: int = -1
 
 
 class RecipeListing(BaseModel):
@@ -66,8 +63,7 @@ class RecipeListing(BaseModel):
     rating: float | None = None
 
 
-class ImageBase(BaseModel):
-    """An image model."""
+class ImageID(BaseModel):
+    """An image model with an id."""
 
-    recipe_id: int
-    image: bytes
+    id_: int = -1
