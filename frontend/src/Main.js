@@ -6,6 +6,7 @@ import Recipes from './Recipes.js';
 
 function Main() {
   const [filters, setFilters] = useState([]);
+  const [search, setSearch] = useState("");
 
   const setFilter = (label, filter) => {
     if (!filter) {
@@ -17,10 +18,10 @@ function Main() {
 
   return (
     <div className="Main">
-      <Header />
+      <Header setSearchInput={setSearch} />
       <div className='content'>
         <Filters setFilter={setFilter} />
-        <Recipes filters={filters} />
+        <Recipes filters={filters} search={search} />
         <footer><Link to="/legalnotice">Impressum</Link></footer>
       </div>
     </div>
