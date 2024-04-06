@@ -2,7 +2,7 @@ from typing import Annotated, Optional
 
 from database import Database, MySQLDatabase
 from exceptions import NotFoundException, UpdateFailedException
-from fastapi import Body, Depends, HTTPException, status
+from fastapi import Body, Depends, HTTPException, Query, status
 from fastapi.routing import APIRouter
 from models import Recipe, RecipeBase, RecipeListing
 from pydantic import ValidationError
@@ -52,8 +52,8 @@ def get_all_recipes(
 def get_filtered_recipes(
     database: Annotated[Database, Depends(get_database_connection)],
     categories: Annotated[
-        Optional[list[str]],
-        Body(
+        list[str],
+        Query(
             title="Categories",
             description="A list of categories to filter recipes by",
             example=["Asian", "Breakfast"],
@@ -61,14 +61,14 @@ def get_filtered_recipes(
     ] = None,
     search: Annotated[
         str,
-        Body(
+        Query(
             title="Search string",
             description="A custom search string to filter recipes by",
             example="Spaghetti",
         ),
     ] = None,
 ) -> list[RecipeListing]:
-    return database.get_all_recipes()
+    return database.get_all_recipes(search_string=search, filter_categories=categories)
 
 
 @recipe_router.put("/recipe/{recipe_id}")
