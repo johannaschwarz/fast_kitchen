@@ -149,7 +149,7 @@ class MySQLDatabase(Database):
         """
         cursor = self.recipes_database.cursor()
 
-        sql = "SELECT RecipeID, Title, Description, RecipeSteps, CookingTime, CoverImage, Portions FROM Recipes WHERE RecipeID = %s"
+        sql = "SELECT RecipeID, Title, Description, CookingTime, CoverImage, Portions FROM Recipes WHERE RecipeID = %s"
         val = (recipe_id,)
 
         cursor.execute(sql, val)
@@ -162,12 +162,12 @@ class MySQLDatabase(Database):
                 f"Recipe with id {recipe_id} not found in database."
             )
 
-        id_, title, description, steps, cooking_time, cover_image, portions = result
-        steps = json.loads(steps)
+        id_, title, description, cooking_time, cover_image, portions = result
 
         categories = self.get_categories_by_recipe(id_)
         ingredients = self._get_ingredients_by_recipe(id_)
         images = self._get_images_by_recipe(id_)
+        steps = self._get_recipe_steps_by_recipe(id_)
 
         cursor.close()
         return Recipe(
@@ -314,6 +314,33 @@ class MySQLDatabase(Database):
         for image_id in recipe_step.images:
             self._add_recipe_step_to_image(id_, image_id)
 
+    def _get_recipe_steps_by_recipe(self, recipe_id: int) -> list[RecipeStep]:
+        """
+        Get all recipe steps for a recipe from the database.
+
+        Returns:
+            A list of recipe steps.
+        """
+
+        cursor = self.recipes_database.cursor()
+
+        sql = "SELECT StepID, OrderID, Step FROM RecipeSteps WHERE RecipeID = %s"
+        val = (recipe_id,)
+
+        cursor.execute(sql, val)
+
+        result = cursor.fetchall()
+
+        cursor.close()
+
+        steps = []
+
+        for step_id, order_id, step in result:
+            images = self._get_images_by_recipe_step(step_id)
+            steps.append(RecipeStep(order_id=order_id, step=step, images=images))
+
+        return steps
+
     def _update_recipe_steps_by_recipe(self, recipe: Recipe):
         """Update the steps for a recipe in the database."""
         cursor = self.recipes_database.cursor()
@@ -447,6 +474,26 @@ class MySQLDatabase(Database):
         self.recipes_database.commit()
 
         cursor.close()
+
+    def _get_images_by_recipe_step(self, step_id: int) -> list[int]:
+        """
+        Get all images for a recipe step from the database.
+
+        Returns:
+            A list of images.
+        """
+
+        cursor = self.recipes_database.cursor()
+
+        sql = "SELECT ImageID FROM Images WHERE StepID = %s"
+        val = (step_id,)
+
+        cursor.execute(sql, val)
+
+        result = cursor.fetchall()
+
+        cursor.close()
+        return [image_id for (image_id,) in result]
 
     def _delete_image(self, image_id: int):
         """
