@@ -3,7 +3,8 @@ import { ThreeDots } from 'react-loader-spinner';
 import { Link, useParams } from 'react-router-dom';
 import Carousel from 'react-material-ui-carousel';
 import { API_BASE } from './Config';
-
+import ImageList from '@mui/material/ImageList';
+import ImageListItem from '@mui/material/ImageListItem';
 import Header from './Header.js';
 
 import './Recipe.css';
@@ -37,8 +38,8 @@ function Recipe({ recipe }) {
             <div className='imageCard'>
                 {recipe.gallery_images.length > 0 &&
                     <Carousel>
-                        {gallery_images.map((image, _) =>
-                            <img class="carousel-image" src={API_BASE + "image/" + image} alt={recipe.name} />
+                        {gallery_images.map((image) =>
+                            <img className="carousel-image" src={API_BASE + "image/" + image} alt={recipe.name} />
                         )}
                     </Carousel>
                 }
@@ -67,9 +68,11 @@ function Recipe({ recipe }) {
                             <div className="stepCounterBottomLine"></div>
                         </div>
                         <div className='imageCard recipeStepContent'>
-                            {step.images.map((image, _) => (
-                                <img src={API_BASE + "image/" + image} alt={"step image"} />)
-                            )}
+                            <Carousel>
+                                {step.images.map((image) => (
+                                        <img className="carousel-image" src={API_BASE + "image/" + image} alt={"step" + index + "image"} />
+                                ))}
+                            </Carousel>
                             <span className="instructionText">{step.step}</span>
                         </div>
                     </div>
