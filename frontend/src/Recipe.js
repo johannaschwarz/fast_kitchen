@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
 import { Link, useParams } from 'react-router-dom';
-
+import Carousel from 'react-material-ui-carousel';
 import { API_BASE } from './Config';
 
 import Header from './Header.js';
@@ -10,7 +10,6 @@ import './Recipe.css';
 
 function Recipe({ recipe }) {
     const [ingredientMultiplier, setIngredientMultiplier] = useState(1);
-    const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [gallery_images, setGalleryImages] = useState([]);
 
     useEffect(() => {
@@ -33,28 +32,15 @@ function Recipe({ recipe }) {
         }
     }
 
-    const getGalleryImages = () => {
-        setGalleryImages(recipe.gallery_images);
-    }
-
-    const nextImage = () => {
-        setCurrentImageIndex((currentImageIndex + 1) % gallery_images.length);
-    };
-
-    const prevImage = () => {
-        setCurrentImageIndex((currentImageIndex - 1 + gallery_images.length) % gallery_images.length);
-    };
-
-
     return (
         <div>
             <div className='imageCard'>
                 {recipe.gallery_images.length > 0 &&
-                    <div style={{position: 'relative'}}>
-                        <button style={{position: 'absolute', left: 0}} onClick={prevImage}>&lt;</button>
-                        <img src={API_BASE + "image/" + gallery_images[currentImageIndex]} alt={recipe.name} />
-                        <button style={{position: 'absolute', right: 0}} onClick={nextImage}>&gt;</button>
-                    </div>
+                    <Carousel>
+                        {gallery_images.map((image, _) =>
+                            <img class="carousel-image" src={API_BASE + "image/" + image} alt={recipe.name} />
+                        )}
+                    </Carousel>
                 }
                 <h2>{recipe.title}</h2>
 
