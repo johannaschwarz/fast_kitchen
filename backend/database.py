@@ -86,6 +86,15 @@ class Database(ABC):
             The image object.
         """
 
+    @abstractmethod
+    def get_categories(self) -> list[str]:
+        """
+        Get all categories from the database.
+
+        Returns:
+            A list of categories.
+        """
+
 
 class MySQLDatabase(Database):
     """A MySQL database class."""
@@ -619,6 +628,24 @@ class MySQLDatabase(Database):
             )
 
         cursor.close()
+
+    def get_categories(self) -> list[str]:
+        """
+        Get all categories from the database.
+
+        Returns:
+            A list of categories.
+        """
+
+        cursor = self.recipes_database.cursor()
+
+        sql = "SELECT DISTINCT Category FROM Categories"
+        cursor.execute(sql)
+
+        result = cursor.fetchall()
+
+        cursor.close()
+        return [category for category, in result]
 
     def _create_ingredient(self, ingredient: Ingredient, recipe_id: int):
         """

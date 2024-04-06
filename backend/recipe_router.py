@@ -100,3 +100,10 @@ def get_recipes_by_category(
     category: str, database: Annotated[Database, Depends(get_database_connection)]
 ) -> list[int]:
     return database.get_recipes_by_category(category)
+
+
+@recipe_router.get("/category/all")
+def get_all_categories(
+    database: Annotated[Database, Depends(get_database_connection)]
+) -> list[str]:
+    return database.get_categories()
