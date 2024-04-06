@@ -162,7 +162,7 @@ function RecipeEditor() {
             .catch((err) => {
                 console.log(err.message);
             });
-    });
+    }, []);
 
     useEffect(() => {
         if (recipeId === undefined) {
