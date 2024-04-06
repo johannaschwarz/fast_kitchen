@@ -10,25 +10,51 @@ import './Recipe.css';
 
 function Recipe({ recipe }) {
     const [ingredientMultiplier, setIngredientMultiplier] = useState(1);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [gallery_images, setGalleryImages] = useState([]);
+
+    useEffect(() => {
+        if (recipe) {
+            setGalleryImages([recipe.cover_image, ...recipe.gallery_images]);
+        }
+    }, [recipe]);
+
     if (recipe === null || recipe.id_ === undefined) {
         return null;
     }
-
+    
     const deleteRecipe = async () => {
         const response = await fetch(API_BASE + 'recipe/' + recipe.id_, {
             method: 'DELETE'
         })
-
+        
         if (response.ok) {
             window.location.href = '/';
         }
     }
 
+    const getGalleryImages = () => {
+        setGalleryImages(recipe.gallery_images);
+    }
+
+    const nextImage = () => {
+        setCurrentImageIndex((currentImageIndex + 1) % gallery_images.length);
+    };
+
+    const prevImage = () => {
+        setCurrentImageIndex((currentImageIndex - 1 + gallery_images.length) % gallery_images.length);
+    };
+
+
     return (
         <div>
             <div className='imageCard'>
-                {recipe.images.length > 0 &&
-                    <img src={API_BASE + "image/" + recipe.images[0]} alt={recipe.name} />
+                {recipe.gallery_images.length > 0 &&
+                    <div style={{position: 'relative'}}>
+                        <button style={{position: 'absolute', left: 0}} onClick={prevImage}>&lt;</button>
+                        <img src={API_BASE + "image/" + gallery_images[currentImageIndex]} alt={recipe.name} />
+                        <button style={{position: 'absolute', right: 0}} onClick={nextImage}>&gt;</button>
+                    </div>
                 }
                 <h2>{recipe.title}</h2>
 
@@ -47,7 +73,7 @@ function Recipe({ recipe }) {
                 <span>Portionen: <input min={1} value={(!isNaN(ingredientMultiplier) ? ingredientMultiplier : "")} onChange={e => setIngredientMultiplier(parseInt(e.target.value))} type='number' /></span>
             </div>
             <div className='recipeSteps'>
-                {recipe.steps.map((instruction, index) => (
+                {recipe.steps.map((step, index) => (
                     <div key={index} className="recipeStep">
                         <div className="stepCounter">
                             <div className="stepCounterTopLine"></div>
@@ -55,10 +81,10 @@ function Recipe({ recipe }) {
                             <div className="stepCounterBottomLine"></div>
                         </div>
                         <div className='imageCard recipeStepContent'>
-                            {recipe.images.length > 0 &&
-                                <img src={API_BASE + "image/" + recipe.images[0]} alt={recipe.name} />
-                            }
-                            <span className="instructionText">{instruction}</span>
+                            {step.images.map((image, _) => (
+                                <img src={API_BASE + "image/" + image} alt={"step image"} />)
+                            )}
+                            <span className="instructionText">{step.step}</span>
                         </div>
                     </div>
                 ))}
