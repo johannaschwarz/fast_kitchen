@@ -3,9 +3,9 @@ from typing import Annotated
 
 from database import Database, MySQLDatabase
 from exceptions import NotFoundException
-from fastapi import Body, Depends, HTTPException, Response, UploadFile, status
+from fastapi import Depends, HTTPException, Response, UploadFile, status
 from fastapi.routing import APIRouter
-from models import ImageBase
+from models import ImageID
 from PIL import Image as PILImage
 from pydantic import ValidationError
 from utils import resize_image
@@ -23,11 +23,9 @@ async def get_database_connection():
 
 @image_router.post("/image/create")
 def create_image(
-    recipe_id: Annotated[int, Body(embed=True)],
     image: UploadFile,
     database: Annotated[Database, Depends(get_database_connection)],
-) -> int:
-
+) -> ImageID:
     image = PILImage.open(image.file)
     image = resize_image(image)
 
@@ -35,10 +33,9 @@ def create_image(
         image.save(output, format="PNG", optimize=True, quality=80)
         contents = output.getvalue()
 
-    image_model = ImageBase(recipe_id=recipe_id, image=contents)
-    id_ = database.create_image(image_model)
+    id_ = database.create_image(contents)
 
-    return id_
+    return ImageID(id_=id_)
 
 
 @image_router.get("/image/{image_id}")
@@ -63,14 +60,3 @@ def get_images_by_recipe(
 ) -> list[int]:
 
     return database.get_images_by_recipe(recipe_id)
-
-
-@image_router.delete("/image/{image_id}")
-def delete_image(
-    image_id: int, database: Annotated[Database, Depends(get_database_connection)]
-):
-
-    try:
-        database.delete_image(image_id)
-    except NotFoundException as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e

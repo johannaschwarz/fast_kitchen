@@ -4,20 +4,23 @@ import { ThreeDots } from 'react-loader-spinner';
 import { redirect, useParams } from "react-router-dom";
 import { API_BASE } from './Config';
 import Header from "./Header";
+
 function Ingredient({ ingredient, onChangeIngredient, onChangeAmount, onChangeUnit, onDelete }) {
     if (ingredient === null) {
-        ingredient = { name: "", amount: "", unit: "" };
+        ingredient = { name: "", amount: 0, unit: "g" , group: ""};
     }
     return (
         <div className="formRow inlineForm">
             <input type="text" id="ingredient" name="ingredient" placeholder="Ingredient" onChange={onChangeIngredient} value={ingredient.name} />
             <input min="0" type="number" id="amount" name="amount" placeholder="Amount" onChange={onChangeAmount} value={ingredient.amount} />
-            <select id="unit" name="unit" onChange={onChangeUnit} value={ingredient.unit}>
+            <select id="unit" name="unit" onChange={onChangeUnit} value={ingredient.unit} defaultValue={"g"}>
                 <option value="g">g</option>
                 <option value="kg">kg</option>
                 <option value="ml">ml</option>
                 <option value="l">l</option>
                 <option value="pcs">pcs</option>
+                <option value="tbsp">tbsp</option>
+                <option value="tsp">tsp</option>
             </select>
             {ingredient.name !== "" && < button type='button' onClick={onDelete} className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>}
         </div>
@@ -28,7 +31,7 @@ const IngredientList = ({ ingredients, setIngredients }) => {
     useEffect(() => {
         // If the last ingredient is filled, add a new empty ingredient
         if (ingredients[ingredients.length - 1].name !== "") {
-            setIngredients([...ingredients, { name: "", amount: "", unit: "" }]);
+            setIngredients([...ingredients, { name: "", amount: 0, unit: "g", group: ""}]);
         }
         // If there are two empty ingredients at the end, remove the last one
         else if (ingredients.length > 1 && ingredients[ingredients.length - 2].name === "") {
@@ -38,7 +41,11 @@ const IngredientList = ({ ingredients, setIngredients }) => {
 
     const handleIngredientChange = (index, key) => (event) => {
         const newIngredients = [...ingredients];
-        newIngredients[index][key] = event.target.value;
+        if (key === "amount") {
+            newIngredients[index][key] = parseFloat(event.target.value);
+        } else {
+            newIngredients[index][key] = event.target.value;
+        }
         setIngredients(newIngredients);
     };
 
@@ -116,11 +123,14 @@ const StepsList = ({ steps, setSteps }) => {
 
 function RecipeEditor() {
     const { recipeId } = useParams();
-    const [ingredients, setIngredients] = useState([{ name: "", amount: "", unit: "" }]);
+    const [ingredients, setIngredients] = useState([{ name: "", amount: 0, unit: "g" , group: ""}]);
     const [steps, setSteps] = useState([{ description: "", duration: 0 }]);
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
+    const [cookingTime, setCookingTime] = useState(0);
+    const [portions, setPortions] = useState(1);
     const [categories, setCategories] = useState("");
+    const [coverImage, setCoverImage] = useState("");
     const [images, setImages] = useState([]);
     const [storing, setStoring] = useState(false);
     const [loaded, setLoaded] = useState(false);
@@ -140,8 +150,12 @@ function RecipeEditor() {
                 setTitle(data.title);
                 setDescription(data.description);
                 setCategories(data.categories.join(", "));
-                setIngredients(data.ingredients.map(ingredient => ({ name: ingredient, amount: "", unit: "" })));
+                setPortions(data.portions);
+                setCookingTime(data.cooking_time);
+                setIngredients(data.ingredients.map(ingredient => ({ name: ingredient.name, amount: ingredient.amount, unit: ingredient.unit })));
                 setSteps(data.steps.map(step => ({ description: step, duration: 0 })));
+                setImages(data.images);
+                setCoverImage(data.cover_image);
                 setLoaded(true);
             })
             .catch((err) => {
@@ -150,10 +164,10 @@ function RecipeEditor() {
             });
     }, [recipeId]);
 
-    const uploadImage = async (file, associatedRecipeId) => {
+    //TODO: add form to upload more images
+    const uploadImage = async (file) => {
         const formData = new FormData();
         formData.append('image', file);
-        formData.append('recipe_id', associatedRecipeId);
 
         const response = await fetch(API_BASE + 'image/create', {
             method: 'POST',
@@ -162,7 +176,8 @@ function RecipeEditor() {
 
         if (response.ok) {
             const data = await response.json();
-            setImages([...images, data.filename]);
+            setImages([...images, data.id_]);
+            return data.id_;
         } else {
             console.error('Image upload failed');
         }
@@ -173,20 +188,22 @@ function RecipeEditor() {
 
         setStoring(true);
 
-        const formData = new FormData();
-        ingredients.forEach((ingredient, index) => {
-            formData.append(`ingredient${index}`, ingredient);
-        });
-
         var data = {
             title: title,
             description: description,
             categories: categories.split(",").map(category => category.trim()),
-            ingredients: ingredients.filter(ingredient => ingredient.name !== "").map(ingredient => ingredient.name),
+            portions: portions,
+            cooking_time: cookingTime,
+            ingredients: ingredients.filter(ingredient => ingredient.name !== ""),
             steps: steps.filter(step => step.description !== "").map(step => step.description),
         }
         if (recipeId !== undefined)
             data.id_ = recipeId;
+
+            if (images.length > 0)
+                data.images = images;
+
+        console.log(data)
 
         // Post form data
         const response = await fetch(API_BASE + (recipeId === undefined ? 'recipe/create' : 'recipe/' + recipeId), {
@@ -203,11 +220,6 @@ function RecipeEditor() {
             const responseData = await response.json();
             const createdRecipeId = responseData.id_;
 
-            // Upload images
-            if (recipeId !== undefined) {
-                images.forEach(image => uploadImage(image, createdRecipeId));
-            }
-
             console.log('Form submitted successfully');
             return redirect("/recipe/" + createdRecipeId);
         } else {
@@ -218,6 +230,12 @@ function RecipeEditor() {
     const uploadImageOnChange = async (event) => {
         const file = event.target.files[0];
         setImages([file]);
+    }
+
+    const uploadCoverImageOnChange = async (event) => {
+        const file = event.target.files[0];
+        const id_ = uploadImage(file);
+        setCoverImage(id_);
     }
 
     return (
@@ -231,16 +249,18 @@ function RecipeEditor() {
                     <input type="text" id="title" name="title" placeholder="Title" value={title} onChange={e => setTitle(e.target.value)} required /><br />
                     <label htmlFor="description">Description:</label><br />
                     <textarea id="description" name="description" placeholder="Description" value={description} onChange={e => setDescription(e.target.value)} required></textarea><br />
+                    <label htmlFor="cookingTime">Cooking Time:</label><br />
+                    <input type="number" id="cookingTime" name="cookingTime" placeholder="Cooking Time" defaultValue={0} onChange={e => setCookingTime(e.target.value)} required /><br />
                     <label htmlFor="categories">Categories:</label><br />
                     <input type="text" id="categories" name="categories" value={categories} onChange={e => setCategories(e.target.value.replace(/\s+/g, ' '))} required /><br />
                     <label htmlFor="images">Cover Image:</label><br />
-                    <input type="file" id="images" name="images" accept="image/*" onChange={uploadImageOnChange} /><br />
+                    <input type="file" id="cover_image" name="cover_image" accept="image/*" onChange={uploadCoverImageOnChange} /><br />
 
                     <h3>Ingredients:</h3>
                     <div>
                         <IngredientList ingredients={ingredients} setIngredients={setIngredients} />
                         <label htmlFor="portions">Portions:</label><br />
-                        <input min="1" type="number" id="portions" name="portions" placeholder="Portions" defaultValue={1} required /><br />
+                        <input min="1" type="number" id="portions" name="portions" placeholder="Portions" defaultValue={1} onChange={e => setPortions(e.target.value)} required /><br />
                     </div>
                     <h3>Steps:</h3>
                     <div>
