@@ -3,8 +3,6 @@ import { ThreeDots } from 'react-loader-spinner';
 import { Link, useParams } from 'react-router-dom';
 import Carousel from 'react-material-ui-carousel';
 import { API_BASE } from './Config';
-import ImageList from '@mui/material/ImageList';
-import ImageListItem from '@mui/material/ImageListItem';
 import Header from './Header.js';
 
 import './Recipe.css';
@@ -15,7 +13,11 @@ function Recipe({ recipe }) {
 
     useEffect(() => {
         if (recipe) {
-            setGalleryImages([recipe.cover_image, ...recipe.gallery_images]);
+            if (recipe.cover_image === null) {
+                setGalleryImages(recipe.gallery_images);
+            } else {
+                setGalleryImages([recipe.cover_image, ...recipe.gallery_images]);
+            }
         }
     }, [recipe]);
 
@@ -60,7 +62,11 @@ function Recipe({ recipe }) {
                 <span>Portionen: <input min={1} value={(!isNaN(ingredientMultiplier) ? ingredientMultiplier : "")} onChange={e => setIngredientMultiplier(parseInt(e.target.value))} type='number' /></span>
             </div>
             <div className='recipeSteps'>
-                {recipe.steps.map((step, index) => (
+                {recipe.steps.sort(function (a, b) {
+                    if (a.order_id < b.order_id) return -1
+                    if (a.order_id > b.order_id) return 1
+                    return 0
+                }).map((step, index) => (
                     <div key={index} className="recipeStep">
                         <div className="stepCounter">
                             <div className="stepCounterTopLine"></div>
@@ -68,7 +74,7 @@ function Recipe({ recipe }) {
                             <div className="stepCounterBottomLine"></div>
                         </div>
                         <div className='imageCard recipeStepContent'>
-                            <Carousel>
+                            <Carousel autoPlay={false}>
                                 {step.images.map((image) => (
                                         <img className="carousel-image" src={API_BASE + "image/" + image} alt={"step" + index + "image"} />
                                 ))}
