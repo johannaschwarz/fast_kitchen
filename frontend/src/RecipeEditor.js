@@ -8,6 +8,36 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { API_BASE } from './Config';
 import Header from "./Header";
 
+import './RecipeEditor.css';
+
+const uploadImage = async (file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const response = await fetch(API_BASE + 'image/create', {
+        method: 'POST',
+        body: formData,
+    });
+
+    if (response.ok) {
+        const data = await response.json();
+        return data.id_;
+    } else {
+        console.error('Image upload failed');
+        return -1;
+    }
+}
+
+const imagesList = (images, imgClass) => {
+    return (
+        <Stack direction={'row'} spacing={2}>
+            {images.map((image, index) => (
+                <img className={imgClass} key={index} src={API_BASE + "image/" + image} alt={image} />
+            ))}
+        </Stack>
+    );
+}
+
 const UploadButton = styled(Button)({
     backgroundColor: 'var(--primary-color)',
     '&:hover': {
@@ -96,20 +126,31 @@ const IngredientList = ({ ingredients, setIngredients }) => {
 };
 
 function Step({ index, step, onChangeDesciption, onDelete }) {
+
+    const uploadStepImageOnChange = async (event) => {
+        const file = event.target.files[0];
+        uploadImage(file).then(id_ => {
+            step.images.push(id_);
+        });
+    }
+
     return (
-        <Stack direction={'row'} spacing={2}>
-            <span>{index}.</span>
-            <TextField type="text" id="step" name="step" label="Instruction" onChange={onChangeDesciption} value={step.description} />
-            <UploadButton component="label" variant="contained" htmlFor="cover_image" startIcon={<CloudUploadIcon />}>
-                Image
-                <VisuallyHiddenInput type="file" id="cover_image" name="cover_image" accept="image/*" />
-            </UploadButton><br />
-            {step.description !== "" && < button type='button' onClick={onDelete} className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>}
-        </Stack>
+        <div>
+            <Stack direction={'row'} spacing={2} style={{ marginBottom: 10 }}>
+                <span>{index}.</span>
+                <TextField type="text" id="step" name="step" label="Instruction" onChange={onChangeDesciption} value={step.description} />
+                <UploadButton component="label" variant="contained" htmlFor={"step_image" + index} startIcon={<CloudUploadIcon />}>
+                    Image
+                    <VisuallyHiddenInput type="file" id={"step_image" + index} name="step_image" accept="image/*" onChange={uploadStepImageOnChange} />
+                </UploadButton><br />
+                {step.description !== "" && < button type='button' onClick={onDelete} className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>}
+            </Stack>
+            {step.images.length > 0 && imagesList(step.images, "stepImg")}
+        </div>
     )
 }
 
-const StepsList = ({ steps, setSteps }) => {
+const StepsList = ({ steps, setSteps, uploadStepImageOnChange }) => {
     useEffect(() => {
         // If the last step is filled, add a new empty step
         if (steps[steps.length - 1].description !== "") {
@@ -206,25 +247,6 @@ function RecipeEditor() {
             });
     }, [recipeId]);
 
-    //TODO: add form to upload more images
-    const uploadImage = async (file) => {
-        const formData = new FormData();
-        formData.append('image', file);
-
-        const response = await fetch(API_BASE + 'image/create', {
-            method: 'POST',
-            body: formData,
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            setGalleryImages([...galleryImages, data.id_]);
-            return data.id_;
-        } else {
-            console.error('Image upload failed');
-        }
-    }
-
     const handleSubmit = async (event) => {
         event.preventDefault();
 
@@ -274,9 +296,9 @@ function RecipeEditor() {
         }
     };
 
-    const uploadImageOnChange = async (event) => {
+    const uploadGalleryImageOnChange = async (event) => {
         const file = event.target.files[0];
-        setGalleryImages([file]);
+        uploadImage(file).then(id_ => { if (id_ !== -1) setGalleryImages([...galleryImages, id_]) });
     }
 
     const uploadCoverImageOnChange = async (event) => {
@@ -311,18 +333,19 @@ function RecipeEditor() {
                             Cover Image
                             <VisuallyHiddenInput type="file" id="cover_image" name="cover_image" accept="image/*" onChange={uploadCoverImageOnChange} />
                         </UploadButton><br />
-                        <span id="cover-image-chosen">{coverImage && document.getElementById("cover_image").files.length > 0 ? <img src={API_BASE + "image/" + coverImage} alt={"Cover-Image: " + document.getElementById("cover_image").files[0].name} /> : "No file chosen"}</span><br />
+                        {coverImage && <img className='uploadedImg' src={API_BASE + "image/" + coverImage} alt={"Cover Image"} />}<br />
 
                         <UploadButton component="label" variant="contained" htmlFor="gallery_images" startIcon={<CloudUploadIcon />}>
                             Gallery Images
-                            <VisuallyHiddenInput type="file" id="gallery_images" name="gallery_images" accept="image/*" onChange={uploadImageOnChange} />
+                            <VisuallyHiddenInput type="file" id="gallery_images" name="gallery_images" accept="image/*" onChange={uploadGalleryImageOnChange} />
                         </UploadButton><br />
+                        {galleryImages.length > 0 && imagesList(galleryImages, "galleryImg")}<br />
 
                         <Divider />
 
                         <h3>Ingredients:</h3>
                         <Stack spacing={2} marginBottom={2}>
-                            <TextField min="1" type="number" id="portions" name="portions" label="Portions" onChange={e => setPortions(e.target.value)} required /><br />
+                            <TextField value={portions} min="1" type="number" id="portions" name="portions" label="Portions" onChange={e => setPortions(e.target.value)} required /><br />
                             <IngredientList ingredients={ingredients} setIngredients={setIngredients} />
                         </Stack>
                         <Divider />
