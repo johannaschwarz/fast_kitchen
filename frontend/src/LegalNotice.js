@@ -3,7 +3,7 @@ import Header from './Header.js';
 
 function LegalNotice() {
     return (
-        <div>
+        <div className="main">
             <Header />
             <div className='content'>
                 <h1>Impressum</h1>

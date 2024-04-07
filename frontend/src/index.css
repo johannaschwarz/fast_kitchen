@@ -25,9 +25,17 @@ header {
   justify-items: center;
 }
 
+
+.main {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+
 footer {
   text-align: center;
-  margin-top: 50px;
+  margin-top: auto;
   padding: 20px;
   color: gray;
 }
