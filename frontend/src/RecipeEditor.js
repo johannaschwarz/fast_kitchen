@@ -269,7 +269,7 @@ function RecipeEditor() {
     }
 
     return (
-        <div>
+        <div className="main">
             <Header />
             <div className={"content " + (storing || (recipeId !== undefined && !loaded) ? 'hidden' : '')}>
                 <h1>{recipeId === undefined ? "Create a new recipe" : "Edit your recipe"}</h1>

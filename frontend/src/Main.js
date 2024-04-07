@@ -17,13 +17,13 @@ function Main() {
   }
 
   return (
-    <div className="Main">
+    <div className="main">
       <Header setSearchInput={setSearch} />
       <div className='content'>
         <Filters setFilter={setFilter} />
         <Recipes filters={filters} search={search} />
-        <footer><Link to="/legalnotice">Impressum</Link></footer>
       </div>
+      <footer><Link to="/legalnotice">Impressum</Link></footer>
     </div>
   );
 }
