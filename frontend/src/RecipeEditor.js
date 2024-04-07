@@ -1,9 +1,11 @@
 import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOutlineOutlined';
 import { Autocomplete, Stack, TextField } from '@mui/material';
 import styled from '@mui/material/styles/styled';
+import Button from '@mui/material/Button';
 import React, { useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
 import { Link, redirect, useParams } from "react-router-dom";
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { API_BASE } from './Config';
 import Header from "./Header";
 
@@ -44,7 +46,7 @@ function Ingredient({ ingredient, onChangeIngredient, onChangeAmount, onChangeUn
 const IngredientList = ({ ingredients, setIngredients }) => {
     useEffect(() => {
         // If the last ingredient is filled, add a new empty ingredient
-        if (ingredients[ingredients.length - 1].name !== "") {
+        if (ingredients.length === 0 || ingredients[ingredients.length - 1].name !== "") {
             setIngredients([...ingredients, { name: "", amount: 0, unit: "g", group: "" }]);
         }
         // If there are two empty ingredients at the end, remove the last one
@@ -85,7 +87,7 @@ const IngredientList = ({ ingredients, setIngredients }) => {
     );
 };
 
-function Step({ index, step, onChangeDesciption, onChangeDuration, onDelete }) {
+function Step({ index, step, onChangeDesciption, onDelete }) {
     return (
         <div className='formRow inlineForm'>
             <span>{index}.</span>
@@ -99,7 +101,7 @@ const StepsList = ({ steps, setSteps }) => {
     useEffect(() => {
         // If the last step is filled, add a new empty step
         if (steps[steps.length - 1].description !== "") {
-            setSteps([...steps, { description: "", duration: 0 }]);
+            setSteps([...steps, { description: "", images: []}]);
         }
         // If there are two empty steps at the end, remove the last one
         else if (steps.length > 1 && steps[steps.length - 2].description === "") {
@@ -127,7 +129,6 @@ const StepsList = ({ steps, setSteps }) => {
                     index={index + 1}
                     step={step}
                     onChangeDesciption={handleStepChange(index, "description")}
-                    onChangeDuration={handleStepChange(index, "duration")}
                     onDelete={handleDeleteStep(index)}
                 />
             ))}
@@ -139,14 +140,14 @@ const defaultFilters = ['Vegan', 'Vegetarian', 'Quick & Easy'];
 function RecipeEditor() {
     const { recipeId } = useParams();
     const [ingredients, setIngredients] = useState([{ name: "", amount: 0, unit: "g", group: "" }]);
-    const [steps, setSteps] = useState([{ description: "", duration: 0 }]);
+    const [steps, setSteps] = useState([{ order_id: 0, description: "", images: []}]);
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [cookingTime, setCookingTime] = useState(20);
     const [portions, setPortions] = useState(1);
     const [categories, setCategories] = useState([]);
     const [coverImage, setCoverImage] = useState("");
-    const [images, setImages] = useState([]);
+    const [galleryImages, setGalleryImages] = useState([]);
     const [storing, setStoring] = useState(false);
     const [loaded, setLoaded] = useState(false);
 
@@ -182,8 +183,8 @@ function RecipeEditor() {
                 setPortions(data.portions);
                 setCookingTime(data.cooking_time);
                 setIngredients(data.ingredients.map(ingredient => ({ name: ingredient.name, amount: ingredient.amount, unit: ingredient.unit })));
-                setSteps(data.steps.map(step => ({ description: step, duration: 0 })));
-                setImages(data.images);
+                setSteps(data.steps.map(step => ({ order_id: step.order_id, description: step.step, images: step.images })));
+                setGalleryImages(data.gallery_images);
                 setCoverImage(data.cover_image);
                 setLoaded(true);
             })
@@ -205,7 +206,7 @@ function RecipeEditor() {
 
         if (response.ok) {
             const data = await response.json();
-            setImages([...images, data.id_]);
+            setGalleryImages([...galleryImages, data.id_]);
             return data.id_;
         } else {
             console.error('Image upload failed');
@@ -217,6 +218,8 @@ function RecipeEditor() {
 
         setStoring(true);
 
+        console.log(steps);
+
         var data = {
             title: title,
             description: description,
@@ -224,14 +227,15 @@ function RecipeEditor() {
             portions: portions,
             cooking_time: cookingTime,
             ingredients: ingredients.filter(ingredient => ingredient.name !== ""),
-            steps: steps.filter(step => step.description !== "").map(step => step.description),
-            cover_image: coverImage,
+            steps: steps.filter(step => step.description !== "").map((step, index) => ({ order_id: index, step: step.description, images: step.images})),
+            cover_image: coverImage !== "" ? Number(coverImage) : -1,
+            gallery_images: galleryImages.map(image => Number(image)),
         }
         if (recipeId !== undefined)
             data.id_ = recipeId;
 
-        if (images.length > 0)
-            data.images = images;
+        if (galleryImages.length > 0)
+            data.gallery_images = galleryImages;
 
         console.log(data)
 
@@ -260,13 +264,21 @@ function RecipeEditor() {
 
     const uploadImageOnChange = async (event) => {
         const file = event.target.files[0];
-        setImages([file]);
+        setGalleryImages([file]);
     }
 
     const uploadCoverImageOnChange = async (event) => {
         const file = event.target.files[0];
         uploadImage(file).then(id_ => setCoverImage(id_));
     }
+
+    const UploadButton = styled(Button)({
+        backgroundColor: 'var(--primary-color)',
+        width: 300,
+        '&:hover': {
+            backgroundColor: 'var(--secondary-color)',
+        },
+    })
 
     return (
         <div>
@@ -290,10 +302,17 @@ function RecipeEditor() {
                             renderInput={(params) => <TextField {...params} label="Categories" />}
                         /><br />
 
-                        <label className="btn" htmlFor="cover_image">Upload cover image
+                        <h3>Images:</h3>
+                        <h4>Cover Image</h4>
+                        <UploadButton component="label" startIcon={<CloudUploadIcon />} variant="contained" htmlFor="cover_image">
                             <VisuallyHiddenInput type="file" id="cover_image" name="cover_image" accept="image/*" onChange={uploadCoverImageOnChange} />
-                        </label><br />
+                        </UploadButton><br />
                         <span id="cover-image-chosen">{coverImage && document.getElementById("cover_image").files.length > 0 ? "Cover-Image: " + document.getElementById("cover_image").files[0].name : "No file chosen"}</span><br />
+
+                        <h4>Gallery Images</h4>
+                        <UploadButton component="label" startIcon={<CloudUploadIcon />} variant="contained" htmlFor="gallery_images">
+                            <VisuallyHiddenInput type="file" id="gallery_images" name="gallery_images" accept="image/*" onChange={uploadImageOnChange} />
+                        </UploadButton><br />
 
                         <h3>Ingredients:</h3>
                         <div>

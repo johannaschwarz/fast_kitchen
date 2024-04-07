@@ -126,7 +126,7 @@ class MySQLDatabase(Database):
             recipe.title,
             recipe.description,
             recipe.cooking_time,
-            recipe.cover_image,
+            recipe.cover_image if recipe.cover_image > 0 else None,
             recipe.portions,
         )
         cursor.execute(sql, val)
@@ -141,8 +141,9 @@ class MySQLDatabase(Database):
         for ingredient in recipe.ingredients:
             self._create_ingredient(ingredient, id_)
 
-        for image_id in recipe.gallery_images:
-            self._add_recipe_to_image(id_, image_id)
+        if recipe.gallery_images:
+            for image_id in recipe.gallery_images:
+                self._add_recipe_to_image(id_, image_id)
 
         for step in recipe.steps:
             self._create_recipe_step(step, id_)
@@ -289,7 +290,7 @@ class MySQLDatabase(Database):
         val = (
             recipe.title,
             recipe.description,
-            recipe.cover_image,
+            recipe.cover_image if recipe.cover_image > 0 else None,
             recipe.portions,
             recipe.id_,
         )
