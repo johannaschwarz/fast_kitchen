@@ -3,7 +3,7 @@ import { Autocomplete, Stack, TextField, Button, MenuItem, Divider } from '@mui/
 import styled from '@mui/material/styles/styled';
 import React, { useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
-import { Link, redirect, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { API_BASE } from './Config';
 import Header from "./Header";
@@ -252,8 +252,6 @@ function RecipeEditor() {
 
         setStoring(true);
 
-        console.log(steps);
-
         var data = {
             title: title,
             description: description,
@@ -289,7 +287,8 @@ function RecipeEditor() {
             const createdRecipeId = responseData.id_;
 
             console.log('Form submitted successfully');
-            return redirect("/recipe/" + createdRecipeId);
+
+            window.location.href = '/recipe/' + createdRecipeId;
         } else {
             response.text().then(text => console.log(text));
             console.error('Form submission failed');
