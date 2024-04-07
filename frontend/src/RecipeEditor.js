@@ -14,6 +14,7 @@ const UploadButton = styled(Button)({
         backgroundColor: 'var(--secondary-color)',
     },
     'font-weight': "bold",
+    borderRadius: 20,
 })
 
 const VisuallyHiddenInput = styled('input')({
