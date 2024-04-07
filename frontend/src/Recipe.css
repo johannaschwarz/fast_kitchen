@@ -1,13 +1,9 @@
 .label {
     display: inline-block;
     padding: 5px 10px;
-    border-radius: 30px;
-    background-color: #bbd2e8;
     margin-bottom: 5px;
     margin-inline: 2px;
     transition: background-color 0.2s ease-out;
-    font-size: 14px;
-    font-weight: 200;
 }
 
 .carousel-image {
@@ -28,6 +24,7 @@
 .card,
 .imageCard {
     background-color: #fff;
+    color: var(--text-color);
     border-radius: 30px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     transition: background-color 0.2s ease-out, box-shadow 0.2s ease-out;
@@ -38,6 +35,15 @@
     scroll-snap-stop: normal;
     scroll-snap-align: center;
 }
+
+/*Description border */
+/* .imageCard>p {
+    border-color: lightgrey;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 15px;
+    padding: 15px;
+} */
 
 .card>h2,
 .imageCard>h2 {

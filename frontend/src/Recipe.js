@@ -48,8 +48,8 @@ function Recipe({ recipe }) {
                 {recipe.categories.map((category, index) => (
                     <span className="label" key={index}>{category}</span>
                 ))}
+                <p>{recipe.description}</p>
             </div>
-            <div className='card'>{recipe.description}</div>
             <div className='card'>
                 <h2>Ingredients:</h2>
                 <ul>
