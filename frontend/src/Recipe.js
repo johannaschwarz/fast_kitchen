@@ -1,24 +1,35 @@
 import React, { useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
 import { Link, useParams } from 'react-router-dom';
-
+import Carousel from 'react-material-ui-carousel';
 import { API_BASE } from './Config';
-
 import Header from './Header.js';
 
 import './Recipe.css';
 
 function Recipe({ recipe }) {
     const [ingredientMultiplier, setIngredientMultiplier] = useState(1);
+    const [gallery_images, setGalleryImages] = useState([]);
+
+    useEffect(() => {
+        if (recipe) {
+            if (recipe.cover_image === null) {
+                setGalleryImages(recipe.gallery_images);
+            } else {
+                setGalleryImages([recipe.cover_image, ...recipe.gallery_images]);
+            }
+        }
+    }, [recipe]);
+
     if (recipe === null || recipe.id_ === undefined) {
         return null;
     }
-
+    
     const deleteRecipe = async () => {
         const response = await fetch(API_BASE + 'recipe/' + recipe.id_, {
             method: 'DELETE'
         })
-
+        
         if (response.ok) {
             window.location.href = '/';
         }
@@ -27,16 +38,20 @@ function Recipe({ recipe }) {
     return (
         <div>
             <div className='imageCard'>
-                {recipe.images.length > 0 &&
-                    <img src={API_BASE + "image/" + recipe.images[0]} alt={recipe.name} />
+                {recipe.gallery_images.length > 0 &&
+                    <Carousel>
+                        {gallery_images.map((image) =>
+                            <img className="carousel-image" src={API_BASE + "image/" + image} alt={recipe.name} />
+                        )}
+                    </Carousel>
                 }
                 <h2>{recipe.title}</h2>
 
                 {recipe.categories.map((category, index) => (
                     <span className="label" key={index}>{category}</span>
                 ))}
+                <p>{recipe.description}</p>
             </div>
-            <div className='card'>{recipe.description}</div>
             <div className='card'>
                 <h2>Ingredients:</h2>
                 <ul>
@@ -47,7 +62,11 @@ function Recipe({ recipe }) {
                 <span>Portionen: <input min={1} value={(!isNaN(ingredientMultiplier) ? ingredientMultiplier : "")} onChange={e => setIngredientMultiplier(parseInt(e.target.value))} type='number' /></span>
             </div>
             <div className='recipeSteps'>
-                {recipe.steps.map((instruction, index) => (
+                {recipe.steps.sort(function (a, b) {
+                    if (a.order_id < b.order_id) return -1
+                    if (a.order_id > b.order_id) return 1
+                    return 0
+                }).map((step, index) => (
                     <div key={index} className="recipeStep">
                         <div className="stepCounter">
                             <div className="stepCounterTopLine"></div>
@@ -55,10 +74,12 @@ function Recipe({ recipe }) {
                             <div className="stepCounterBottomLine"></div>
                         </div>
                         <div className='imageCard recipeStepContent'>
-                            {recipe.images.length > 0 &&
-                                <img src={API_BASE + "image/" + recipe.images[0]} alt={recipe.name} />
-                            }
-                            <span className="instructionText">{instruction}</span>
+                            <Carousel autoPlay={false}>
+                                {step.images.map((image) => (
+                                        <img className="carousel-image" src={API_BASE + "image/" + image} alt={"step" + index + "image"} />
+                                ))}
+                            </Carousel>
+                            <span className="instructionText">{step.step}</span>
                         </div>
                     </div>
                 ))}

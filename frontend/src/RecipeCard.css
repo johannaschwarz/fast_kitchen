@@ -44,7 +44,7 @@
 
 
 .recipe-card h3 {
-    font-size: 18px;
+    font-size: 25px;
     margin-bottom: 5px;
 }
 
@@ -57,23 +57,6 @@
     background-clip: text;
     -webkit-background-clip: text;
     animation: animated-gradient 8s infinite ease-out;
-}
-
-.recipe-card .label {
-    display: inline-block;
-    padding: 5px 10px;
-    border-radius: 30px;
-    background-color: #bbd2e8;
-    margin-bottom: 5px;
-    margin-inline: 2px;
-    cursor: pointer;
-    transition: background-color 0.2s ease-out;
-    font-size: 14px;
-    font-weight: 200;
-}
-
-.recipe-card .label:hover {
-    background-color: #e0e0e0;
 }
 
 .recipe-card .creator {

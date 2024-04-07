@@ -128,7 +128,7 @@ class MySQLDatabase(Database):
             recipe.title,
             recipe.description,
             recipe.cooking_time,
-            recipe.cover_image,
+            recipe.cover_image if recipe.cover_image > 0 else None,
             recipe.portions,
         )
         cursor.execute(sql, val)
@@ -143,8 +143,9 @@ class MySQLDatabase(Database):
         for ingredient in recipe.ingredients:
             self._create_ingredient(ingredient, id_)
 
-        for image_id in recipe.images:
-            self._add_recipe_to_image(id_, image_id)
+        if recipe.gallery_images:
+            for image_id in recipe.gallery_images:
+                self._add_recipe_to_image(id_, image_id)
 
         for step in recipe.steps:
             self._create_recipe_step(step, id_)
@@ -181,7 +182,7 @@ class MySQLDatabase(Database):
 
         categories = self.get_categories_by_recipe(id_)
         ingredients = self._get_ingredients_by_recipe(id_)
-        images = self._get_images_by_recipe(id_)
+        images = self._get_gallery_images_by_recipe(id_)
         steps = self._get_recipe_steps_by_recipe(id_)
 
         cursor.close()
@@ -195,7 +196,7 @@ class MySQLDatabase(Database):
             steps=steps,
             categories=categories,
             cover_image=cover_image,
-            images=images,
+            gallery_images=images,
         )
 
     def get_all_recipes(
@@ -249,6 +250,9 @@ class MySQLDatabase(Database):
 
         for id_, title, description, image in result:
             categories = self.get_categories_by_recipe(id_)
+            if not image:
+                images = self._get_gallery_images_by_recipe(id_)
+                image = images[0] if images else None
             try:
                 recipes.append(
                     RecipeListing(
@@ -301,7 +305,7 @@ class MySQLDatabase(Database):
         val = (
             recipe.title,
             recipe.description,
-            recipe.cover_image,
+            recipe.cover_image if recipe.cover_image > 0 else None,
             recipe.portions,
             recipe.id_,
         )
@@ -450,9 +454,9 @@ class MySQLDatabase(Database):
         cursor.close()
         return result[0]
 
-    def _get_images_by_recipe(self, recipe_id: int) -> list[int]:
+    def _get_gallery_images_by_recipe(self, recipe_id: int) -> list[int]:
         """
-        Get all images for a recipe from the database.
+        Get all gallery images for a recipe from the database.
 
         Returns:
             A list of images.
@@ -460,7 +464,7 @@ class MySQLDatabase(Database):
 
         cursor = self.recipes_database.cursor()
 
-        sql = "SELECT ImageID FROM Images WHERE RecipeID = %s"
+        sql = "SELECT ImageID FROM Images WHERE RecipeID = %s AND StepID IS NULL"
         val = (recipe_id,)
 
         cursor.execute(sql, val)
@@ -483,10 +487,14 @@ class MySQLDatabase(Database):
 
         current_images = [image_id for (image_id,) in cursor.fetchall()]
         deleted_images = [
-            image_id for image_id in current_images if image_id not in recipe.images
+            image_id
+            for image_id in current_images
+            if image_id not in recipe.gallery_images
         ]
         added_images = [
-            image_id for image_id in recipe.images if image_id not in current_images
+            image_id
+            for image_id in recipe.gallery_images
+            if image_id not in current_images
         ]
         cursor.close()
 

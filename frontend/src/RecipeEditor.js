@@ -1,11 +1,51 @@
 import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOutlineOutlined';
-import { Autocomplete, Stack, TextField } from '@mui/material';
+import { Autocomplete, Stack, TextField, Button, MenuItem, Divider } from '@mui/material';
 import styled from '@mui/material/styles/styled';
 import React, { useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
-import { Link, redirect, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { API_BASE } from './Config';
 import Header from "./Header";
+
+import './RecipeEditor.css';
+
+const uploadImage = async (file) => {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const response = await fetch(API_BASE + 'image/create', {
+        method: 'POST',
+        body: formData,
+    });
+
+    if (response.ok) {
+        const data = await response.json();
+        return data.id_;
+    } else {
+        console.error('Image upload failed');
+        return -1;
+    }
+}
+
+const imagesList = (images, imgClass) => {
+    return (
+        <Stack direction={'row'} spacing={2}>
+            {images.map((image, index) => (
+                <img className={imgClass} key={index} src={API_BASE + "image/" + image} alt={image} />
+            ))}
+        </Stack>
+    );
+}
+
+const UploadButton = styled(Button)({
+    backgroundColor: 'var(--primary-color)',
+    '&:hover': {
+        backgroundColor: 'var(--secondary-color)',
+    },
+    'font-weight': "bold",
+    borderRadius: 20,
+})
 
 const VisuallyHiddenInput = styled('input')({
     clip: 'rect(0 0 0 0)',
@@ -19,32 +59,32 @@ const VisuallyHiddenInput = styled('input')({
     width: 1,
 });
 
+const measureUnits = ["g", "kg", "ml", "l", "pcs", "tbsp", "tsp"];
+
 function Ingredient({ ingredient, onChangeIngredient, onChangeAmount, onChangeUnit, onDelete }) {
     if (ingredient === null) {
         ingredient = { name: "", amount: 0, unit: "g", group: "" };
     }
     return (
-        <div className="formRow inlineForm">
-            <input type="text" id="ingredient" name="ingredient" placeholder="Ingredient" onChange={onChangeIngredient} value={ingredient.name} />
-            <input min="0" type="number" id="amount" name="amount" placeholder="Amount" onChange={onChangeAmount} value={ingredient.amount} />
-            <select id="unit" name="unit" onChange={onChangeUnit} value={ingredient.unit} >
-                <option value="g">g</option>
-                <option value="kg">kg</option>
-                <option value="ml">ml</option>
-                <option value="l">l</option>
-                <option value="pcs">pcs</option>
-                <option value="tbsp">tbsp</option>
-                <option value="tsp">tsp</option>
-            </select>
+        <Stack direction={"row"} spacing={2}>
+            <TextField type="text" id="ingredient" name="ingredient" label="Ingredient" onChange={onChangeIngredient} value={ingredient.name} />
+            <TextField min="0" type="number" id="amount" name="amount" label="Amount" onChange={onChangeAmount} value={ingredient.amount} />
+            <TextField select label="Select" id="unit" name="unit" defaultValue={"g"} onChange={onChangeUnit} value={ingredient.unit} >
+                {measureUnits.map((option) => (
+                    <MenuItem key={option} value={option}>
+                        {option}
+                    </MenuItem>
+                ))}
+            </TextField>
             {ingredient.name !== "" && < button type='button' onClick={onDelete} className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>}
-        </div>
+        </Stack>
     )
 }
 
 const IngredientList = ({ ingredients, setIngredients }) => {
     useEffect(() => {
         // If the last ingredient is filled, add a new empty ingredient
-        if (ingredients[ingredients.length - 1].name !== "") {
+        if (ingredients.length === 0 || ingredients[ingredients.length - 1].name !== "") {
             setIngredients([...ingredients, { name: "", amount: 0, unit: "g", group: "" }]);
         }
         // If there are two empty ingredients at the end, remove the last one
@@ -70,7 +110,7 @@ const IngredientList = ({ ingredients, setIngredients }) => {
     }
 
     return (
-        <div>
+        <Stack spacing={2}>
             {ingredients.map((ingredient, index) => (
                 <Ingredient
                     key={index}
@@ -81,25 +121,40 @@ const IngredientList = ({ ingredients, setIngredients }) => {
                     onDelete={handleDeleteIngredient(index)}
                 />
             ))}
-        </div>
+        </Stack>
     );
 };
 
-function Step({ index, step, onChangeDesciption, onChangeDuration, onDelete }) {
+function Step({ index, step, onChangeDesciption, onDelete }) {
+
+    const uploadStepImageOnChange = async (event) => {
+        const file = event.target.files[0];
+        uploadImage(file).then(id_ => {
+            step.images.push(id_);
+        });
+    }
+
     return (
-        <div className='formRow inlineForm'>
-            <span>{index}.</span>
-            <textarea type="text" id="step" name="step" placeholder="Instruction" onChange={onChangeDesciption} value={step.description}></textarea>
-            {step.description !== "" && < button type='button' onClick={onDelete} className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>}
+        <div>
+            <Stack direction={'row'} spacing={2} style={{ marginBottom: 10 }}>
+                <span>{index}.</span>
+                <TextField type="text" id="step" name="step" label="Instruction" onChange={onChangeDesciption} value={step.description} />
+                <UploadButton component="label" variant="contained" htmlFor={"step_image" + index} startIcon={<CloudUploadIcon />}>
+                    Image
+                    <VisuallyHiddenInput type="file" id={"step_image" + index} name="step_image" accept="image/*" onChange={uploadStepImageOnChange} />
+                </UploadButton><br />
+                {step.description !== "" && < button type='button' onClick={onDelete} className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>}
+            </Stack>
+            {step.images.length > 0 && imagesList(step.images, "stepImg")}
         </div>
     )
 }
 
-const StepsList = ({ steps, setSteps }) => {
+const StepsList = ({ steps, setSteps, uploadStepImageOnChange }) => {
     useEffect(() => {
         // If the last step is filled, add a new empty step
         if (steps[steps.length - 1].description !== "") {
-            setSteps([...steps, { description: "", duration: 0 }]);
+            setSteps([...steps, { description: "", images: [] }]);
         }
         // If there are two empty steps at the end, remove the last one
         else if (steps.length > 1 && steps[steps.length - 2].description === "") {
@@ -120,18 +175,17 @@ const StepsList = ({ steps, setSteps }) => {
     }
 
     return (
-        <div>
+        <Stack spacing={2} style={{ marginBottom: 30 }}>
             {steps.map((step, index) => (
                 <Step
                     key={index}
                     index={index + 1}
                     step={step}
                     onChangeDesciption={handleStepChange(index, "description")}
-                    onChangeDuration={handleStepChange(index, "duration")}
                     onDelete={handleDeleteStep(index)}
                 />
             ))}
-        </div>
+        </Stack>
     );
 };
 
@@ -139,14 +193,14 @@ const defaultFilters = ['Vegan', 'Vegetarian', 'Quick & Easy'];
 function RecipeEditor() {
     const { recipeId } = useParams();
     const [ingredients, setIngredients] = useState([{ name: "", amount: 0, unit: "g", group: "" }]);
-    const [steps, setSteps] = useState([{ description: "", duration: 0 }]);
+    const [steps, setSteps] = useState([{ order_id: 0, description: "", images: [] }]);
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [cookingTime, setCookingTime] = useState(20);
     const [portions, setPortions] = useState(1);
     const [categories, setCategories] = useState([]);
     const [coverImage, setCoverImage] = useState("");
-    const [images, setImages] = useState([]);
+    const [galleryImages, setGalleryImages] = useState([]);
     const [storing, setStoring] = useState(false);
     const [loaded, setLoaded] = useState(false);
 
@@ -182,8 +236,8 @@ function RecipeEditor() {
                 setPortions(data.portions);
                 setCookingTime(data.cooking_time);
                 setIngredients(data.ingredients.map(ingredient => ({ name: ingredient.name, amount: ingredient.amount, unit: ingredient.unit })));
-                setSteps(data.steps.map(step => ({ description: step, duration: 0 })));
-                setImages(data.images);
+                setSteps(data.steps.map(step => ({ order_id: step.order_id, description: step.step, images: step.images })));
+                setGalleryImages(data.gallery_images);
                 setCoverImage(data.cover_image);
                 setLoaded(true);
             })
@@ -192,25 +246,6 @@ function RecipeEditor() {
                 window.location.href = '/';
             });
     }, [recipeId]);
-
-    //TODO: add form to upload more images
-    const uploadImage = async (file) => {
-        const formData = new FormData();
-        formData.append('image', file);
-
-        const response = await fetch(API_BASE + 'image/create', {
-            method: 'POST',
-            body: formData,
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            setImages([...images, data.id_]);
-            return data.id_;
-        } else {
-            console.error('Image upload failed');
-        }
-    }
 
     const handleSubmit = async (event) => {
         event.preventDefault();
@@ -224,14 +259,15 @@ function RecipeEditor() {
             portions: portions,
             cooking_time: cookingTime,
             ingredients: ingredients.filter(ingredient => ingredient.name !== ""),
-            steps: steps.filter(step => step.description !== "").map(step => step.description),
-            cover_image: coverImage,
+            steps: steps.filter(step => step.description !== "").map((step, index) => ({ order_id: index, step: step.description, images: step.images })),
+            cover_image: coverImage !== "" ? Number(coverImage) : -1,
+            gallery_images: galleryImages.map(image => Number(image)),
         }
         if (recipeId !== undefined)
             data.id_ = recipeId;
 
-        if (images.length > 0)
-            data.images = images;
+        if (galleryImages.length > 0)
+            data.gallery_images = galleryImages;
 
         console.log(data)
 
@@ -251,16 +287,17 @@ function RecipeEditor() {
             const createdRecipeId = responseData.id_;
 
             console.log('Form submitted successfully');
-            return redirect("/recipe/" + createdRecipeId);
+
+            window.location.href = '/recipe/' + createdRecipeId;
         } else {
             response.text().then(text => console.log(text));
             console.error('Form submission failed');
         }
     };
 
-    const uploadImageOnChange = async (event) => {
+    const uploadGalleryImageOnChange = async (event) => {
         const file = event.target.files[0];
-        setImages([file]);
+        uploadImage(file).then(id_ => { if (id_ !== -1) setGalleryImages([...galleryImages, id_]) });
     }
 
     const uploadCoverImageOnChange = async (event) => {
@@ -275,7 +312,6 @@ function RecipeEditor() {
                 <h1>{recipeId === undefined ? "Create a new recipe" : "Edit your recipe"}</h1>
                 <form onSubmit={handleSubmit}>
                     <Stack>
-                        {/* TODO: consider using https://mui.com/material-ui/react-text-field/ instead of input */}
                         <TextField id="title" name="title" label="Title" value={title} onChange={e => setTitle(e.target.value)} required /><br />
                         <TextField id="description" name="description" label="Description" value={description} onChange={e => setDescription(e.target.value)} required /><br />
                         <TextField id="cookingTime" name="cookingTime" label="Cooking time in minutes" type="number" value={cookingTime} onChange={e => setCookingTime(e.target.value)} required /><br />
@@ -289,22 +325,35 @@ function RecipeEditor() {
                             onChange={(_, value) => { setCategories(value) }}
                             renderInput={(params) => <TextField {...params} label="Categories" />}
                         /><br />
+                        <Divider />
 
-                        <label className="btn" htmlFor="cover_image">Upload cover image
+                        <h3>Images:</h3>
+                        <UploadButton component="label" variant="contained" htmlFor="cover_image" startIcon={<CloudUploadIcon />}>
+                            Cover Image
                             <VisuallyHiddenInput type="file" id="cover_image" name="cover_image" accept="image/*" onChange={uploadCoverImageOnChange} />
-                        </label><br />
-                        <span id="cover-image-chosen">{coverImage && document.getElementById("cover_image").files.length > 0 ? "Cover-Image: " + document.getElementById("cover_image").files[0].name : "No file chosen"}</span><br />
+                        </UploadButton><br />
+                        {coverImage && <img className='uploadedImg' src={API_BASE + "image/" + coverImage} alt={"Cover Image"} />}<br />
+
+                        <UploadButton component="label" variant="contained" htmlFor="gallery_images" startIcon={<CloudUploadIcon />}>
+                            Gallery Images
+                            <VisuallyHiddenInput type="file" id="gallery_images" name="gallery_images" accept="image/*" onChange={uploadGalleryImageOnChange} />
+                        </UploadButton><br />
+                        {galleryImages.length > 0 && imagesList(galleryImages, "galleryImg")}<br />
+
+                        <Divider />
 
                         <h3>Ingredients:</h3>
-                        <div>
+                        <Stack spacing={2} marginBottom={2}>
+                            <TextField value={portions} min="1" type="number" id="portions" name="portions" label="Portions" onChange={e => setPortions(e.target.value)} required /><br />
                             <IngredientList ingredients={ingredients} setIngredients={setIngredients} />
-                            <label htmlFor="portions">Portions:</label><br />
-                            <input min="1" type="number" id="portions" name="portions" placeholder="Portions" onChange={e => setPortions(e.target.value)} required /><br />
-                        </div>
+                        </Stack>
+                        <Divider />
+
                         <h3>Steps:</h3>
                         <div>
                             <StepsList steps={steps} setSteps={setSteps} />
                         </div>
+                        <Divider />
                         <br />
                         <button type="submit">{recipeId === undefined ? "Create" : "Change"}</button><br />
                     </Stack>
