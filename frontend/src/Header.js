@@ -25,6 +25,9 @@ function Header({ setSearchInput }) {
             return
         }
 
+        // Limit the number of results to 10
+        params.append("limit", 10)
+
         setLoading(true)
         fetch(API_BASE + 'recipe/filtered?' + new URLSearchParams(params))
             .then((response) => response.json())

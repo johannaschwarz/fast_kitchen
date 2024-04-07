@@ -43,9 +43,20 @@ def get_recipe(
 
 @recipe_router.get("/recipe/all")
 def get_all_recipes(
-    database: Annotated[Database, Depends(get_database_connection)]
+    database: Annotated[Database, Depends(get_database_connection)],
+    limit: Annotated[
+        int,
+        Query(
+            title="Limit",
+            description="The maximum number of recipes to return",
+            example=10,
+        ),
+    ] = None,
+    page: Annotated[
+        int, Query(title="Page", description="The page number", example=1)
+    ] = None,
 ) -> list[RecipeListing]:
-    return database.get_all_recipes()
+    return database.get_all_recipes(limit=limit, page=page)
 
 
 @recipe_router.get("/recipe/filtered")
@@ -67,8 +78,21 @@ def get_filtered_recipes(
             example="Spaghetti",
         ),
     ] = None,
+    limit: Annotated[
+        int,
+        Query(
+            title="Limit",
+            description="The maximum number of recipes to return",
+            example=10,
+        ),
+    ] = None,
+    page: Annotated[
+        int, Query(title="Page", description="The page number", example=1)
+    ] = None,
 ) -> list[RecipeListing]:
-    return database.get_all_recipes(search_string=search, filter_categories=categories)
+    return database.get_all_recipes(
+        imit=limit, page=page, search_string=search, filter_categories=categories
+    )
 
 
 @recipe_router.put("/recipe/{recipe_id}")

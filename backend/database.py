@@ -36,6 +36,8 @@ class Database(ABC):
     @abstractmethod
     def get_all_recipes(
         self,
+        limit: int | None = None,
+        page: int | None = None,
         search_string: str | None = None,
         filter_categories: list[str] | None = None,
     ) -> list[RecipeListing]:
@@ -198,6 +200,8 @@ class MySQLDatabase(Database):
 
     def get_all_recipes(
         self,
+        limit: int | None = None,
+        page: int | None = None,
         search_string: str | None = None,
         filter_categories: list[str] | None = None,
     ) -> list[RecipeListing]:
@@ -212,20 +216,31 @@ class MySQLDatabase(Database):
 
         cursor = self.recipes_database.cursor(prepared=True)
 
+        if limit:
+            limitation_query = f" LIMIT %s"
+            limit_parameters = (limit,)
+            if page:
+                limitation_query += " OFFSET %s"
+                limit_parameters = (limit, (page - 1) * limit)
+        else:
+            limitation_query = ""
+            limit_parameters = tuple()
+
         if filter_categories:
             cursor.execute(
-                f"SELECT DISTINCT r.RecipeID, r.Title, r.Description, r.CoverImage FROM Recipes r, Categories c WHERE (r.Title LIKE CONCAT('%', %s, '%') OR r.Description LIKE CONCAT('%', %s, '%')) AND c.RecipeID = r.RecipeID AND c.Category IN ({', '.join(['%s'] * len(filter_categories))}) GROUP BY r.RecipeID HAVING COUNT(c.Category) = %s;",
+                f"SELECT DISTINCT r.RecipeID, r.Title, r.Description, r.CoverImage FROM Recipes r, Categories c WHERE (r.Title LIKE CONCAT('%', %s, '%') OR r.Description LIKE CONCAT('%', %s, '%')) AND c.RecipeID = r.RecipeID AND c.Category IN ({', '.join(['%s'] * len(filter_categories))}) GROUP BY r.RecipeID HAVING COUNT(c.Category) = %s{limitation_query};",
                 (
                     search_string,
                     search_string,
                     *filter_categories,
                     len(filter_categories),
-                ),
+                )
+                + limit_parameters,
             )
         else:
             cursor.execute(
-                "SELECT RecipeID, Title, Description, CoverImage FROM Recipes WHERE Title LIKE CONCAT('%', %s, '%') OR Description LIKE CONCAT('%', %s, '%')",
-                (search_string, search_string),
+                f"SELECT RecipeID, Title, Description, CoverImage FROM Recipes WHERE Title LIKE CONCAT('%', %s, '%') OR Description LIKE CONCAT('%', %s, '%'){limitation_query}",
+                (search_string, search_string) + limit_parameters,
             )
         result = cursor.fetchall()
         cursor.close()
