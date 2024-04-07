@@ -6,9 +6,12 @@ from exceptions import NotFoundException
 from fastapi import Depends, HTTPException, Response, UploadFile, status
 from fastapi.routing import APIRouter
 from models import ImageID
+from pi_heif import register_heif_opener
 from PIL import Image as PILImage
 from pydantic import ValidationError
 from utils import resize_image
+
+register_heif_opener()
 
 image_router = APIRouter()
 
