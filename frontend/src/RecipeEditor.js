@@ -135,6 +135,7 @@ const StepsList = ({ steps, setSteps }) => {
     );
 };
 
+const defaultFilters = ['Vegan', 'Vegetarian', 'Quick & Easy'];
 function RecipeEditor() {
     const { recipeId } = useParams();
     const [ingredients, setIngredients] = useState([{ name: "", amount: 0, unit: "g", group: "" }]);
@@ -149,7 +150,6 @@ function RecipeEditor() {
     const [storing, setStoring] = useState(false);
     const [loaded, setLoaded] = useState(false);
 
-    const defaultFilters = ['Vegan', 'Vegetarian', 'Quick & Easy'];
     const [filters, setFilters] = useState(defaultFilters);
 
     useEffect(() => {
@@ -220,11 +220,12 @@ function RecipeEditor() {
         var data = {
             title: title,
             description: description,
-            categories: categories.split(",").map(category => category.trim()),
+            categories: categories.map(category => category.trim()),
             portions: portions,
             cooking_time: cookingTime,
             ingredients: ingredients.filter(ingredient => ingredient.name !== ""),
             steps: steps.filter(step => step.description !== "").map(step => step.description),
+            cover_image: coverImage,
         }
         if (recipeId !== undefined)
             data.id_ = recipeId;
@@ -252,6 +253,7 @@ function RecipeEditor() {
             console.log('Form submitted successfully');
             return redirect("/recipe/" + createdRecipeId);
         } else {
+            response.text().then(text => console.log(text));
             console.error('Form submission failed');
         }
     };
@@ -263,8 +265,7 @@ function RecipeEditor() {
 
     const uploadCoverImageOnChange = async (event) => {
         const file = event.target.files[0];
-        const id_ = uploadImage(file);
-        setCoverImage(id_);
+        uploadImage(file).then(id_ => setCoverImage(id_));
     }
 
     return (

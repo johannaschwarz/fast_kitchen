@@ -1,5 +1,6 @@
-fastapi==0.109.2
+fastapi==0.110.1
 mysql-connector-python==8.3.0
 uvicorn[standard]==0.27.1
 python-multipart==0.0.9
 pillow==10.2.0
+pi-heif==0.16.0

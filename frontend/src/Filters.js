@@ -3,8 +3,8 @@ import React, { useEffect, useState } from 'react';
 import { API_BASE } from './Config';
 import Filter from './Filter';
 
+const defaultFilters = ['Vegan', 'Vegetarian', 'Quick & Easy'];
 function Filters({ setFilter }) {
-    const defaultFilters = ['Vegan', 'Vegetarian', 'Quick & Easy'];
     const [filters, setFilters] = useState(defaultFilters);
 
     useEffect(() => {
