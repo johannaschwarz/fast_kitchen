@@ -229,7 +229,7 @@ class MySQLDatabase(Database):
 
         if filter_categories:
             cursor.execute(
-                f"SELECT DISTINCT r.RecipeID, r.Title, r.Description, r.CoverImage FROM Recipes r, Categories c WHERE (r.Title LIKE CONCAT('%', %s, '%') OR r.Description LIKE CONCAT('%', %s, '%')) AND c.RecipeID = r.RecipeID AND c.Category IN ({', '.join(['%s'] * len(filter_categories))}) GROUP BY r.RecipeID HAVING COUNT(c.Category) = %s{limitation_query};",
+                f"SELECT DISTINCT r.RecipeID, r.Title, r.Description, r.CoverImage FROM Recipes r, Categories c WHERE (r.Title LIKE CONCAT('%', %s, '%') OR r.Description LIKE CONCAT('%', %s, '%')) AND c.RecipeID = r.RecipeID AND c.Category IN ({', '.join(['%s'] * len(filter_categories))}) GROUP BY r.RecipeID HAVING COUNT(c.Category) = %s {limitation_query};",
                 (
                     search_string,
                     search_string,
@@ -240,7 +240,7 @@ class MySQLDatabase(Database):
             )
         else:
             cursor.execute(
-                f"SELECT RecipeID, Title, Description, CoverImage FROM Recipes WHERE Title LIKE CONCAT('%', %s, '%') OR Description LIKE CONCAT('%', %s, '%'){limitation_query}",
+                f"SELECT RecipeID, Title, Description, CoverImage FROM Recipes WHERE Title LIKE CONCAT('%', %s, '%') OR Description LIKE CONCAT('%', %s, '%') {limitation_query}",
                 (search_string, search_string) + limit_parameters,
             )
         result = cursor.fetchall()

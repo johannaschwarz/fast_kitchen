@@ -91,7 +91,7 @@ def get_filtered_recipes(
     ] = None,
 ) -> list[RecipeListing]:
     return database.get_all_recipes(
-        imit=limit, page=page, search_string=search, filter_categories=categories
+        limit=limit, page=page, search_string=search, filter_categories=categories
     )
 
 
