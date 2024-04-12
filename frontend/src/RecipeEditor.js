@@ -1,10 +1,10 @@
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOutlineOutlined';
-import { Autocomplete, Stack, TextField, Button, MenuItem, Divider } from '@mui/material';
+import { Alert, AlertTitle, Autocomplete, Button, Divider, MenuItem, Stack, TextField } from '@mui/material';
 import styled from '@mui/material/styles/styled';
 import React, { useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
 import { Link, useParams } from "react-router-dom";
-import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { API_BASE } from './Config';
 import Header from "./Header";
 
@@ -43,7 +43,7 @@ const UploadButton = styled(Button)({
     '&:hover': {
         backgroundColor: 'var(--secondary-color)',
     },
-    'font-weight': "bold",
+    fontWeight: "bold",
     borderRadius: 20,
 })
 
@@ -66,7 +66,7 @@ function Ingredient({ ingredient, onChangeIngredient, onChangeAmount, onChangeUn
         ingredient = { name: "", amount: 0, unit: "g", group: "" };
     }
     return (
-        <Stack direction={"row"} spacing={2}>
+        <Stack direction="row" spacing={2}>
             <TextField type="text" id="ingredient" name="ingredient" label="Ingredient" onChange={onChangeIngredient} value={ingredient.name} />
             <TextField min="0" type="number" id="amount" name="amount" label="Amount" onChange={onChangeAmount} value={ingredient.amount} />
             <TextField select label="Select" id="unit" name="unit" defaultValue={"g"} onChange={onChangeUnit} value={ingredient.unit} >
@@ -84,43 +84,80 @@ function Ingredient({ ingredient, onChangeIngredient, onChangeAmount, onChangeUn
 const IngredientList = ({ ingredients, setIngredients }) => {
     useEffect(() => {
         // If the last ingredient is filled, add a new empty ingredient
-        if (ingredients.length === 0 || ingredients[ingredients.length - 1].name !== "") {
-            setIngredients([...ingredients, { name: "", amount: 0, unit: "g", group: "" }]);
-        }
-        // If there are two empty ingredients at the end, remove the last one
-        else if (ingredients.length > 1 && ingredients[ingredients.length - 2].name === "") {
-            setIngredients(ingredients.slice(0, -1));
-        }
+        let newIngredients = [...ingredients];
+        newIngredients.forEach((group, groupIndex) => {
+            if (group.ingredients.length === 0 || group.ingredients[group.ingredients.length - 1].name !== "") {
+                group.ingredients.push({ name: "", amount: 0, unit: "g", group: "" });
+            }
+            // If there are two empty ingredients at the end, remove the last one
+            else if (group.ingredients.length > 1 && group.ingredients[group.ingredients.length - 2].name === "") {
+                group.ingredients = group.ingredients.slice(0, -1);
+            }
+        });
+        setIngredients(newIngredients);
     }, [ingredients, setIngredients]);
 
-    const handleIngredientChange = (index, key) => (event) => {
-        const newIngredients = [...ingredients];
+    const handleIngredientChange = (groupIndex, index, key) => (event) => {
+        const newGroupIngredients = [...ingredients[groupIndex]["ingredients"]];
         if (key === "amount") {
-            newIngredients[index][key] = parseFloat(event.target.value);
+            newGroupIngredients[index][key] = event.target.value !== "" ? parseFloat(event.target.value) : "";
         } else {
-            newIngredients[index][key] = event.target.value;
+            newGroupIngredients[index][key] = event.target.value;
         }
+
+        const newIngredients = [...ingredients];
+        newIngredients[groupIndex]["ingredients"] = newGroupIngredients;
         setIngredients(newIngredients);
     };
 
-    const handleDeleteIngredient = (index) => (_event) => {
+    const handleDeleteIngredient = (groupIndex, index) => (_event) => {
+        const newGroupIngredients = [...ingredients[groupIndex]["ingredients"]];
+        newGroupIngredients.splice(index, 1);
+
         const newIngredients = [...ingredients];
-        newIngredients.splice(index, 1);
+        newIngredients[groupIndex]["ingredients"] = newGroupIngredients;
         setIngredients(newIngredients);
     }
 
+    const handleGroupNameChange = (groupIndex) => (event) => {
+        const newIngredients = [...ingredients];
+        newIngredients[groupIndex]["group"] = event.target.value;
+        setIngredients(newIngredients);
+    }
+
+    const addIngredientGroup = () => {
+        setIngredients([...ingredients, { group: "", ingredients: [{ name: "", amount: 0, unit: "g", group: "" }] }]);
+    };
+
+    const deleteIngredientGroup = (groupIndex) => (_event) => {
+        const newIngredients = [...ingredients];
+        newIngredients.splice(groupIndex, 1);
+        setIngredients(newIngredients);
+    };
     return (
-        <Stack spacing={2}>
-            {ingredients.map((ingredient, index) => (
-                <Ingredient
-                    key={index}
-                    ingredient={ingredient}
-                    onChangeIngredient={handleIngredientChange(index, "name")}
-                    onChangeAmount={handleIngredientChange(index, "amount")}
-                    onChangeUnit={handleIngredientChange(index, "unit")}
-                    onDelete={handleDeleteIngredient(index)}
-                />
-            ))}
+        <Stack>
+            {ingredients.map((ingredientGroup, groupIndex) => (
+                <Stack spacing={2} key={groupIndex}>
+                    {ingredients.length > 1 && <Stack direction="row" spacing={2}>
+                        <TextField id={"group_name_" + groupIndex} name="group" label="Ingredient Group" onChange={handleGroupNameChange(groupIndex)} value={ingredientGroup["group"]} /><br />
+                        {ingredients.length > 1 && < button type='button' onClick={deleteIngredientGroup(groupIndex)} className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>}
+                    </Stack>}
+                    {ingredientGroup["ingredients"].map((ingredient, index) => (
+                        <Ingredient
+                            key={index}
+                            ingredient={ingredient}
+                            group={ingredientGroup}
+                            onChangeIngredient={handleIngredientChange(groupIndex, index, "name")}
+                            onChangeAmount={handleIngredientChange(groupIndex, index, "amount")}
+                            onChangeUnit={handleIngredientChange(groupIndex, index, "unit")}
+                            onDelete={handleDeleteIngredient(groupIndex, index)}
+                        />
+                    ))}
+                    <Divider />
+                    <br />
+                </Stack>))}
+            <br />
+            <button onClick={addIngredientGroup}>Add ingredient group</button>
         </Stack>
     );
 };
@@ -153,14 +190,14 @@ function Step({ index, step, onChangeDesciption, onDelete }) {
 const StepsList = ({ steps, setSteps, uploadStepImageOnChange }) => {
     useEffect(() => {
         // If the last step is filled, add a new empty step
-        if (steps[steps.length - 1].description !== "") {
+        if (steps.length > 0 && steps[steps.length - 1].description !== "") {
             setSteps([...steps, { description: "", images: [] }]);
         }
         // If there are two empty steps at the end, remove the last one
         else if (steps.length > 1 && steps[steps.length - 2].description === "") {
             setSteps(steps.slice(0, -1));
         }
-    }, [steps, setSteps]);
+    }, [steps]);
 
     const handleStepChange = (index, key) => (event) => {
         const newSteps = [...steps];
@@ -192,7 +229,7 @@ const StepsList = ({ steps, setSteps, uploadStepImageOnChange }) => {
 const defaultFilters = ['Vegan', 'Vegetarian', 'Quick & Easy'];
 function RecipeEditor() {
     const { recipeId } = useParams();
-    const [ingredients, setIngredients] = useState([{ name: "", amount: 0, unit: "g", group: "" }]);
+    const [ingredients, setIngredients] = useState([{ group: "", ingredients: [{ name: "", amount: 0, unit: "g", group: "" }] }]);
     const [steps, setSteps] = useState([{ order_id: 0, description: "", images: [] }]);
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
@@ -203,6 +240,7 @@ function RecipeEditor() {
     const [galleryImages, setGalleryImages] = useState([]);
     const [storing, setStoring] = useState(false);
     const [loaded, setLoaded] = useState(false);
+    const [alertMessage, setAlertMessage] = useState("");
 
     const [filters, setFilters] = useState(defaultFilters);
 
@@ -235,8 +273,24 @@ function RecipeEditor() {
                 setCategories(data.categories);
                 setPortions(data.portions);
                 setCookingTime(data.cooking_time);
-                setIngredients(data.ingredients.map(ingredient => ({ name: ingredient.name, amount: ingredient.amount, unit: ingredient.unit })));
-                setSteps(data.steps.map(step => ({ order_id: step.order_id, description: step.step, images: step.images })));
+                if (data.ingredients.length > 0) {
+                    let newIngredients = []
+                    for (let i = 0; i < data.ingredients.length; i++) {
+                        let groupIndex = newIngredients.findIndex(group => group.group === data.ingredients[i].group);
+                        if (groupIndex === -1) {
+                            newIngredients.push({ group: data.ingredients[i].group, ingredients: [] });
+                            groupIndex = newIngredients.length - 1;
+                        }
+                        newIngredients[groupIndex].ingredients.push({
+                            name: data.ingredients[i].name,
+                            amount: data.ingredients[i].amount,
+                            unit: data.ingredients[i].unit,
+                        });
+                    }
+                    setIngredients(newIngredients);
+                }
+                if (data.steps.length > 0)
+                    setSteps(data.steps.map(step => ({ order_id: step.order_id, description: step.step, images: step.images })));
                 setGalleryImages(data.gallery_images);
                 setCoverImage(data.cover_image);
                 setLoaded(true);
@@ -247,10 +301,62 @@ function RecipeEditor() {
             });
     }, [recipeId]);
 
+    const recipeChecks = () => {
+        if (title.trim() === "") {
+            setAlertMessage("Please enter a title");
+            return false;
+        }
+
+        if (description.trim() === "") {
+            setAlertMessage("Please enter a description");
+            return false;
+        }
+
+        if (categories.length === 0) {
+            setAlertMessage("Please enter at least one category");
+            return false;
+        }
+
+        if (cookingTime <= 0) {
+            setAlertMessage("Please enter a valid cooking time");
+            return false;
+        }
+
+        // check for distinct ingredient groups
+        let groupNames = ingredients.map(group => group.group);
+        if (groupNames.length !== new Set(groupNames).size) {
+            setAlertMessage("Ingredient groups must have different names");
+            return false;
+        }
+
+        // check if all groups have a name if there is more than one
+        if (ingredients.length > 1 && ingredients.filter(group => group.group === "").length > 0) {
+            setAlertMessage("Ingredient groups must have a name");
+            return false;
+        }
+
+        if (steps.filter(step => step.description.trim() !== "").length === 0) {
+            setAlertMessage("Please enter at least one step");
+            return false;
+        }
+        return true;
+    }
+
     const handleSubmit = async (event) => {
         event.preventDefault();
 
+        setAlertMessage("");
+
+        let flattenedIngredients = ingredients.map(group => group.ingredients.map(ingredient => (
+            { name: ingredient.name.trim(), amount: ingredient.amount, unit: ingredient.unit, group: group.group }
+        )).filter(ingredient => ingredient.name !== "")).flat();
+
+        if (!recipeChecks()) {
+            return;
+        }
+
         setStoring(true);
+
 
         var data = {
             title: title,
@@ -258,8 +364,8 @@ function RecipeEditor() {
             categories: categories.map(category => category.trim()),
             portions: portions,
             cooking_time: cookingTime,
-            ingredients: ingredients.filter(ingredient => ingredient.name !== ""),
-            steps: steps.filter(step => step.description !== "").map((step, index) => ({ order_id: index, step: step.description, images: step.images })),
+            ingredients: flattenedIngredients,
+            steps: steps.filter(step => step.description.trim() !== "").map((step, index) => ({ order_id: index, step: step.description.trim(), images: step.images })),
             cover_image: coverImage !== "" ? Number(coverImage) : -1,
             gallery_images: galleryImages.map(image => Number(image)),
         }
@@ -280,8 +386,6 @@ function RecipeEditor() {
             body: JSON.stringify(data),
         });
 
-        setStoring(false);
-
         if (response.ok) {
             const responseData = await response.json();
             const createdRecipeId = responseData.id_;
@@ -290,8 +394,12 @@ function RecipeEditor() {
 
             window.location.href = '/recipe/' + createdRecipeId;
         } else {
-            response.text().then(text => console.log(text));
-            console.error('Form submission failed');
+            setStoring(false);
+            response.text().then(text => {
+                console.log("Form submission failed")
+                console.log(text);
+                setAlertMessage("An error occured: " + text);
+            });
         }
     };
 
@@ -356,6 +464,10 @@ function RecipeEditor() {
                         <Divider />
                         <br />
                         <button type="submit">{recipeId === undefined ? "Create" : "Change"}</button><br />
+                        {alertMessage && <Alert severity="error">
+                            <AlertTitle>Error</AlertTitle>
+                            {alertMessage}
+                        </Alert>}
                     </Stack>
                 </form>
             </div>
