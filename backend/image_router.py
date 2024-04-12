@@ -63,3 +63,14 @@ def get_images_by_recipe(
 ) -> list[int]:
 
     return database.get_images_by_recipe(recipe_id)
+
+
+@image_router.delete("/image/{image_id}")
+def delete_image(
+    image_id: int, database: Annotated[Database, Depends(get_database_connection)]
+) -> None:
+
+    try:
+        database.delete_image(image_id)
+    except NotFoundException as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e

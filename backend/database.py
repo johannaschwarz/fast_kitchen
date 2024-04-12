@@ -89,6 +89,15 @@ class Database(ABC):
         """
 
     @abstractmethod
+    def delete_image(self, image_id: int):
+        """
+        Delete an image from the database.
+
+        Raises:
+            NotFoundException if the image could not be found.
+        """
+
+    @abstractmethod
     def get_categories(self) -> list[str]:
         """
         Get all categories from the database.
@@ -453,6 +462,28 @@ class MySQLDatabase(Database):
 
         cursor.close()
         return result[0]
+
+    def delete_image(self, image_id: int):
+        """
+        Delete an image from the database.
+
+        Raises:
+            NotFoundException: if the image could not be found.
+        """
+
+        cursor = self.recipes_database.cursor()
+
+        sql = "DELETE FROM Images WHERE ImageID = %s"
+        val = (image_id,)
+
+        cursor.execute(sql, val)
+        self.recipes_database.commit()
+
+        if cursor.rowcount == 0:
+            cursor.close()
+            raise NotFoundException(f"Image with id {image_id} not found in database.")
+
+        cursor.close()
 
     def _get_gallery_images_by_recipe(self, recipe_id: int) -> list[int]:
         """
