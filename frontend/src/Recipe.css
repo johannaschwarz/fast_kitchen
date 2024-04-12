@@ -74,7 +74,7 @@
     height: 100vh;
     scroll-behavior: smooth;
     overflow: auto;
-   /* scroll-snap-type: y mandatory;*/
+    /* scroll-snap-type: y mandatory;*/
 }
 
 
@@ -88,6 +88,10 @@
 .recipeStepContent {
     margin: 100px 0;
     flex-grow: 1;
+}
+
+.recipeStepCarousel {
+    margin-bottom: 8px;
 }
 
 .stepCounterCircle {
@@ -125,7 +129,6 @@
 
 .instructionText {
     display: block;
-    margin-top: 8px;
 }
 
 

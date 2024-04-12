@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
-import { Link, useParams } from 'react-router-dom';
 import Carousel from 'react-material-ui-carousel';
+import { Link, useParams } from 'react-router-dom';
 import { API_BASE } from './Config';
 import Header from './Header.js';
 
@@ -9,7 +9,8 @@ import './Recipe.css';
 
 function Recipe({ recipe }) {
     const [ingredientMultiplier, setIngredientMultiplier] = useState(1);
-    const [gallery_images, setGalleryImages] = useState([]);
+    const [galleryImages, setGalleryImages] = useState([]);
+    const [ingredients, setIngredients] = useState([]);
 
     useEffect(() => {
         if (recipe) {
@@ -18,18 +19,33 @@ function Recipe({ recipe }) {
             } else {
                 setGalleryImages([recipe.cover_image, ...recipe.gallery_images]);
             }
+
+            let newIngredients = []
+            for (let i = 0; i < recipe.ingredients.length; i++) {
+                let groupIndex = newIngredients.findIndex(group => group.group === recipe.ingredients[i].group);
+                if (groupIndex === -1) {
+                    newIngredients.push({ group: recipe.ingredients[i].group, ingredients: [] });
+                    groupIndex = newIngredients.length - 1;
+                }
+                newIngredients[groupIndex].ingredients.push({
+                    name: recipe.ingredients[i].name,
+                    amount: recipe.ingredients[i].amount,
+                    unit: recipe.ingredients[i].unit,
+                });
+            }
+            setIngredients(newIngredients);
         }
     }, [recipe]);
 
     if (recipe === null || recipe.id_ === undefined) {
         return null;
     }
-    
+
     const deleteRecipe = async () => {
         const response = await fetch(API_BASE + 'recipe/' + recipe.id_, {
             method: 'DELETE'
         })
-        
+
         if (response.ok) {
             window.location.href = '/';
         }
@@ -38,10 +54,10 @@ function Recipe({ recipe }) {
     return (
         <div>
             <div className='imageCard'>
-                {recipe.gallery_images.length > 0 &&
+                {galleryImages.length > 0 &&
                     <Carousel>
-                        {gallery_images.map((image) =>
-                            <img className="carousel-image" src={API_BASE + "image/" + image} alt={recipe.name} />
+                        {galleryImages.map((image, index) =>
+                            <img key={index} className="carousel-image" src={API_BASE + "image/" + image} alt={recipe.name} />
                         )}
                     </Carousel>
                 }
@@ -54,11 +70,27 @@ function Recipe({ recipe }) {
             </div>
             <div className='card'>
                 <h2>Ingredients:</h2>
-                <ul>
-                    {recipe.ingredients.map((ingredient, index) => (
-                        <li key={index}>{ingredient.name}: {ingredient.amount * (!isNaN(ingredientMultiplier) ? ingredientMultiplier : 1)} {ingredient.unit}</li>
-                    ))}
-                </ul>
+                {ingredients.map((ingredientGroup, groupIndex) => (
+                    <div key={groupIndex}>
+                        {ingredients.length > 1 &&
+                            <div>
+                                <h3>{ingredientGroup.group}</h3>
+                                <ul>
+                                    {ingredientGroup.ingredients.map((ingredient, ingredientIndex) => (
+                                        <li key={ingredientIndex}>{ingredient.name}: {ingredient.amount * (!isNaN(ingredientMultiplier) ? ingredientMultiplier : 1)} {ingredient.unit}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        }
+                        {ingredients.length === 1 &&
+                            <ul>
+                                {ingredientGroup.ingredients.map((ingredient, ingredientIndex) => (
+                                    <li key={ingredientIndex}>{ingredient.name}: {ingredient.amount * (!isNaN(ingredientMultiplier) ? ingredientMultiplier : 1)} {ingredient.unit}</li>
+                                ))}
+                            </ul>
+                        }
+                    </div>
+                ))}
                 <span>Portionen: <input min={1} value={(!isNaN(ingredientMultiplier) ? ingredientMultiplier : "")} onChange={e => setIngredientMultiplier(parseInt(e.target.value))} type='number' /></span>
             </div>
             <div className='recipeSteps'>
@@ -74,11 +106,11 @@ function Recipe({ recipe }) {
                             <div className="stepCounterBottomLine"></div>
                         </div>
                         <div className='imageCard recipeStepContent'>
-                            <Carousel autoPlay={false}>
-                                {step.images.map((image) => (
-                                        <img className="carousel-image" src={API_BASE + "image/" + image} alt={"step" + index + "image"} />
+                            {step.images.length > 0 && <Carousel autoPlay={false} className="recipeStepCarousel">
+                                {step.images.map((image, imgIndex) => (
+                                    <img key={imgIndex} className="carousel-image" src={API_BASE + "image/" + image} alt={"Step" + index + " image " + imgIndex} />
                                 ))}
-                            </Carousel>
+                            </Carousel>}
                             <span className="instructionText">{step.step}</span>
                         </div>
                     </div>
