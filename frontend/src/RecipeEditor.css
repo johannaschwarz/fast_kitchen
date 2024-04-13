@@ -3,6 +3,8 @@
     border-radius: 10px;
     object-fit: cover;
     max-height: 400px;
+    position: relative;
+    display: inline-block;
 }
 
 .stepImg {
@@ -10,5 +12,41 @@
     height: 100px;
     border-radius: 10px;
     position: relative;
-    display: inline-flex;
+    display: inline-block;
+}
+
+.deleteIconStep {
+    padding: 3px
+}
+
+.coverImg {
+    width: 400px;
+    border-radius: 10px;
+    object-fit: cover;
+    max-height: 400px;
+    display: block;
+}
+
+.deleteIcon,
+.deleteIconStep {
+    top: 0;
+    left: 0;
+    position: absolute;
+    background: rgba(42, 42, 42, 0.488);
+    border: none;
+    border-radius: 0;
+    border-start-start-radius: 10px;
+    border-end-end-radius: 10px;
+    box-shadow: none;
+    color: #c2c2c2;
+}
+
+.deleteIcon:hover,
+.deleteIconStep:hover {
+    background: rgba(42, 42, 42, 0.788);
+    color: #fff;
+}
+
+.uploadImgContainer {
+    position: relative;
 }

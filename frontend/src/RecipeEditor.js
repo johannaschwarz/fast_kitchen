@@ -40,16 +40,18 @@ const deleteImage = async (id) => {
     }
 }
 
-const imagesList = (images, imgClass, deleteStepImageOnChange) => {
+const imagesList = (images, imgClass, deleteStepImageOnChange, iconClass = "deleteIcon") => {
     return (
         <Stack direction={'row'} spacing={2}>
             {images.map((image) => (
                 <div key={image}>
                     {console.log(image)}
-                    <img className={imgClass} src={API_BASE + "image/" + image} alt={image} />
-                    <button type="button" onClick={() => deleteStepImageOnChange(image)} className="clearBtn">
-                        <RemoveCircleOutlineOutlinedIcon />
-                    </button>
+                    <div className='uploadImgContainer'>
+                        <img className={imgClass} src={API_BASE + "image/" + image} alt={image} />
+                        <button type="button" onClick={() => deleteStepImageOnChange(image)} className={iconClass}>
+                            <RemoveCircleOutlineOutlinedIcon />
+                        </button>
+                    </div>
                 </div>
             ))}
         </Stack>
@@ -193,7 +195,7 @@ function Step({ index, step, onChangeDesciption, onDelete, onUploadImage, onDele
                 </UploadButton><br />
                 {step.description !== "" && < button type='button' onClick={onDelete} className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>}
             </Stack>
-            {step.images.length > 0 && imagesList(step.images, "stepImg", onDeleteImage)}
+            {step.images.length > 0 && imagesList(step.images, "stepImg", onDeleteImage, "deleteIconStep")}
         </div>
     )
 }
@@ -485,9 +487,9 @@ function RecipeEditor() {
                             <VisuallyHiddenInput type="file" id="cover_image" name="cover_image" accept="image/*" onChange={uploadCoverImageOnChange} />
                         </UploadButton><br />
                         {coverImage &&
-                            <div>
-                                <img className='galleryImg' src={API_BASE + "image/" + coverImage} alt={"Cover Image"} />
-                                <button type='button' onClick={() => deleteCoverImageOnChange(coverImage)} className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>
+                            <div className="uploadImgContainer">
+                                <img className='coverImg' src={API_BASE + "image/" + coverImage} alt={"Cover Image"} />
+                                <button type='button' onClick={() => deleteCoverImageOnChange(coverImage)} className='deleteIcon'><RemoveCircleOutlineOutlinedIcon /></button>
                             </div>
                         }
                         <br />
