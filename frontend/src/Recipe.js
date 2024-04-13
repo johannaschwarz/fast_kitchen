@@ -1,10 +1,11 @@
+import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined';
+import { Stack } from '@mui/material';
 import React, { useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
 import Carousel from 'react-material-ui-carousel';
 import { Link, useParams } from 'react-router-dom';
 import { API_BASE } from './Config';
 import Header from './Header.js';
-
 import './Recipe.css';
 
 function Recipe({ recipe }) {
@@ -62,10 +63,18 @@ function Recipe({ recipe }) {
                     </Carousel>
                 }
                 <h2>{recipe.title}</h2>
+                <Stack direction="row" alignItems="center" gap={1}>
+                    <span className="label">
+                        <Stack direction="row" alignItems="center" gap={1}>
+                            <TimerOutlinedIcon sx={{ fontSize: 15 }} />
+                            <span>{recipe.cooking_time} min</span>
+                        </Stack>
+                    </span>
 
-                {recipe.categories.map((category, index) => (
-                    <span className="label" key={index}>{category}</span>
-                ))}
+                    {recipe.categories.map((category, index) => (
+                        <span className="label" key={index}>{category}</span>
+                    ))}
+                </Stack>
                 <p>{recipe.description}</p>
             </div>
             <div className='card'>
