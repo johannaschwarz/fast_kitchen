@@ -1,0 +1,89 @@
+from datetime import datetime, timedelta, timezone
+from typing import Annotated
+
+from database import Database
+from database_handler import get_database_connection
+from exceptions import CredentialsException, NotFoundException
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
+from models import Token, UserInDB
+from passlib.context import CryptContext
+from utils import load_credentials
+
+user_router = APIRouter()
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+SECRET_KEY = load_credentials()["secret_key"]
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 360
+
+
+def verify_password(plain_password, hashed_password) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
+
+def get_password_hash(password) -> str:
+    return pwd_context.hash(password)
+
+
+def authenticate_user(
+    database: Database, username: str, password: str
+) -> UserInDB | None:
+    try:
+        user = database.get_user_by_username(username)
+
+        return user if verify_password(password, user.hashed_password) else None
+
+    except NotFoundException:
+        return None
+
+
+def create_access_token(data: dict) -> str:
+    to_encode = data.copy()
+    to_encode["exp"] = datetime.now(timezone.utc) + timedelta(
+        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+    )
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
+async def get_current_user(
+    token: Annotated[str, Depends(oauth2_scheme)],
+    database: Annotated[Database, Depends(get_database_connection)],
+) -> UserInDB:
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+
+        user_id: int = payload.get("sub")
+        if not user_id:
+            raise CredentialsException()
+
+        return database.get_user_by_id(user_id)
+    except (JWTError, NotFoundException) as e:
+        raise CredentialsException() from e
+
+
+async def get_current_active_user(
+    current_user: Annotated[UserInDB, Depends(get_current_user)],
+):
+    if current_user.disabled:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user"
+        )
+    return current_user
+
+
+@user_router.post("/token")
+async def login(
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    database: Annotated[Database, Depends(get_database_connection)],
+) -> Token:
+    user = authenticate_user(database, form_data.username, form_data.password)
+    if not user:
+        raise CredentialsException()
+
+    access_token = create_access_token(data={"sub": user.id_})
+    return Token(access_token=access_token, token_type="bearer")

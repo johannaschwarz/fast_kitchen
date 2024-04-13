@@ -1,7 +1,8 @@
 import io
 from typing import Annotated
 
-from database import Database, MySQLDatabase
+from database import Database
+from database_handler import get_database_connection
 from exceptions import NotFoundException
 from fastapi import Depends, HTTPException, Response, UploadFile, status
 from fastapi.routing import APIRouter
@@ -14,14 +15,6 @@ from utils import resize_image
 register_heif_opener()
 
 image_router = APIRouter()
-
-
-async def get_database_connection():
-    db = MySQLDatabase()
-    try:
-        yield db
-    finally:
-        db.close()
 
 
 @image_router.post("/image/create")

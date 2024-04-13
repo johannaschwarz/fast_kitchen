@@ -33,8 +33,6 @@ class Step(BaseModel):
 class RecipeBase(BaseModel):
     """The base recipe model (used when creating a recipe)."""
 
-    # TODO: add user/creator
-
     title: str
     description: str | None = None
     portions: int
@@ -50,6 +48,7 @@ class Recipe(RecipeBase):
     """A recipe with all attributes."""
 
     id_: int = -1
+    creator: str | None = None
 
 
 class RecipeListing(BaseModel):
@@ -57,6 +56,7 @@ class RecipeListing(BaseModel):
 
     id_: int = -1
     title: str
+    creator: str | None = None
     description: str
     categories: list[str]
     cover_image: int | None = None
@@ -75,3 +75,27 @@ class ImageID(BaseModel):
     """An image model with an id."""
 
     id_: int = -1
+
+
+class User(BaseModel):
+    """Model for a user."""
+
+    username: str
+    disabled: bool | None = None
+
+
+class UserInDB(User):
+    """Model for a user in the database."""
+
+    id_: int
+    is_admin: bool
+    hashed_password: str
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    user_id: int

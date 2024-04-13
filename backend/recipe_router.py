@@ -1,31 +1,17 @@
 from typing import Annotated
 
-from database import Database, MySQLDatabase
+from database import Database
+from database_handler import DatabaseContextManager, get_database_connection
 from exceptions import NotFoundException, UpdateFailedException
 from fastapi import BackgroundTasks, Depends, HTTPException, Query, status
 from fastapi.routing import APIRouter
+from fastapi.security import OAuth2PasswordBearer
 from models import Recipe, RecipeBase, RecipeListing
 from pydantic import ValidationError
 
 recipe_router = APIRouter()
 
-
-class DatabaseContextManager:
-    """A context manager for the database connection."""
-
-    def __init__(self):
-        self.db = MySQLDatabase()
-
-    def __enter__(self):
-        return self.db
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.db.close()
-
-
-async def get_database_connection():
-    with DatabaseContextManager() as database:
-        yield database
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 def remove_unused_images():

@@ -1,9 +1,16 @@
-import json
 from abc import ABC, abstractmethod
 
 import mysql.connector
 from exceptions import NotFoundException
-from models import Ingredient, Recipe, RecipeBase, RecipeListing, RecipeStep, UnitEnum
+from models import (
+    Ingredient,
+    Recipe,
+    RecipeBase,
+    RecipeListing,
+    RecipeStep,
+    UnitEnum,
+    UserInDB,
+)
 from pydantic import ValidationError
 from utils import load_config, load_credentials
 
@@ -104,6 +111,30 @@ class Database(ABC):
 
         Returns:
             A list of categories.
+        """
+
+    @abstractmethod
+    def get_user_by_username(self, username: str) -> UserInDB:
+        """
+        Get a user from the database using the username.
+
+        Raises:
+            NotFoundException if the user could not be found.
+
+        Returns:
+            The user object.
+        """
+
+    @abstractmethod
+    def get_user_by_id(self, user_id: int) -> UserInDB:
+        """
+        Get a user from the database using the user ID.
+
+        Raises:
+            NotFoundException if the user could not be found.
+
+        Returns:
+            The user object.
         """
 
 
@@ -227,7 +258,7 @@ class MySQLDatabase(Database):
         cursor = self.recipes_database.cursor(prepared=True)
 
         if limit:
-            limitation_query = f" LIMIT %s"
+            limitation_query = " LIMIT %s"
             limit_parameters = (limit,)
             if page:
                 limitation_query += " OFFSET %s"
@@ -624,8 +655,6 @@ class MySQLDatabase(Database):
         """
         Create a new category in the database.
         """
-        # TODO: Think about if there can be categories without recipes
-
         cursor = self.recipes_database.cursor()
 
         sql = "INSERT INTO Categories (RecipeID, Category) VALUES (%s, %s)"
@@ -777,6 +806,75 @@ class MySQLDatabase(Database):
             self._create_ingredient(ingredient, recipe.id_)
 
         cursor.close()
+
+    def get_user_by_username(self, username: str) -> UserInDB:
+        """
+        Get a user from the database.
+
+        Raises:
+            NotFoundException if the user could not be found.
+
+        Returns:
+            The user object.
+        """
+
+        cursor = self.recipes_database.cursor()
+
+        sql = "SELECT UserID, Username, Password, IsAdmin, Disabled FROM Users WHERE Username = %s"
+        val = (username,)
+
+        cursor.execute(sql, val)
+        result = cursor.fetchone()
+        if cursor.rowcount == 0:
+            cursor.close()
+            raise NotFoundException(
+                f"User with username {username} not found in database."
+            )
+
+        user_id, username, password, is_admin, disabled = result
+        cursor.close()
+        return UserInDB(
+            username=username,
+            disabled=disabled,
+            id_=user_id,
+            is_admin=is_admin,
+            hashed_password=password,
+        )
+
+    def get_user_by_id(self, user_id: int) -> UserInDB:
+        """
+        Get a user from the database using the user ID.
+
+        Raises:
+            NotFoundException if the user could not be found.
+
+        Returns:
+            The user object.
+        """
+
+        cursor = self.recipes_database.cursor()
+
+        sql = (
+            "SELECT Username, Password, IsAdmin, Disabled FROM Users WHERE UserID = %s"
+        )
+        val = (user_id,)
+
+        cursor.execute(sql, val)
+        result = cursor.fetchone()
+        if cursor.rowcount == 0:
+            cursor.close()
+            raise NotFoundException(f"User with id {user_id} not found in database.")
+
+        username, password, is_admin, disabled = result
+
+        cursor.close()
+        return UserInDB(
+            username=username,
+            disabled=disabled,
+            id_=user_id,
+            is_admin=is_admin,
+            hashed_password=password,
+        )
 
     def close(self):
         self.recipes_database.close()
