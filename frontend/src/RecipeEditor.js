@@ -213,7 +213,7 @@ const StepsList = ({ steps, setSteps }) => {
         else if (steps.length > 1 && steps[steps.length - 2].description === "") {
             setSteps(steps.slice(0, -1));
         }
-    }, [steps]);
+    }, [steps, setSteps]);
 
     const handleStepChange = (index, key) => (event) => {
         const newSteps = [...steps];
@@ -490,7 +490,7 @@ function RecipeEditor() {
                         </UploadButton><br />
                         {coverImage &&
                             <div className="uploadImgContainer">
-                                <img className='coverImg' src={API_BASE + "image/" + coverImage} alt={"Cover Image"} />
+                                <img className='coverImg' src={API_BASE + "image/" + coverImage} alt={"Recipe Cover"} />
                                 <button type='button' onClick={() => deleteCoverImageOnChange(coverImage)} className='deleteIcon'><RemoveCircleOutlineOutlinedIcon /></button>
                             </div>
                         }
