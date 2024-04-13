@@ -411,6 +411,7 @@ class MySQLDatabase(Database):
         val = (recipe.id_,)
         cursor.execute(sql, val)
         self.recipes_database.commit()
+        cursor.close()
 
         for step in recipe.steps:
             self._create_recipe_step(step, recipe.id_)
@@ -603,6 +604,19 @@ class MySQLDatabase(Database):
             cursor.close()
             raise NotFoundException(f"Image with id {image_id} not found in database.")
 
+        cursor.close()
+
+    def delete_unused_images(self):
+        """
+        Delete all images that are not used in any recipe.
+        """
+
+        cursor = self.recipes_database.cursor()
+
+        sql = "DELETE FROM Images WHERE RecipeID IS NULL AND TimeStamp < DATE_SUB(NOW(), INTERVAL 1 DAY)"
+        cursor.execute(sql)
+
+        self.recipes_database.commit()
         cursor.close()
 
     def create_category(self, category: str, recipe_id: int):

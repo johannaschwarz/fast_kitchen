@@ -2,7 +2,7 @@ from typing import Annotated
 
 from database import Database, MySQLDatabase
 from exceptions import NotFoundException, UpdateFailedException
-from fastapi import Depends, HTTPException, Query, status
+from fastapi import BackgroundTasks, Depends, HTTPException, Query, status
 from fastapi.routing import APIRouter
 from models import Recipe, RecipeBase, RecipeListing
 from pydantic import ValidationError
@@ -10,19 +10,38 @@ from pydantic import ValidationError
 recipe_router = APIRouter()
 
 
+class DatabaseContextManager:
+    """A context manager for the database connection."""
+
+    def __init__(self):
+        self.db = MySQLDatabase()
+
+    def __enter__(self):
+        return self.db
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.db.close()
+
+
 async def get_database_connection():
-    db = MySQLDatabase()
-    try:
-        yield db
-    finally:
-        db.close()
+    with DatabaseContextManager() as database:
+        yield database
+
+
+def remove_unused_images():
+    with DatabaseContextManager() as database:
+        database.delete_unused_images()
 
 
 @recipe_router.post("/recipe/create")
 def create_recipe(
-    recipe: RecipeBase, database: Annotated[Database, Depends(get_database_connection)]
+    recipe: RecipeBase,
+    database: Annotated[Database, Depends(get_database_connection)],
+    background_tasks: BackgroundTasks,
 ) -> Recipe:
     id_ = database.create_recipe(recipe)
+
+    background_tasks.add_task(remove_unused_images)
 
     return Recipe(id_=id_, **recipe.model_dump())
 
@@ -99,6 +118,7 @@ def get_filtered_recipes(
 def update_recipe(
     recipe: Recipe,
     database: Annotated[Database, Depends(get_database_connection)],
+    background_tasks: BackgroundTasks,
 ) -> Recipe:
     try:
         database.update_recipe(recipe)
@@ -106,6 +126,8 @@ def update_recipe(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         ) from e
+
+    background_tasks.add_task(remove_unused_images)
     return recipe
 
 
