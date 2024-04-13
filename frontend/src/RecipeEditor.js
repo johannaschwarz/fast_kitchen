@@ -28,11 +28,31 @@ const uploadImage = async (file) => {
     }
 }
 
-const imagesList = (images, imgClass) => {
+const deleteImage = async (id) => {
+    const response = await fetch(API_BASE + 'image/' + id, {
+        method: 'DELETE',
+    });
+
+    if (response.ok) {
+        console.log('Image with id ' + id + ' deleted');
+    } else {
+        console.error('Delete image with id ' + id + ' failed');
+    }
+}
+
+const imagesList = (images, imgClass, deleteStepImageOnChange, iconClass = "deleteIcon") => {
     return (
         <Stack direction={'row'} spacing={2}>
-            {images.map((image, index) => (
-                <img className={imgClass} key={index} src={API_BASE + "image/" + image} alt={image} />
+            {images.map((image) => (
+                <div key={image}>
+                    {console.log(image)}
+                    <div className='uploadImgContainer'>
+                        <img className={imgClass} src={API_BASE + "image/" + image} alt={image} />
+                        <button type="button" onClick={() => deleteStepImageOnChange(image)} className={iconClass}>
+                            <RemoveCircleOutlineOutlinedIcon />
+                        </button>
+                    </div>
+                </div>
             ))}
         </Stack>
     );
@@ -162,14 +182,7 @@ const IngredientList = ({ ingredients, setIngredients }) => {
     );
 };
 
-function Step({ index, step, onChangeDesciption, onDelete }) {
-
-    const uploadStepImageOnChange = async (event) => {
-        const file = event.target.files[0];
-        uploadImage(file).then(id_ => {
-            step.images.push(id_);
-        });
-    }
+function Step({ index, step, onChangeDesciption, onDelete, onUploadImage, onDeleteImage }) {
 
     return (
         <div>
@@ -178,16 +191,16 @@ function Step({ index, step, onChangeDesciption, onDelete }) {
                 <TextField type="text" id="step" name="step" label="Instruction" onChange={onChangeDesciption} value={step.description} />
                 <UploadButton component="label" variant="contained" htmlFor={"step_image" + index} startIcon={<CloudUploadIcon />}>
                     Image
-                    <VisuallyHiddenInput type="file" id={"step_image" + index} name="step_image" accept="image/*" onChange={uploadStepImageOnChange} />
+                    <VisuallyHiddenInput type="file" id={"step_image" + index} name="step_image" accept="image/*" onChange={onUploadImage} />
                 </UploadButton><br />
                 {step.description !== "" && < button type='button' onClick={onDelete} className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>}
             </Stack>
-            {step.images.length > 0 && imagesList(step.images, "stepImg")}
+            {step.images.length > 0 && imagesList(step.images, "stepImg", onDeleteImage, "deleteIconStep")}
         </div>
     )
 }
 
-const StepsList = ({ steps, setSteps, uploadStepImageOnChange }) => {
+const StepsList = ({ steps, setSteps }) => {
     useEffect(() => {
         // If the last step is filled, add a new empty step
         if (steps.length > 0 && steps[steps.length - 1].description !== "") {
@@ -211,6 +224,29 @@ const StepsList = ({ steps, setSteps, uploadStepImageOnChange }) => {
         setSteps(newSteps);
     }
 
+    const uploadStepImageOnChange = (index) => (event) => {
+        const newSteps = [...steps];
+        const file = event.target.files[0];
+        uploadImage(file).then(id_ => {
+            let step = newSteps[index];
+            step.images.push(id_);
+            newSteps[index] = step;
+            setSteps(newSteps);
+            event.target.value = null;
+        });
+    }
+
+    const deleteStepImageOnChange = (index) => async (id) => {
+        const newSteps = [...steps];
+        deleteImage(id).then(() => {
+            let step = newSteps[index];
+            const newImages = step.images.filter(image => image !== id);
+            step.images = newImages;
+            newSteps[index] = step;
+            setSteps(newSteps);
+        });
+    }
+
     return (
         <Stack spacing={2} style={{ marginBottom: 30 }}>
             {steps.map((step, index) => (
@@ -220,6 +256,8 @@ const StepsList = ({ steps, setSteps, uploadStepImageOnChange }) => {
                     step={step}
                     onChangeDesciption={handleStepChange(index, "description")}
                     onDelete={handleDeleteStep(index)}
+                    onDeleteImage={deleteStepImageOnChange(index)}
+                    onUploadImage={uploadStepImageOnChange(index)}
                 />
             ))}
         </Stack>
@@ -405,12 +443,20 @@ function RecipeEditor() {
 
     const uploadGalleryImageOnChange = async (event) => {
         const file = event.target.files[0];
-        uploadImage(file).then(id_ => { if (id_ !== -1) setGalleryImages([...galleryImages, id_]) });
+        uploadImage(file).then(id_ => { if (id_ !== -1) setGalleryImages([...galleryImages, id_]); event.target.value = null });
+    }
+
+    const deleteGalleryImageOnChange = async (id) => {
+        deleteImage(id).then(() => setGalleryImages(galleryImages.filter(image => image !== id)));
     }
 
     const uploadCoverImageOnChange = async (event) => {
         const file = event.target.files[0];
-        uploadImage(file).then(id_ => setCoverImage(id_));
+        uploadImage(file).then(id_ => { setCoverImage(id_); console.log("set cover image to" + id_); event.target.value = null });
+    }
+
+    const deleteCoverImageOnChange = async (id) => {
+        deleteImage(id).then(() => setCoverImage(""));
     }
 
     return (
@@ -440,13 +486,19 @@ function RecipeEditor() {
                             Cover Image
                             <VisuallyHiddenInput type="file" id="cover_image" name="cover_image" accept="image/*" onChange={uploadCoverImageOnChange} />
                         </UploadButton><br />
-                        {coverImage && <img className='uploadedImg' src={API_BASE + "image/" + coverImage} alt={"Cover Image"} />}<br />
+                        {coverImage &&
+                            <div className="uploadImgContainer">
+                                <img className='coverImg' src={API_BASE + "image/" + coverImage} alt={"Cover Image"} />
+                                <button type='button' onClick={() => deleteCoverImageOnChange(coverImage)} className='deleteIcon'><RemoveCircleOutlineOutlinedIcon /></button>
+                            </div>
+                        }
+                        <br />
 
                         <UploadButton component="label" variant="contained" htmlFor="gallery_images" startIcon={<CloudUploadIcon />}>
                             Gallery Images
                             <VisuallyHiddenInput type="file" id="gallery_images" name="gallery_images" accept="image/*" onChange={uploadGalleryImageOnChange} />
                         </UploadButton><br />
-                        {galleryImages.length > 0 && imagesList(galleryImages, "galleryImg")}<br />
+                        {galleryImages.length > 0 && imagesList(galleryImages, "galleryImg", deleteGalleryImageOnChange)}<br />
 
                         <Divider />
 

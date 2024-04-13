@@ -1,8 +1,8 @@
-from typing import Annotated, Optional
+from typing import Annotated
 
 from database import Database, MySQLDatabase
 from exceptions import NotFoundException, UpdateFailedException
-from fastapi import Body, Depends, HTTPException, Query, status
+from fastapi import Depends, HTTPException, Query, status
 from fastapi.routing import APIRouter
 from models import Recipe, RecipeBase, RecipeListing
 from pydantic import ValidationError
