@@ -45,7 +45,6 @@ const imagesList = (images, imgClass, deleteStepImageOnChange, iconClass = "dele
         <Stack direction={'row'} spacing={2} className='imageList'>
             {images.map((image) => (
                 <div key={image}>
-                    {console.log(image)}
                     <div className='uploadImgContainer'>
                         <img className={imgClass} src={API_BASE + "image/" + image} alt={image} />
                         <button type="button" onClick={() => deleteStepImageOnChange(image)} className={iconClass}>
@@ -390,7 +389,7 @@ function RecipeEditor() {
         setAlertMessage("");
 
         let flattenedIngredients = ingredients.map(group => group.ingredients.map(ingredient => (
-            { name: ingredient.name.trim(), amount: ingredient.amount, unit: ingredient.unit, group: group.group }
+            { name: ingredient.name.trim(), amount: parseFloat(ingredient.amount), unit: ingredient.unit, group: group.group }
         )).filter(ingredient => ingredient.name !== "")).flat();
 
         if (!recipeChecks()) {
@@ -399,13 +398,12 @@ function RecipeEditor() {
 
         setStoring(true);
 
-
         var data = {
             title: title,
             description: description,
             categories: categories.map(category => category.trim()),
             portions: portions,
-            cooking_time: cookingTime,
+            cooking_time: parseInt(cookingTime),
             ingredients: flattenedIngredients,
             steps: steps.filter(step => step.description.trim() !== "").map((step, index) => ({ order_id: index, step: step.description.trim(), images: step.images })),
             cover_image: coverImage !== "" ? Number(coverImage) : -1,
