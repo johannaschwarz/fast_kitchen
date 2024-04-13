@@ -310,10 +310,11 @@ class MySQLDatabase(Database):
 
         cursor = self.recipes_database.cursor()
 
-        sql = "UPDATE Recipes SET Title = %s, Description = %s, CoverImage = %s, Portions = %s WHERE RecipeID = %s"
+        sql = "UPDATE Recipes SET Title = %s, Description = %s, CookingTime = %s, CoverImage = %s, Portions = %s WHERE RecipeID = %s"
         val = (
             recipe.title,
             recipe.description,
+            recipe.cooking_time,
             recipe.cover_image if recipe.cover_image > 0 else None,
             recipe.portions,
             recipe.id_,
