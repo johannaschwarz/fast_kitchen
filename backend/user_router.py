@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
+import bcrypt
 from database import Database
 from database_handler import get_database_connection
 from exceptions import CredentialsException, NotFoundException
@@ -23,11 +24,11 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 360
 
 
 def verify_password(plain_password, hashed_password) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(plain_password, hashed_password)
 
 
-def get_password_hash(password) -> str:
-    return pwd_context.hash(password)
+def get_password_hash(password: str) -> str:
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt())
 
 
 def authenticate_user(
@@ -57,7 +58,7 @@ async def get_current_user(
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
 
-        user_id: int = payload.get("sub")
+        user_id: int = int(payload.get("sub"))
         if not user_id:
             raise CredentialsException()
 
@@ -85,5 +86,5 @@ async def login(
     if not user:
         raise CredentialsException()
 
-    access_token = create_access_token(data={"sub": user.id_})
+    access_token = create_access_token(data={"sub": str(user.id_)})
     return Token(access_token=access_token, token_type="bearer")

@@ -6,8 +6,9 @@ from exceptions import NotFoundException, UpdateFailedException
 from fastapi import BackgroundTasks, Depends, HTTPException, Query, status
 from fastapi.routing import APIRouter
 from fastapi.security import OAuth2PasswordBearer
-from models import Recipe, RecipeBase, RecipeListing
+from models import Recipe, RecipeBase, RecipeListing, UserInDB
 from pydantic import ValidationError
+from user_router import get_current_active_user
 
 recipe_router = APIRouter()
 
@@ -23,6 +24,7 @@ def remove_unused_images():
 def create_recipe(
     recipe: RecipeBase,
     database: Annotated[Database, Depends(get_database_connection)],
+    _: Annotated[UserInDB, Depends(get_current_active_user)],
     background_tasks: BackgroundTasks,
 ) -> Recipe:
     id_ = database.create_recipe(recipe)
