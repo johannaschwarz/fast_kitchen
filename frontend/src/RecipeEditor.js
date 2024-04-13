@@ -42,7 +42,7 @@ const deleteImage = async (id) => {
 
 const imagesList = (images, imgClass, deleteStepImageOnChange, iconClass = "deleteIcon") => {
     return (
-        <Stack direction={'row'} spacing={2}>
+        <Stack direction={'row'} spacing={2} className='imageList'>
             {images.map((image) => (
                 <div key={image}>
                     {console.log(image)}
@@ -188,14 +188,18 @@ function Step({ index, step, onChangeDesciption, onDelete, onUploadImage, onDele
         <div>
             <Stack direction={'row'} spacing={2} style={{ marginBottom: 10 }}>
                 <span>{index}.</span>
-                <TextField type="text" id="step" name="step" label="Instruction" onChange={onChangeDesciption} value={step.description} />
-                <UploadButton component="label" variant="contained" htmlFor={"step_image" + index} startIcon={<CloudUploadIcon />}>
-                    Image
-                    <VisuallyHiddenInput type="file" id={"step_image" + index} name="step_image" accept="image/*" onChange={onUploadImage} />
-                </UploadButton><br />
-                {step.description !== "" && < button type='button' onClick={onDelete} className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>}
+                <Stack direction={'column'} spacing={1}>
+                    <Stack direction={'row'} spacing={2} style={{ marginBottom: 10 }}>
+                        <TextField type="text" id="step" name="step" label="Instruction" onChange={onChangeDesciption} value={step.description} />
+                        <UploadButton component="label" variant="contained" htmlFor={"step_image" + index} startIcon={<CloudUploadIcon />}>
+                            Image
+                            <VisuallyHiddenInput type="file" id={"step_image" + index} name="step_image" accept="image/*" onChange={onUploadImage} />
+                        </UploadButton><br />
+                        {step.description !== "" && < button type='button' onClick={onDelete} className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>}
+                    </Stack>
+                    {step.images.length > 0 && imagesList(step.images, "stepImg", onDeleteImage, "deleteIconStep")}
+                </Stack>
             </Stack>
-            {step.images.length > 0 && imagesList(step.images, "stepImg", onDeleteImage, "deleteIconStep")}
         </div>
     )
 }

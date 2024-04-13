@@ -2,7 +2,7 @@
     width: 400px;
     border-radius: 10px;
     object-fit: cover;
-    max-height: 400px;
+    height: 400px;
     position: relative;
     display: inline-block;
 }
@@ -10,6 +10,7 @@
 .stepImg {
     width: 100px;
     height: 100px;
+    object-fit: cover;
     border-radius: 10px;
     position: relative;
     display: inline-block;
@@ -49,4 +50,8 @@
 
 .uploadImgContainer {
     position: relative;
+}
+
+.imageList {
+    overflow-x: auto;
 }
