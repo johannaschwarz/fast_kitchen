@@ -418,7 +418,6 @@ function RecipeEditor() {
         }
 
         setStoring(true);
-        console.log("Cooking time: " + cookingTime + " " + parseInt(cookingTime))
         var data = {
             title: title,
             description: description,
