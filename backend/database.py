@@ -19,7 +19,7 @@ class Database(ABC):
     """A MySQL database class."""
 
     @abstractmethod
-    def create_recipe(self, recipe: RecipeBase):
+    def create_recipe(self, recipe: RecipeBase, user: UserInDB):
         """
         Create a new recipe in the database.
 
@@ -72,6 +72,10 @@ class Database(ABC):
         Returns:
             True if the recipe was deleted, False otherwise.
         """
+
+    @abstractmethod
+    def is_authorized(self, user_id: int, recipe_id: int) -> bool:
+        """Check if the user is authorized to access the recipe."""
 
     @abstractmethod
     def create_image(self, image: bytes) -> int:
@@ -154,7 +158,7 @@ class MySQLDatabase(Database):
             database=self.CREDENTIALS["database_name"],
         )
 
-    def create_recipe(self, recipe: RecipeBase) -> int:
+    def create_recipe(self, recipe: RecipeBase, user: UserInDB) -> int:
         """
         Create a new recipe in the database.
 
@@ -163,13 +167,14 @@ class MySQLDatabase(Database):
         """
         cursor = self.recipes_database.cursor()
 
-        sql = "INSERT INTO Recipes (Title, Description, CookingTime, CoverImage, Portions) VALUES (%s, %s, %s, %s, %s)"
+        sql = "INSERT INTO Recipes (Title, Description, CookingTime, CoverImage, Portions, UserID) VALUES (%s, %s, %s, %s, %s, %s)"
         val = (
             recipe.title,
             recipe.description,
             recipe.cooking_time,
             recipe.cover_image if recipe.cover_image > 0 else None,
             recipe.portions,
+            user.id_,
         )
         cursor.execute(sql, val)
 
@@ -205,7 +210,7 @@ class MySQLDatabase(Database):
         """
         cursor = self.recipes_database.cursor()
 
-        sql = "SELECT RecipeID, Title, Description, CookingTime, CoverImage, Portions FROM Recipes WHERE RecipeID = %s"
+        sql = "SELECT RecipeID, Title, Description, CookingTime, CoverImage, Portions, UserID FROM Recipes WHERE RecipeID = %s"
         val = (recipe_id,)
 
         cursor.execute(sql, val)
@@ -218,17 +223,19 @@ class MySQLDatabase(Database):
                 f"Recipe with id {recipe_id} not found in database."
             )
 
-        id_, title, description, cooking_time, cover_image, portions = result
+        id_, title, description, cooking_time, cover_image, portions, user_id = result
 
         categories = self.get_categories_by_recipe(id_)
         ingredients = self._get_ingredients_by_recipe(id_)
         images = self._get_gallery_images_by_recipe(id_)
         steps = self._get_recipe_steps_by_recipe(id_)
+        username = self.get_user_by_id(user_id).username if user_id else None
 
         cursor.close()
         return Recipe(
             id_=id_,
             title=title,
+            creator=username,
             description=description,
             ingredients=ingredients,
             portions=portions,
@@ -269,7 +276,7 @@ class MySQLDatabase(Database):
 
         if filter_categories:
             cursor.execute(
-                f"SELECT DISTINCT r.RecipeID, r.Title, r.Description, r.CoverImage FROM Recipes r, Categories c WHERE (r.Title LIKE CONCAT('%', %s, '%') OR r.Description LIKE CONCAT('%', %s, '%')) AND c.RecipeID = r.RecipeID AND c.Category IN ({', '.join(['%s'] * len(filter_categories))}) GROUP BY r.RecipeID HAVING COUNT(c.Category) = %s {limitation_query};",
+                f"SELECT DISTINCT r.RecipeID, r.Title, r.Description, r.CoverImage, r.UserID FROM Recipes r, Categories c WHERE (r.Title LIKE CONCAT('%', %s, '%') OR r.Description LIKE CONCAT('%', %s, '%')) AND c.RecipeID = r.RecipeID AND c.Category IN ({', '.join(['%s'] * len(filter_categories))}) GROUP BY r.RecipeID HAVING COUNT(c.Category) = %s {limitation_query};",
                 (
                     search_string,
                     search_string,
@@ -280,7 +287,7 @@ class MySQLDatabase(Database):
             )
         else:
             cursor.execute(
-                f"SELECT RecipeID, Title, Description, CoverImage FROM Recipes WHERE Title LIKE CONCAT('%', %s, '%') OR Description LIKE CONCAT('%', %s, '%') {limitation_query}",
+                f"SELECT RecipeID, Title, Description, CoverImage, UserID FROM Recipes WHERE Title LIKE CONCAT('%', %s, '%') OR Description LIKE CONCAT('%', %s, '%') {limitation_query}",
                 (search_string, search_string) + limit_parameters,
             )
         result = cursor.fetchall()
@@ -288,7 +295,7 @@ class MySQLDatabase(Database):
 
         recipes = []
 
-        for id_, title, description, image in result:
+        for id_, title, description, image, user_id in result:
             categories = self.get_categories_by_recipe(id_)
             if not image:
                 images = self._get_gallery_images_by_recipe(id_)
@@ -301,6 +308,9 @@ class MySQLDatabase(Database):
                         description=description if description else "",
                         cover_image=image,
                         categories=categories,
+                        creator=(
+                            self.get_user_by_id(user_id).username if user_id else None
+                        ),
                     )
                 )
             except ValidationError:
@@ -338,7 +348,6 @@ class MySQLDatabase(Database):
         Returns:
             True if the recipe was updated, False otherwise.
         """
-
         cursor = self.recipes_database.cursor()
 
         sql = "UPDATE Recipes SET Title = %s, Description = %s, CookingTime = %s, CoverImage = %s, Portions = %s WHERE RecipeID = %s"
@@ -384,6 +393,31 @@ class MySQLDatabase(Database):
             )
 
         cursor.close()
+
+    def is_authorized(self, user_id: int, recipe_id: int) -> bool:
+        """Check if the user is authorized to access the recipe."""
+        cursor = self.recipes_database.cursor()
+
+        sql = "SELECT IsAdmin, Disabled FROM Users WHERE UserID = %s"
+        val = (user_id,)
+        cursor.execute(sql, val)
+        (is_admin, disabled) = cursor.fetchone()
+
+        cursor.close()
+        if disabled:
+            return False
+        if is_admin:
+            return True
+
+        cursor = self.recipes_database.cursor()
+        sql = "SELECT UserId FROM Recipes WHERE RecipeID = %s"
+        val = (recipe_id,)
+
+        cursor.execute(sql, val)
+        result = cursor.fetchone()
+        cursor.close()
+
+        return result[0] == user_id
 
     def _create_recipe_step(self, recipe_step: RecipeStep, recipe_id: int):
         """

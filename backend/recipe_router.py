@@ -24,10 +24,10 @@ def remove_unused_images():
 def create_recipe(
     recipe: RecipeBase,
     database: Annotated[Database, Depends(get_database_connection)],
-    _: Annotated[UserInDB, Depends(get_current_active_user)],
+    user: Annotated[UserInDB, Depends(get_current_active_user)],
     background_tasks: BackgroundTasks,
 ) -> Recipe:
-    id_ = database.create_recipe(recipe)
+    id_ = database.create_recipe(recipe, user)
 
     background_tasks.add_task(remove_unused_images)
 
@@ -106,9 +106,15 @@ def get_filtered_recipes(
 def update_recipe(
     recipe: Recipe,
     database: Annotated[Database, Depends(get_database_connection)],
-    _: Annotated[UserInDB, Depends(get_current_active_user)],
+    user: Annotated[UserInDB, Depends(get_current_active_user)],
     background_tasks: BackgroundTasks,
 ) -> Recipe:
+    if not database.is_authorized(user.id_, recipe.id_):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User is not authorized to update the recipe.",
+        )
+
     try:
         database.update_recipe(recipe)
     except UpdateFailedException as e:
@@ -124,8 +130,13 @@ def update_recipe(
 def delete_recipe(
     recipe_id: int,
     database: Annotated[Database, Depends(get_database_connection)],
-    _: Annotated[UserInDB, Depends(get_current_active_user)],
+    user: Annotated[UserInDB, Depends(get_current_active_user)],
 ):
+    if not database.is_authorized(recipe_id, user.id_):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User is not authorized to delete the recipe.",
+        )
     try:
         database.delete_recipe(recipe_id)
     except NotFoundException as e:
