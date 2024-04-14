@@ -87,7 +87,7 @@ function Ingredient({ ingredient, onChangeIngredient, onChangeAmount, onChangeUn
     return (
         <Stack direction="row" spacing={2}>
             <TextField type="text" id="ingredient" name="ingredient" label="Ingredient" onChange={onChangeIngredient} value={ingredient.name} />
-            <TextField min="0" type="number" id="amount" name="amount" label="Amount" onChange={onChangeAmount} value={ingredient.amount} />
+            <TextField min="0" type="number" id="amount" name="amount" label="Amount" onWheel={(e) => e.target.blur()} onChange={onChangeAmount} value={ingredient.amount} />
             <TextField select label="Select" id="unit" name="unit" defaultValue={"g"} onChange={onChangeUnit} value={ingredient.unit} >
                 {measureUnits.map((option) => (
                     <MenuItem key={option} value={option}>
@@ -397,7 +397,7 @@ function RecipeEditor() {
         }
 
         setStoring(true);
-
+        console.log("Cooking time: " + cookingTime + " " + parseInt(cookingTime))
         var data = {
             title: title,
             description: description,
@@ -432,7 +432,7 @@ function RecipeEditor() {
 
             console.log('Form submitted successfully');
 
-            window.location.href = '/recipe/' + createdRecipeId;
+            //window.location.href = '/recipe/' + createdRecipeId;
         } else {
             setStoring(false);
             response.text().then(text => {
@@ -470,7 +470,7 @@ function RecipeEditor() {
                     <Stack>
                         <TextField id="title" name="title" label="Title" value={title} onChange={e => setTitle(e.target.value)} required /><br />
                         <TextField id="description" name="description" label="Description" value={description} onChange={e => setDescription(e.target.value)} required /><br />
-                        <TextField id="cookingTime" name="cookingTime" label="Cooking time in minutes" type="number" value={cookingTime} onChange={e => setCookingTime(e.target.value)} required /><br />
+                        <TextField id="cookingTime" name="cookingTime" label="Cooking time in minutes" type="number" value={cookingTime} onWheel={(e) => e.target.blur()} onChange={e => setCookingTime(e.target.value)} required /><br />
                         <Autocomplete
                             disablePortal
                             options={filters}
@@ -506,7 +506,7 @@ function RecipeEditor() {
 
                         <h3>Ingredients:</h3>
                         <Stack spacing={2} marginBottom={2}>
-                            <TextField value={portions} min="1" type="number" id="portions" name="portions" label="Portions" onChange={e => setPortions(e.target.value)} required /><br />
+                            <TextField value={portions} min="1" type="number" id="portions" name="portions" label="Portions" onWheel={(e) => e.target.blur()} onChange={e => setPortions(e.target.value)} required /><br />
                             <IngredientList ingredients={ingredients} setIngredients={setIngredients} />
                         </Stack>
                         <Divider />
