@@ -93,10 +93,12 @@ class UserInDB(User):
     hashed_password: str
 
 
-class Token(BaseModel):
+class Authorization(BaseModel):
     access_token: str
     token_type: str
     user_id: int
+    is_admin: bool
+    disabled: bool
 
 
 class TokenData(BaseModel):

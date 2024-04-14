@@ -8,7 +8,7 @@ from exceptions import CredentialsException, NotFoundException
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
-from models import Token, UserInDB
+from models import Authorization, UserInDB
 from passlib.context import CryptContext
 from utils import load_credentials
 
@@ -81,10 +81,16 @@ async def get_current_active_user(
 async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     database: Annotated[Database, Depends(get_database_connection)],
-) -> Token:
+) -> Authorization:
     user = authenticate_user(database, form_data.username, form_data.password)
     if not user:
         raise CredentialsException()
 
     access_token = create_access_token(data={"sub": str(user.id_)})
-    return Token(access_token=access_token, token_type="bearer", user_id=user.id_)
+    return Authorization(
+        access_token=access_token,
+        token_type="bearer",
+        user_id=user.id_,
+        is_admin=user.is_admin,
+        disabled=user.disabled,
+    )
