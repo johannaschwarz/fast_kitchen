@@ -2,7 +2,7 @@
 import SearchIcon from '@mui/icons-material/Search';
 import { Autocomplete, TextField } from '@mui/material';
 import InputAdornment from '@mui/material/InputAdornment';
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { API_BASE } from './Config';
 import { AuthContext } from './index';
@@ -42,7 +42,7 @@ function Header({ setSearchInput }) {
                 setLoading(false)
             });
 
-    }, [search]);
+    }, [search, setSearchInput]);
 
     return (
         <header>

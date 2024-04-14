@@ -133,7 +133,7 @@ function Recipe({ recipe }) {
                 ))}
             </div>
             {
-                (isAdmin || user == recipe.creator_id) &&
+                (isAdmin || user === recipe.creator_id) &&
                 <div className='card'>
                     <h2>Options</h2>
                     <div className='inlineForm'>

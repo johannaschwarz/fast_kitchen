@@ -1,3 +1,4 @@
+import { Stack } from "@mui/material";
 import { useContext } from "react";
 import { Link } from "react-router-dom";
 import { AuthContext } from "./index";
@@ -6,8 +7,10 @@ function Footer() {
     const { logout } = useContext(AuthContext);
     return (
         <footer>
-            <a onClick={logout}>Log out</a>
-            <Link to="/legalnotice">Legal notice</Link>
+            <Stack>
+                <span className="link" onClick={logout}>Log out</span>
+                <Link to="/legalnotice">Legal notice</Link>
+            </Stack>
         </footer>
     )
 }

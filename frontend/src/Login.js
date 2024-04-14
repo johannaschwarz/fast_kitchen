@@ -1,17 +1,21 @@
-import { TextField } from "@mui/material";
-import { API_BASE } from "./Config";
+import { Alert, CircularProgress, Stack, TextField } from "@mui/material";
 import { useContext, useState } from "react";
-import { AuthContext } from "./index";
 import { Link } from "react-router-dom";
+import { API_BASE } from "./Config";
 import Header from './Header.js';
+import { AuthContext } from "./index";
 
 const Login = () => {
     const { setLoggedIn, setUser, setToken, setIsAdmin } = useContext(AuthContext);
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [loginError, setLoginError] = useState('');
+    const [loading, setLoading] = useState(false);
 
     const handleLogin = async () => {
         try {
+            setLoginError('');
+            setLoading(true);
             const response = await fetch(API_BASE + "token", {
                 method: 'POST',
                 headers: {
@@ -28,26 +32,34 @@ const Login = () => {
                 setUser(data.user_id);
                 setIsAdmin(data.is_admin);
                 setLoggedIn(true);
+
+                // Redirect to home page
+                window.location.href = '/';
             } else {
-                console.error('Login failed');
+                const data = await response.json();
+                setLoginError('Login failed: ' + data.detail);
             }
         } catch (err) {
             console.error(err);
+            setLoginError('Login failed, please try again later.');
         }
+        setLoading(false);
     }
     return (
         <div className="main">
             <Header />
             <div className='content'>
-                <div>
+                {loginError && <Alert severity="error">{loginError}</Alert>}
+                <Stack>
                     <h3>Login</h3>
-                    <TextField type="text" label="Username" value={username} onChange={(event) => setUsername(event.target.value)} />
-                    <TextField type="password" label="Password" value={password} onChange={(event) => setPassword(event.target.value)} />
-                    <button className="btn" onClick={handleLogin} >Login</button>
-                </div>
+                    <TextField type="text" label="Username" value={username} onChange={(event) => setUsername(event.target.value)} /><br />
+                    <TextField type="password" label="Password" value={password} onChange={(event) => setPassword(event.target.value)} /><br />
+                    {!loading && <button className="btn" onClick={handleLogin}>Login</button>}
+                    {loading && <Stack direction={"row"} alignSelf="center"><CircularProgress /></Stack>}
+                </Stack>
             </div>
             <footer><Link to="/legalnotice">Impressum</Link></footer>
-        </div>
+        </div >
     )
 }
 
