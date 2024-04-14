@@ -2,10 +2,11 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOutlineOutlined';
 import { Alert, AlertTitle, Autocomplete, Button, Divider, MenuItem, Stack, TextField } from '@mui/material';
 import styled from '@mui/material/styles/styled';
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { API_BASE } from './Config';
+import Footer from './Footer';
 import Header from "./Header";
 import { AuthContext } from './index';
 
@@ -556,7 +557,7 @@ function RecipeEditor() {
                     wrapperClass=""
                 />
             </div>
-            <footer><Link to="/legalnotice">Impressum</Link></footer>
+            <Footer />
         </div>
     )
 }

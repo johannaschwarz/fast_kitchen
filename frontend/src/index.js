@@ -1,17 +1,17 @@
+import Cookies from 'js-cookie';
 import { React, createContext, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import {
-  createBrowserRouter,
   RouterProvider,
+  createBrowserRouter,
 } from "react-router-dom";
-import './index.css';
 import LegalNotice from './LegalNotice.js';
+import Login from './Login.js';
 import Main from './Main.js';
 import RecipePage from './Recipe.js';
 import RecipeEditor from './RecipeEditor.js';
+import './index.css';
 import reportWebVitals from './reportWebVitals';
-import Login from './Login.js';
-import Cookies from 'js-cookie';
 
 const AuthContext = createContext();
 
@@ -22,11 +22,17 @@ const AuthContextProvider = ({ children }) => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    Cookies.set('token', token);
+    if (token)
+      Cookies.set('token', token);
+    else
+      Cookies.remove('token');
   }, [token]);
 
   useEffect(() => {
-    Cookies.set('user', user);
+    if (user)
+      Cookies.set('user', user);
+    else
+      Cookies.remove('user');
   }, [user]);
 
   useEffect(() => {
@@ -40,8 +46,15 @@ const AuthContextProvider = ({ children }) => {
     Cookies.set('isAdmin', isAdmin);
   }, [isAdmin]);
 
+  const logout = () => {
+    setLoggedIn(false);
+    setUser(null);
+    setToken(null);
+    setIsAdmin(false);
+  }
+
   return (
-    <AuthContext.Provider value={{ loggedIn, user, token, setLoggedIn, setUser, setToken, setIsAdmin }}>
+    <AuthContext.Provider value={{ loggedIn, user, token, setLoggedIn, setUser, setToken, setIsAdmin, logout }}>
       {children}
     </AuthContext.Provider>
   );

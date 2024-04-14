@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Link } from "react-router-dom";
 import Filters from './Filters.js';
+import Footer from './Footer.js';
 import Header from './Header.js';
 import Recipes from './Recipes.js';
 
@@ -23,7 +23,7 @@ function Main() {
         <Filters setFilter={setFilter} />
         <Recipes filters={filters} search={search} />
       </div>
-      <footer><Link to="/legalnotice">Impressum</Link></footer>
+      <Footer />
     </div>
   );
 }

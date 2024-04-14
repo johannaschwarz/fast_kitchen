@@ -1,10 +1,11 @@
 import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined';
 import { Stack } from '@mui/material';
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
 import Carousel from 'react-material-ui-carousel';
 import { Link, useParams } from 'react-router-dom';
 import { API_BASE } from './Config';
+import Footer from './Footer.js';
 import Header from './Header.js';
 import './Recipe.css';
 import { AuthContext } from './index';
@@ -190,7 +191,7 @@ function RecipePage() {
                     wrapperClass=""
                 />
             </div>
-            <footer><Link to="/legalnotice">Impressum</Link></footer>
+            <Footer />
         </div>
     );
 }
