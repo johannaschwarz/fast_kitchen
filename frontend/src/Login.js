@@ -1,7 +1,7 @@
 import { Alert, CircularProgress, Stack, TextField } from "@mui/material";
 import { useContext, useState } from "react";
-import { Link } from "react-router-dom";
 import { API_BASE } from "./Config";
+import Footer from './Footer.js';
 import Header from './Header.js';
 import { AuthContext } from "./index";
 
@@ -50,15 +50,17 @@ const Login = () => {
             <Header />
             <div className='content'>
                 {loginError && <Alert severity="error">{loginError}</Alert>}
-                <Stack>
-                    <h3>Login</h3>
-                    <TextField type="text" label="Username" value={username} onChange={(event) => setUsername(event.target.value)} /><br />
-                    <TextField type="password" label="Password" value={password} onChange={(event) => setPassword(event.target.value)} /><br />
-                    {!loading && <button className="btn" onClick={handleLogin}>Login</button>}
-                    {loading && <Stack direction={"row"} alignSelf="center"><CircularProgress /></Stack>}
-                </Stack>
+                <form onSubmit={handleLogin}>
+                    <Stack>
+                        <h3>Login</h3>
+                        <TextField type="text" label="Username" required value={username} onChange={(event) => setUsername(event.target.value)} /><br />
+                        <TextField type="password" label="Password" required value={password} onChange={(event) => setPassword(event.target.value)} /><br />
+                        {!loading && <button type="submit" className="btn">Login</button>}
+                        {loading && <Stack direction={"row"} alignSelf="center"><CircularProgress /></Stack>}
+                    </Stack>
+                </form>
             </div>
-            <footer><Link to="/legalnotice">Impressum</Link></footer>
+            <Footer />
         </div >
     )
 }
