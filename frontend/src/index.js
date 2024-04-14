@@ -44,7 +44,10 @@ const AuthContextProvider = ({ children }) => {
   }, [loggedIn]);
 
   useEffect(() => {
-    Cookies.set('isAdmin', isAdmin);
+    if (isAdmin)
+      Cookies.set('isAdmin', isAdmin);
+    else
+      Cookies.remove('isAdmin');
   }, [isAdmin]);
 
   const logout = () => {
