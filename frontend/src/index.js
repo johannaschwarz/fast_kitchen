@@ -1,4 +1,4 @@
-import { React, createContext, useState } from 'react';
+import { React, createContext, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import {
   createBrowserRouter,
@@ -11,13 +11,29 @@ import RecipePage from './Recipe.js';
 import RecipeEditor from './RecipeEditor.js';
 import reportWebVitals from './reportWebVitals';
 import Login from './Login.js';
+import Cookies from 'js-cookie';
 
 const AuthContext = createContext();
 
 const AuthContextProvider = ({ children }) => {
-  const [loggedIn, setLoggedIn] = useState(false);
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState("");
+  const [loggedIn, setLoggedIn] = useState(Cookies.get('token') !== undefined ? true : false);
+  const [user, setUser] = useState(Cookies.get('user') !== undefined ? Cookies.get('user') : null);
+  const [token, setToken] = useState(Cookies.get('token') !== undefined ? Cookies.get('token') : null);
+
+  useEffect(() => {
+    Cookies.set('token', token);
+  }, [token]);
+
+  useEffect(() => {
+    Cookies.set('user', user);
+  }, [user]);
+
+  useEffect(() => {
+    if (!loggedIn) {
+      Cookies.remove('token');
+      Cookies.remove('user');
+    }
+  }, [loggedIn]);
 
   return (
     <AuthContext.Provider value={{ loggedIn, user, token, setLoggedIn, setUser, setToken }}>
