@@ -74,7 +74,7 @@ const router = createBrowserRouter([
     element: <RecipePage />
   },
   {
-    path: "c/reate",
+    path: "/create",
     element: <RecipeEditor />
   },
   {
