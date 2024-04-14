@@ -235,7 +235,8 @@ class MySQLDatabase(Database):
         return Recipe(
             id_=id_,
             title=title,
-            creator=username,
+            creator_name=username,
+            creator_id=user_id if user_id else None,
             description=description,
             ingredients=ingredients,
             portions=portions,

@@ -48,7 +48,8 @@ class Recipe(RecipeBase):
     """A recipe with all attributes."""
 
     id_: int = -1
-    creator: str | None = None
+    creator_name: str | None = None
+    creator_id: int | None = None
 
 
 class RecipeListing(BaseModel):
