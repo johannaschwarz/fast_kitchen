@@ -2,20 +2,25 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOutlineOutlined';
 import { Alert, AlertTitle, Autocomplete, Button, Divider, MenuItem, Stack, TextField } from '@mui/material';
 import styled from '@mui/material/styles/styled';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
 import { Link, useParams } from "react-router-dom";
 import { API_BASE } from './Config';
 import Header from "./Header";
+import { AuthContext } from './index';
 
 import './RecipeEditor.css';
 
-const uploadImage = async (file) => {
+
+const uploadImage = async (file, token) => {
     const formData = new FormData();
     formData.append('image', file);
 
     const response = await fetch(API_BASE + 'image/create', {
         method: 'POST',
+        headers: {
+            "Authorization": "Bearer " + token,
+        },
         body: formData,
     });
 
@@ -28,9 +33,12 @@ const uploadImage = async (file) => {
     }
 }
 
-const deleteImage = async (id) => {
+const deleteImage = async (id, token) => {
     const response = await fetch(API_BASE + 'image/' + id, {
         method: 'DELETE',
+        headers: {
+            "Authorization": "Bearer " + token,
+        }
     });
 
     if (response.ok) {
@@ -204,6 +212,8 @@ function Step({ index, step, onChangeDesciption, onDelete, onUploadImage, onDele
 }
 
 const StepsList = ({ steps, setSteps }) => {
+    const { token } = useContext(AuthContext);
+
     useEffect(() => {
         // If the last step is filled, add a new empty step
         if (steps.length > 0 && steps[steps.length - 1].description !== "") {
@@ -230,7 +240,7 @@ const StepsList = ({ steps, setSteps }) => {
     const uploadStepImageOnChange = (index) => (event) => {
         const newSteps = [...steps];
         const file = event.target.files[0];
-        uploadImage(file).then(id_ => {
+        uploadImage(file, token).then(id_ => {
             let step = newSteps[index];
             step.images.push(id_);
             newSteps[index] = step;
@@ -241,7 +251,7 @@ const StepsList = ({ steps, setSteps }) => {
 
     const deleteStepImageOnChange = (index) => async (id) => {
         const newSteps = [...steps];
-        deleteImage(id).then(() => {
+        deleteImage(id, token).then(() => {
             let step = newSteps[index];
             const newImages = step.images.filter(image => image !== id);
             step.images = newImages;
@@ -269,6 +279,7 @@ const StepsList = ({ steps, setSteps }) => {
 
 const defaultFilters = ['Vegan', 'Vegetarian', 'Quick & Easy'];
 function RecipeEditor() {
+    const { token } = useContext(AuthContext);
     const { recipeId } = useParams();
     const [ingredients, setIngredients] = useState([{ group: "", ingredients: [{ name: "", amount: 0, unit: "g", group: "" }] }]);
     const [steps, setSteps] = useState([{ order_id: 0, description: "", images: [] }]);
@@ -284,6 +295,7 @@ function RecipeEditor() {
     const [alertMessage, setAlertMessage] = useState("");
 
     const [filters, setFilters] = useState(defaultFilters);
+
 
     useEffect(() => {
         fetch(API_BASE + 'category/all')
@@ -422,6 +434,7 @@ function RecipeEditor() {
             method: recipeId === undefined ? 'POST' : 'PUT',
             headers: {
                 'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token,
             },
             body: JSON.stringify(data),
         });
@@ -445,20 +458,20 @@ function RecipeEditor() {
 
     const uploadGalleryImageOnChange = async (event) => {
         const file = event.target.files[0];
-        uploadImage(file).then(id_ => { if (id_ !== -1) setGalleryImages([...galleryImages, id_]); event.target.value = null });
+        uploadImage(file, token).then(id_ => { if (id_ !== -1) setGalleryImages([...galleryImages, id_]); event.target.value = null });
     }
 
     const deleteGalleryImageOnChange = async (id) => {
-        deleteImage(id).then(() => setGalleryImages(galleryImages.filter(image => image !== id)));
+        deleteImage(id, token).then(() => setGalleryImages(galleryImages.filter(image => image !== id)));
     }
 
     const uploadCoverImageOnChange = async (event) => {
         const file = event.target.files[0];
-        uploadImage(file).then(id_ => { setCoverImage(id_); console.log("set cover image to" + id_); event.target.value = null });
+        uploadImage(file, token).then(id_ => { setCoverImage(id_); console.log("set cover image to" + id_); event.target.value = null });
     }
 
     const deleteCoverImageOnChange = async (id) => {
-        deleteImage(id).then(() => setCoverImage(""));
+        deleteImage(id, token).then(() => setCoverImage(""));
     }
 
     return (

@@ -24,11 +24,11 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 360
 
 
 def verify_password(plain_password, hashed_password) -> bool:
-    return bcrypt.checkpw(plain_password, hashed_password)
+    return bcrypt.checkpw(plain_password.encode(), hashed_password.encode())
 
 
 def get_password_hash(password: str) -> str:
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+    return str(bcrypt.hashpw(password.encode(), bcrypt.gensalt()), encoding="utf-8")
 
 
 def authenticate_user(
@@ -87,4 +87,4 @@ async def login(
         raise CredentialsException()
 
     access_token = create_access_token(data={"sub": str(user.id_)})
-    return Token(access_token=access_token, token_type="bearer")
+    return Token(access_token=access_token, token_type="bearer", user_id=user.id_)
