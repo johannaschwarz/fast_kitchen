@@ -188,6 +188,10 @@ button:hover,
   color: #49a1ff;
 }
 
+footer .link {
+  color: #858282;
+}
+
 .w100 {
   width: 100%;
 }
