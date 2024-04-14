@@ -446,7 +446,7 @@ function RecipeEditor() {
 
             console.log('Form submitted successfully');
 
-            //window.location.href = '/recipe/' + createdRecipeId;
+            window.location.href = '/recipe/' + createdRecipeId;
         } else {
             setStoring(false);
             response.text().then(text => {
