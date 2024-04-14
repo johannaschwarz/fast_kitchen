@@ -4,7 +4,10 @@ import user_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI(title="FastKitchen")
+app = FastAPI(
+    title="FastKitchen",
+    version="0.1.0",
+)
 
 app.add_middleware(
     CORSMiddleware,
