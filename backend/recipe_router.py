@@ -106,6 +106,7 @@ def get_filtered_recipes(
 def update_recipe(
     recipe: Recipe,
     database: Annotated[Database, Depends(get_database_connection)],
+    _: Annotated[UserInDB, Depends(get_current_active_user)],
     background_tasks: BackgroundTasks,
 ) -> Recipe:
     try:
@@ -121,7 +122,9 @@ def update_recipe(
 
 @recipe_router.delete("/recipe/{recipe_id}")
 def delete_recipe(
-    recipe_id: int, database: Annotated[Database, Depends(get_database_connection)]
+    recipe_id: int,
+    database: Annotated[Database, Depends(get_database_connection)],
+    _: Annotated[UserInDB, Depends(get_current_active_user)],
 ):
     try:
         database.delete_recipe(recipe_id)
