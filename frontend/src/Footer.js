@@ -4,12 +4,13 @@ import { Link } from "react-router-dom";
 import { AuthContext } from "./index";
 
 function Footer() {
-    const { logout } = useContext(AuthContext);
+    const { loggedIn, logout, isAdmin } = useContext(AuthContext);
     return (
         <footer>
-            <Stack>
-                <span className="link" onClick={logout}>Log out</span>
-                <Link to="/legalnotice">Legal notice</Link>
+            <Stack direction={"row"} spacing={2} justifyContent={"center"}>
+                {loggedIn && <span className="link" onClick={logout}>Log out</span>}
+                {(loggedIn && isAdmin) && <Link className="link" to="/register">Create user</Link>}
+                <Link className="link" to="/legalnotice">Legal notice</Link>
             </Stack>
         </footer>
     )
