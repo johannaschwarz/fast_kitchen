@@ -19,6 +19,7 @@ const AuthContextProvider = ({ children }) => {
   const [loggedIn, setLoggedIn] = useState(Cookies.get('token') !== undefined ? true : false);
   const [user, setUser] = useState(Cookies.get('user') !== undefined ? Cookies.get('user') : null);
   const [token, setToken] = useState(Cookies.get('token') !== undefined ? Cookies.get('token') : null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     Cookies.set('token', token);
@@ -35,8 +36,12 @@ const AuthContextProvider = ({ children }) => {
     }
   }, [loggedIn]);
 
+  useEffect(() => {
+    Cookies.set('isAdmin', isAdmin);
+  }, [isAdmin]);
+
   return (
-    <AuthContext.Provider value={{ loggedIn, user, token, setLoggedIn, setUser, setToken }}>
+    <AuthContext.Provider value={{ loggedIn, user, token, setLoggedIn, setUser, setToken, setIsAdmin }}>
       {children}
     </AuthContext.Provider>
   );

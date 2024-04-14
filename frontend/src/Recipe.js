@@ -10,7 +10,7 @@ import './Recipe.css';
 import { AuthContext } from './index';
 
 function Recipe({ recipe }) {
-    const { token } = useContext(AuthContext);
+    const { token, user, isAdmin } = useContext(AuthContext);
 
     const [ingredientMultiplier, setIngredientMultiplier] = useState(1);
     const [galleryImages, setGalleryImages] = useState([]);
@@ -131,14 +131,16 @@ function Recipe({ recipe }) {
                     </div>
                 ))}
             </div>
-            <div className='card'>
-                {/* TODO: show only to recipe owner */}
-                <h2>Options</h2>
-                <div className='inlineForm'>
-                    <Link to={"/edit/" + recipe.id_} ><button>Edit</button></Link>
-                    <button onClick={deleteRecipe}>Delete</button>
+            {
+                (isAdmin || user == recipe.creator_id) &&
+                <div className='card'>
+                    <h2>Options</h2>
+                    <div className='inlineForm'>
+                        <Link to={"/edit/" + recipe.id_} ><button>Edit</button></Link>
+                        <button onClick={deleteRecipe}>Delete</button>
+                    </div>
                 </div>
-            </div>
+            }
         </div>
     );
 }

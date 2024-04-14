@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import Header from './Header.js';
 
 const Login = () => {
-    const { setLoggedIn, setUser, setToken } = useContext(AuthContext);
+    const { setLoggedIn, setUser, setToken, setIsAdmin } = useContext(AuthContext);
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
 
@@ -26,6 +26,7 @@ const Login = () => {
                 const data = await response.json();
                 setToken(data.access_token);
                 setUser(data.user_id);
+                setIsAdmin(data.is_admin);
                 setLoggedIn(true);
             } else {
                 console.error('Login failed');
