@@ -2,7 +2,8 @@ import { Alert, CircularProgress, Stack, TextField } from "@mui/material";
 import Checkbox from '@mui/material/Checkbox';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import { useContext, useState } from "react";
-import { API_BASE } from "./Config";
+import { Navigate } from "react-router-dom";
+import { API_BASE } from "./Config.js";
 import Footer from './Footer.js';
 import Header from './Header.js';
 import { AuthContext } from "./index";
@@ -18,8 +19,7 @@ function Registration() {
 
 
     if (!isAdmin) {
-        window.location.href = '/';
-        return null;
+        return <Navigate to={"/"} />;
     }
 
     const handleCreation = async (event) => {

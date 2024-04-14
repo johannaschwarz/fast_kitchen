@@ -4,13 +4,14 @@ import { Alert, AlertTitle, Autocomplete, Button, Divider, MenuItem, Stack, Text
 import styled from '@mui/material/styles/styled';
 import React, { useContext, useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
-import { useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import { API_BASE } from './Config';
 import Footer from './Footer';
 import Header from "./Header";
 import { AuthContext } from './index';
 
 import './RecipeEditor.css';
+
 
 
 const uploadImage = async (file, token) => {
@@ -280,7 +281,7 @@ const StepsList = ({ steps, setSteps }) => {
 
 const defaultFilters = ['Vegan', 'Vegetarian', 'Quick & Easy'];
 function RecipeEditor() {
-    const { token } = useContext(AuthContext);
+    const { loggedIn, token } = useContext(AuthContext);
     const { recipeId } = useParams();
     const [ingredients, setIngredients] = useState([{ group: "", ingredients: [{ name: "", amount: 0, unit: "g", group: "" }] }]);
     const [steps, setSteps] = useState([{ order_id: 0, description: "", images: [] }]);
@@ -294,9 +295,7 @@ function RecipeEditor() {
     const [storing, setStoring] = useState(false);
     const [loaded, setLoaded] = useState(false);
     const [alertMessage, setAlertMessage] = useState("");
-
     const [filters, setFilters] = useState(defaultFilters);
-
 
     useEffect(() => {
         fetch(API_BASE + 'category/all')
@@ -354,6 +353,10 @@ function RecipeEditor() {
                 window.location.href = '/';
             });
     }, [recipeId]);
+
+    if (!loggedIn) {
+        return <Navigate to={"/login"} />;
+    }
 
     const recipeChecks = () => {
         if (title.trim() === "") {
