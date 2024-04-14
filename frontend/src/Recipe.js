@@ -107,7 +107,7 @@ function Recipe({ recipe }) {
                         }
                     </div>
                 ))}
-                <span>Portionen: <input min={1} value={(!isNaN(ingredientMultiplier) ? ingredientMultiplier : "")} onChange={e => setIngredientMultiplier(parseInt(e.target.value))} type='number' /></span>
+                <span>Portions: <input min={1} value={(!isNaN(ingredientMultiplier) ? ingredientMultiplier : "")} onChange={e => setIngredientMultiplier(parseInt(e.target.value))} type='number' /></span>
             </div>
             <div className='recipeSteps'>
                 {recipe.steps.sort(function (a, b) {
