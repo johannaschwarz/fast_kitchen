@@ -1,9 +1,7 @@
-.label {
-    display: inline-block;
-    padding: 5px 10px;
-    margin-bottom: 5px;
-    margin-inline: 2px;
-    transition: background-color 0.2s ease-out;
+.recipeLabel {
+    background-color: #a6bdd2 !important;
+    color: white !important;
+    font-weight: bold;
 }
 
 .carousel-image {
