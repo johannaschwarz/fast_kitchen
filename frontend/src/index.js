@@ -10,6 +10,7 @@ import Login from './Login.js';
 import Main from './Main.js';
 import RecipePage from './Recipe.js';
 import RecipeEditor from './RecipeEditor.js';
+import Registration from './Registration.js';
 import './index.css';
 import reportWebVitals from './reportWebVitals';
 
@@ -19,7 +20,7 @@ const AuthContextProvider = ({ children }) => {
   const [loggedIn, setLoggedIn] = useState(Cookies.get('token') !== undefined ? true : false);
   const [user, setUser] = useState(Cookies.get('user') !== undefined ? Cookies.get('user') : null);
   const [token, setToken] = useState(Cookies.get('token') !== undefined ? Cookies.get('token') : null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(Cookies.get('isAdmin') !== undefined ? Cookies.get('isAdmin') === "true" : false);
 
   useEffect(() => {
     if (token)
@@ -54,7 +55,7 @@ const AuthContextProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ loggedIn, user, token, setLoggedIn, setUser, setToken, setIsAdmin, logout }}>
+    <AuthContext.Provider value={{ loggedIn, user, token, isAdmin, setLoggedIn, setUser, setToken, setIsAdmin, logout }}>
       {children}
     </AuthContext.Provider>
   );
@@ -84,6 +85,10 @@ const router = createBrowserRouter([
   {
     path: "login",
     element: <Login />
+  },
+  {
+    path: "register",
+    element: <Registration />
   }
 ]);
 
