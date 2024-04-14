@@ -8,7 +8,7 @@ from exceptions import CredentialsException, NotFoundException
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
-from models import Authorization, UserInDB
+from models import Authorization, NewUser, UserInDB
 from utils import load_credentials
 
 user_router = APIRouter()
@@ -96,3 +96,26 @@ async def login(
         is_admin=user.is_admin,
         disabled=user.disabled,
     )
+
+
+@user_router.post("/user/create")
+def create_user(
+    new_user: NewUser,
+    database: Annotated[Database, Depends(get_database_connection)],
+    user: Annotated[UserInDB, Depends(get_current_active_user)],
+) -> NewUser | None:
+    if not user.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="You do not have permission to create users",
+        )
+    hashed_password = get_password_hash(new_user.password)
+    try:
+        if database.create_user(new_user.username, hashed_password, new_user.is_admin):
+            return new_user
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Failed to create user as the username already exists",
+        )
+    return None

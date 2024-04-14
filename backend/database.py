@@ -141,6 +141,17 @@ class Database(ABC):
             The user object.
         """
 
+    @abstractmethod
+    def create_user(
+        self, username: str, password: str, is_admin: bool
+    ) -> UserInDB | None:
+        """
+        Create a new user in the database.
+
+        Returns:
+            The user object.
+        """
+
 
 class MySQLDatabase(Database):
     """A MySQL database class."""
@@ -906,6 +917,37 @@ class MySQLDatabase(Database):
         return UserInDB(
             username=username,
             disabled=disabled,
+            id_=user_id,
+            is_admin=is_admin,
+            hashed_password=password,
+        )
+
+    def create_user(
+        self, username: str, password: str, is_admin: bool
+    ) -> UserInDB | None:
+        cursor = self.recipes_database.cursor()
+
+        sql = "INSERT INTO Users (Username, Password, IsAdmin, Disabled) VALUES (%s, %s, %s, 0)"
+        val = (username, password, is_admin)
+
+        try:
+            cursor.execute(sql, val)
+        except mysql.connector.errors.IntegrityError:
+            raise ValueError("User already exists in database.")
+
+        self.recipes_database.commit()
+
+        _ = cursor.fetchone()
+        if cursor.rowcount == 0:
+            cursor.close()
+            return None
+
+        user_id = cursor.lastrowid
+
+        cursor.close()
+        return UserInDB(
+            username=username,
+            disabled=False,
             id_=user_id,
             is_admin=is_admin,
             hashed_password=password,
