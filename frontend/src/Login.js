@@ -12,7 +12,8 @@ const Login = () => {
     const [loginError, setLoginError] = useState('');
     const [loading, setLoading] = useState(false);
 
-    const handleLogin = async () => {
+    const handleLogin = async (e) => {
+        e.preventDefault();
         try {
             setLoginError('');
             setLoading(true);
