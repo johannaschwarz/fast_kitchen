@@ -1,3 +1,2 @@
 # Recipe Manager Web App
-
-A Web App to Manage your personal recipes!
+[flottekueche.de](https://flottekueche.de)
