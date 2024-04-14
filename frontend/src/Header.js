@@ -2,11 +2,13 @@
 import SearchIcon from '@mui/icons-material/Search';
 import { Autocomplete, TextField } from '@mui/material';
 import InputAdornment from '@mui/material/InputAdornment';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { API_BASE } from './Config';
+import { AuthContext } from './index';
 
 function Header({ setSearchInput }) {
+    const { loggedIn } = useContext(AuthContext);
     const [search, setSearch] = useState('');
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -40,7 +42,7 @@ function Header({ setSearchInput }) {
                 setLoading(false)
             });
 
-    }, [search]);
+    }, [search, setSearchInput]);
 
     return (
         <header>
@@ -78,7 +80,8 @@ function Header({ setSearchInput }) {
                 onChange={(e) => {
                     setSearchInput(e.target.value)
                 }} />}
-            <Link id="create-recipe" to="/create"><button>New Recipe</button></Link>
+            {!loggedIn && <Link id="login" to="/login"><button>Login</button></Link>}
+            {loggedIn && <Link id="create-recipe" to="/create"><button>New Recipe</button></Link>}
         </header >
     );
 }

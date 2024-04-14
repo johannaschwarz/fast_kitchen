@@ -1,14 +1,16 @@
 import io
 from typing import Annotated
 
-from database import Database, MySQLDatabase
+from database import Database
+from database_handler import get_database_connection
 from exceptions import NotFoundException
 from fastapi import Depends, HTTPException, Response, UploadFile, status
 from fastapi.routing import APIRouter
-from models import ImageID
+from models import ImageID, UserInDB
 from pi_heif import register_heif_opener
 from PIL import Image as PILImage
 from pydantic import ValidationError
+from user_router import get_current_active_user
 from utils import resize_image
 
 register_heif_opener()
@@ -16,18 +18,11 @@ register_heif_opener()
 image_router = APIRouter()
 
 
-async def get_database_connection():
-    db = MySQLDatabase()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
 @image_router.post("/image/create")
 def create_image(
     image: UploadFile,
     database: Annotated[Database, Depends(get_database_connection)],
+    _: Annotated[UserInDB, Depends(get_current_active_user)],
 ) -> ImageID:
     image = PILImage.open(image.file)
     image = resize_image(image)
@@ -67,7 +62,9 @@ def get_images_by_recipe(
 
 @image_router.delete("/image/{image_id}")
 def delete_image(
-    image_id: int, database: Annotated[Database, Depends(get_database_connection)]
+    image_id: int,
+    database: Annotated[Database, Depends(get_database_connection)],
+    _: Annotated[UserInDB, Depends(get_current_active_user)],
 ) -> None:
 
     try:

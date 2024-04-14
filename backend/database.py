@@ -1,9 +1,16 @@
-import json
 from abc import ABC, abstractmethod
 
 import mysql.connector
 from exceptions import NotFoundException
-from models import Ingredient, Recipe, RecipeBase, RecipeListing, RecipeStep, UnitEnum
+from models import (
+    Ingredient,
+    Recipe,
+    RecipeBase,
+    RecipeListing,
+    RecipeStep,
+    UnitEnum,
+    UserInDB,
+)
 from pydantic import ValidationError
 from utils import load_config, load_credentials
 
@@ -12,7 +19,7 @@ class Database(ABC):
     """A MySQL database class."""
 
     @abstractmethod
-    def create_recipe(self, recipe: RecipeBase):
+    def create_recipe(self, recipe: RecipeBase, user: UserInDB):
         """
         Create a new recipe in the database.
 
@@ -67,6 +74,10 @@ class Database(ABC):
         """
 
     @abstractmethod
+    def is_authorized(self, user_id: int, recipe_id: int) -> bool:
+        """Check if the user is authorized to access the recipe."""
+
+    @abstractmethod
     def create_image(self, image: bytes) -> int:
         """
         Create a new image in the database.
@@ -106,6 +117,41 @@ class Database(ABC):
             A list of categories.
         """
 
+    @abstractmethod
+    def get_user_by_username(self, username: str) -> UserInDB:
+        """
+        Get a user from the database using the username.
+
+        Raises:
+            NotFoundException if the user could not be found.
+
+        Returns:
+            The user object.
+        """
+
+    @abstractmethod
+    def get_user_by_id(self, user_id: int) -> UserInDB:
+        """
+        Get a user from the database using the user ID.
+
+        Raises:
+            NotFoundException if the user could not be found.
+
+        Returns:
+            The user object.
+        """
+
+    @abstractmethod
+    def create_user(
+        self, username: str, password: str, is_admin: bool
+    ) -> UserInDB | None:
+        """
+        Create a new user in the database.
+
+        Returns:
+            The user object.
+        """
+
 
 class MySQLDatabase(Database):
     """A MySQL database class."""
@@ -123,7 +169,7 @@ class MySQLDatabase(Database):
             database=self.CREDENTIALS["database_name"],
         )
 
-    def create_recipe(self, recipe: RecipeBase) -> int:
+    def create_recipe(self, recipe: RecipeBase, user: UserInDB) -> int:
         """
         Create a new recipe in the database.
 
@@ -132,13 +178,14 @@ class MySQLDatabase(Database):
         """
         cursor = self.recipes_database.cursor()
 
-        sql = "INSERT INTO Recipes (Title, Description, CookingTime, CoverImage, Portions) VALUES (%s, %s, %s, %s, %s)"
+        sql = "INSERT INTO Recipes (Title, Description, CookingTime, CoverImage, Portions, UserID) VALUES (%s, %s, %s, %s, %s, %s)"
         val = (
             recipe.title,
             recipe.description,
             recipe.cooking_time,
             recipe.cover_image if recipe.cover_image > 0 else None,
             recipe.portions,
+            user.id_,
         )
         cursor.execute(sql, val)
 
@@ -174,7 +221,7 @@ class MySQLDatabase(Database):
         """
         cursor = self.recipes_database.cursor()
 
-        sql = "SELECT RecipeID, Title, Description, CookingTime, CoverImage, Portions FROM Recipes WHERE RecipeID = %s"
+        sql = "SELECT RecipeID, Title, Description, CookingTime, CoverImage, Portions, UserID FROM Recipes WHERE RecipeID = %s"
         val = (recipe_id,)
 
         cursor.execute(sql, val)
@@ -187,17 +234,20 @@ class MySQLDatabase(Database):
                 f"Recipe with id {recipe_id} not found in database."
             )
 
-        id_, title, description, cooking_time, cover_image, portions = result
+        id_, title, description, cooking_time, cover_image, portions, user_id = result
 
         categories = self.get_categories_by_recipe(id_)
         ingredients = self._get_ingredients_by_recipe(id_)
         images = self._get_gallery_images_by_recipe(id_)
         steps = self._get_recipe_steps_by_recipe(id_)
+        username = self.get_user_by_id(user_id).username if user_id else None
 
         cursor.close()
         return Recipe(
             id_=id_,
             title=title,
+            creator_name=username,
+            creator_id=user_id if user_id else None,
             description=description,
             ingredients=ingredients,
             portions=portions,
@@ -227,7 +277,7 @@ class MySQLDatabase(Database):
         cursor = self.recipes_database.cursor(prepared=True)
 
         if limit:
-            limitation_query = f" LIMIT %s"
+            limitation_query = " LIMIT %s"
             limit_parameters = (limit,)
             if page:
                 limitation_query += " OFFSET %s"
@@ -238,7 +288,7 @@ class MySQLDatabase(Database):
 
         if filter_categories:
             cursor.execute(
-                f"SELECT DISTINCT r.RecipeID, r.Title, r.Description, r.CoverImage FROM Recipes r, Categories c WHERE (r.Title LIKE CONCAT('%', %s, '%') OR r.Description LIKE CONCAT('%', %s, '%')) AND c.RecipeID = r.RecipeID AND c.Category IN ({', '.join(['%s'] * len(filter_categories))}) GROUP BY r.RecipeID HAVING COUNT(c.Category) = %s {limitation_query};",
+                f"SELECT DISTINCT r.RecipeID, r.Title, r.Description, r.CoverImage, r.UserID FROM Recipes r, Categories c WHERE (r.Title LIKE CONCAT('%', %s, '%') OR r.Description LIKE CONCAT('%', %s, '%')) AND c.RecipeID = r.RecipeID AND c.Category IN ({', '.join(['%s'] * len(filter_categories))}) GROUP BY r.RecipeID HAVING COUNT(c.Category) = %s {limitation_query};",
                 (
                     search_string,
                     search_string,
@@ -249,7 +299,7 @@ class MySQLDatabase(Database):
             )
         else:
             cursor.execute(
-                f"SELECT RecipeID, Title, Description, CoverImage FROM Recipes WHERE Title LIKE CONCAT('%', %s, '%') OR Description LIKE CONCAT('%', %s, '%') {limitation_query}",
+                f"SELECT RecipeID, Title, Description, CoverImage, UserID FROM Recipes WHERE Title LIKE CONCAT('%', %s, '%') OR Description LIKE CONCAT('%', %s, '%') {limitation_query}",
                 (search_string, search_string) + limit_parameters,
             )
         result = cursor.fetchall()
@@ -257,7 +307,7 @@ class MySQLDatabase(Database):
 
         recipes = []
 
-        for id_, title, description, image in result:
+        for id_, title, description, image, user_id in result:
             categories = self.get_categories_by_recipe(id_)
             if not image:
                 images = self._get_gallery_images_by_recipe(id_)
@@ -270,6 +320,9 @@ class MySQLDatabase(Database):
                         description=description if description else "",
                         cover_image=image,
                         categories=categories,
+                        creator=(
+                            self.get_user_by_id(user_id).username if user_id else None
+                        ),
                     )
                 )
             except ValidationError:
@@ -307,7 +360,6 @@ class MySQLDatabase(Database):
         Returns:
             True if the recipe was updated, False otherwise.
         """
-
         cursor = self.recipes_database.cursor()
 
         sql = "UPDATE Recipes SET Title = %s, Description = %s, CookingTime = %s, CoverImage = %s, Portions = %s WHERE RecipeID = %s"
@@ -353,6 +405,31 @@ class MySQLDatabase(Database):
             )
 
         cursor.close()
+
+    def is_authorized(self, user_id: int, recipe_id: int) -> bool:
+        """Check if the user is authorized to access the recipe."""
+        cursor = self.recipes_database.cursor()
+
+        sql = "SELECT IsAdmin, Disabled FROM Users WHERE UserID = %s"
+        val = (user_id,)
+        cursor.execute(sql, val)
+        (is_admin, disabled) = cursor.fetchone()
+
+        cursor.close()
+        if disabled:
+            return False
+        if is_admin:
+            return True
+
+        cursor = self.recipes_database.cursor()
+        sql = "SELECT UserId FROM Recipes WHERE RecipeID = %s"
+        val = (recipe_id,)
+
+        cursor.execute(sql, val)
+        result = cursor.fetchone()
+        cursor.close()
+
+        return result[0] == user_id
 
     def _create_recipe_step(self, recipe_step: RecipeStep, recipe_id: int):
         """
@@ -624,8 +701,6 @@ class MySQLDatabase(Database):
         """
         Create a new category in the database.
         """
-        # TODO: Think about if there can be categories without recipes
-
         cursor = self.recipes_database.cursor()
 
         sql = "INSERT INTO Categories (RecipeID, Category) VALUES (%s, %s)"
@@ -777,6 +852,106 @@ class MySQLDatabase(Database):
             self._create_ingredient(ingredient, recipe.id_)
 
         cursor.close()
+
+    def get_user_by_username(self, username: str) -> UserInDB:
+        """
+        Get a user from the database.
+
+        Raises:
+            NotFoundException if the user could not be found.
+
+        Returns:
+            The user object.
+        """
+
+        cursor = self.recipes_database.cursor()
+
+        sql = "SELECT UserID, Username, Password, IsAdmin, Disabled FROM Users WHERE Username = %s"
+        val = (username,)
+
+        cursor.execute(sql, val)
+        result = cursor.fetchone()
+        if cursor.rowcount == 0:
+            cursor.close()
+            raise NotFoundException(
+                f"User with username {username} not found in database."
+            )
+
+        user_id, username, password, is_admin, disabled = result
+        cursor.close()
+        return UserInDB(
+            username=username,
+            disabled=disabled,
+            id_=user_id,
+            is_admin=is_admin,
+            hashed_password=password,
+        )
+
+    def get_user_by_id(self, user_id: int) -> UserInDB:
+        """
+        Get a user from the database using the user ID.
+
+        Raises:
+            NotFoundException if the user could not be found.
+
+        Returns:
+            The user object.
+        """
+
+        cursor = self.recipes_database.cursor()
+
+        sql = (
+            "SELECT Username, Password, IsAdmin, Disabled FROM Users WHERE UserID = %s"
+        )
+        val = (user_id,)
+
+        cursor.execute(sql, val)
+        result = cursor.fetchone()
+        if cursor.rowcount == 0:
+            cursor.close()
+            raise NotFoundException(f"User with id {user_id} not found in database.")
+
+        username, password, is_admin, disabled = result
+
+        cursor.close()
+        return UserInDB(
+            username=username,
+            disabled=disabled,
+            id_=user_id,
+            is_admin=is_admin,
+            hashed_password=password,
+        )
+
+    def create_user(
+        self, username: str, password: str, is_admin: bool
+    ) -> UserInDB | None:
+        cursor = self.recipes_database.cursor()
+
+        sql = "INSERT INTO Users (Username, Password, IsAdmin, Disabled) VALUES (%s, %s, %s, 0)"
+        val = (username, password, is_admin)
+
+        try:
+            cursor.execute(sql, val)
+        except mysql.connector.errors.IntegrityError:
+            raise ValueError("User already exists in database.")
+
+        self.recipes_database.commit()
+
+        _ = cursor.fetchone()
+        if cursor.rowcount == 0:
+            cursor.close()
+            return None
+
+        user_id = cursor.lastrowid
+
+        cursor.close()
+        return UserInDB(
+            username=username,
+            disabled=False,
+            id_=user_id,
+            is_admin=is_admin,
+            hashed_password=password,
+        )
 
     def close(self):
         self.recipes_database.close()

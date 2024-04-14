@@ -1,31 +1,18 @@
 from typing import Annotated
 
-from database import Database, MySQLDatabase
+from database import Database
+from database_handler import DatabaseContextManager, get_database_connection
 from exceptions import NotFoundException, UpdateFailedException
 from fastapi import BackgroundTasks, Depends, HTTPException, Query, status
 from fastapi.routing import APIRouter
-from models import Recipe, RecipeBase, RecipeListing
+from fastapi.security import OAuth2PasswordBearer
+from models import Recipe, RecipeBase, RecipeListing, UserInDB
 from pydantic import ValidationError
+from user_router import get_current_active_user
 
 recipe_router = APIRouter()
 
-
-class DatabaseContextManager:
-    """A context manager for the database connection."""
-
-    def __init__(self):
-        self.db = MySQLDatabase()
-
-    def __enter__(self):
-        return self.db
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.db.close()
-
-
-async def get_database_connection():
-    with DatabaseContextManager() as database:
-        yield database
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
 def remove_unused_images():
@@ -37,9 +24,10 @@ def remove_unused_images():
 def create_recipe(
     recipe: RecipeBase,
     database: Annotated[Database, Depends(get_database_connection)],
+    user: Annotated[UserInDB, Depends(get_current_active_user)],
     background_tasks: BackgroundTasks,
 ) -> Recipe:
-    id_ = database.create_recipe(recipe)
+    id_ = database.create_recipe(recipe, user)
 
     background_tasks.add_task(remove_unused_images)
 
@@ -118,8 +106,15 @@ def get_filtered_recipes(
 def update_recipe(
     recipe: Recipe,
     database: Annotated[Database, Depends(get_database_connection)],
+    user: Annotated[UserInDB, Depends(get_current_active_user)],
     background_tasks: BackgroundTasks,
 ) -> Recipe:
+    if not database.is_authorized(user.id_, recipe.id_):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User is not authorized to update the recipe.",
+        )
+
     try:
         database.update_recipe(recipe)
     except UpdateFailedException as e:
@@ -133,8 +128,15 @@ def update_recipe(
 
 @recipe_router.delete("/recipe/{recipe_id}")
 def delete_recipe(
-    recipe_id: int, database: Annotated[Database, Depends(get_database_connection)]
+    recipe_id: int,
+    database: Annotated[Database, Depends(get_database_connection)],
+    user: Annotated[UserInDB, Depends(get_current_active_user)],
 ):
+    if not database.is_authorized(user.id_, recipe_id):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User is not authorized to delete the recipe.",
+        )
     try:
         database.delete_recipe(recipe_id)
     except NotFoundException as e:

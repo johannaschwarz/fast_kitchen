@@ -1,14 +1,18 @@
 import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined';
 import { Stack } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
 import Carousel from 'react-material-ui-carousel';
 import { Link, useParams } from 'react-router-dom';
 import { API_BASE } from './Config';
+import Footer from './Footer.js';
 import Header from './Header.js';
 import './Recipe.css';
+import { AuthContext } from './index';
 
 function Recipe({ recipe }) {
+    const { token, user, isAdmin } = useContext(AuthContext);
+
     const [ingredientMultiplier, setIngredientMultiplier] = useState(1);
     const [galleryImages, setGalleryImages] = useState([]);
     const [ingredients, setIngredients] = useState([]);
@@ -44,7 +48,10 @@ function Recipe({ recipe }) {
 
     const deleteRecipe = async () => {
         const response = await fetch(API_BASE + 'recipe/' + recipe.id_, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: {
+                "Authorization": "Bearer " + token,
+            }
         })
 
         if (response.ok) {
@@ -125,14 +132,16 @@ function Recipe({ recipe }) {
                     </div>
                 ))}
             </div>
-            <div className='card'>
-                {/* TODO: show only to recipe owner */}
-                <h2>Options</h2>
-                <div className='inlineForm'>
-                    <Link to={"/edit/" + recipe.id_} ><button>Edit</button></Link>
-                    <button onClick={deleteRecipe}>Delete</button>
+            {
+                (isAdmin || user === recipe.creator_id) &&
+                <div className='card'>
+                    <h2>Options</h2>
+                    <div className='inlineForm'>
+                        <Link to={"/edit/" + recipe.id_} ><button>Edit</button></Link>
+                        <button onClick={deleteRecipe}>Delete</button>
+                    </div>
                 </div>
-            </div>
+            }
         </div>
     );
 }
@@ -182,7 +191,7 @@ function RecipePage() {
                     wrapperClass=""
                 />
             </div>
-            <footer><Link to="/legalnotice">Impressum</Link></footer>
+            <Footer />
         </div>
     );
 }
