@@ -132,7 +132,7 @@ def delete_recipe(
     database: Annotated[Database, Depends(get_database_connection)],
     user: Annotated[UserInDB, Depends(get_current_active_user)],
 ):
-    if not database.is_authorized(recipe_id, user.id_):
+    if not database.is_authorized(user.id_, recipe_id):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User is not authorized to delete the recipe.",

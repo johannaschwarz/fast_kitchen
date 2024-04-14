@@ -1,14 +1,17 @@
 import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined';
 import { Stack } from '@mui/material';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useContext } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
 import Carousel from 'react-material-ui-carousel';
 import { Link, useParams } from 'react-router-dom';
 import { API_BASE } from './Config';
 import Header from './Header.js';
 import './Recipe.css';
+import { AuthContext } from './index';
 
 function Recipe({ recipe }) {
+    const { token } = useContext(AuthContext);
+
     const [ingredientMultiplier, setIngredientMultiplier] = useState(1);
     const [galleryImages, setGalleryImages] = useState([]);
     const [ingredients, setIngredients] = useState([]);
@@ -44,7 +47,10 @@ function Recipe({ recipe }) {
 
     const deleteRecipe = async () => {
         const response = await fetch(API_BASE + 'recipe/' + recipe.id_, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: {
+                "Authorization": "Bearer " + token,
+            }
         })
 
         if (response.ok) {
