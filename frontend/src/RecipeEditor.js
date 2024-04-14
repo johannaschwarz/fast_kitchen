@@ -114,16 +114,20 @@ const IngredientList = ({ ingredients, setIngredients }) => {
     useEffect(() => {
         // If the last ingredient is filled, add a new empty ingredient
         let newIngredients = [...ingredients];
+        let change = false;
         newIngredients.forEach((group, groupIndex) => {
             if (group.ingredients.length === 0 || group.ingredients[group.ingredients.length - 1].name !== "") {
                 group.ingredients.push({ name: "", amount: 0, unit: "g", group: "" });
+                change = true;
             }
             // If there are two empty ingredients at the end, remove the last one
             else if (group.ingredients.length > 1 && group.ingredients[group.ingredients.length - 2].name === "") {
                 group.ingredients = group.ingredients.slice(0, -1);
+                change = true;
             }
         });
-        setIngredients(newIngredients);
+        if (change)
+            setIngredients(newIngredients);
     }, [ingredients, setIngredients]);
 
     const handleIngredientChange = (groupIndex, index, key) => (event) => {
@@ -340,6 +344,7 @@ function RecipeEditor() {
                             unit: data.ingredients[i].unit,
                         });
                     }
+                    console.log(newIngredients);
                     setIngredients(newIngredients);
                 }
                 if (data.steps.length > 0)
