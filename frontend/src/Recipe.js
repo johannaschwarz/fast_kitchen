@@ -14,12 +14,13 @@ import { AuthContext } from './index';
 function Recipe({ recipe }) {
     const { token, user, isAdmin } = useContext(AuthContext);
 
-    const [ingredientMultiplier, setIngredientMultiplier] = useState(1);
+    const [wishedPortions, setWishedPortions] = useState(1);
     const [galleryImages, setGalleryImages] = useState([]);
     const [ingredients, setIngredients] = useState([]);
 
     useEffect(() => {
         if (recipe) {
+            setWishedPortions(recipe.portions);
             if (recipe.cover_image === null) {
                 setGalleryImages(recipe.gallery_images);
             } else {
@@ -89,7 +90,7 @@ function Recipe({ recipe }) {
                                 <h3>{ingredientGroup.group}</h3>
                                 <ul>
                                     {ingredientGroup.ingredients.map((ingredient, ingredientIndex) => (
-                                        <li key={ingredientIndex}>{ingredient.name}: {ingredient.amount * (!isNaN(ingredientMultiplier) ? ingredientMultiplier : 1)} {ingredient.unit}</li>
+                                        <li key={ingredientIndex}>{ingredient.name}: {ingredient.amount * (!isNaN(wishedPortions) ? wishedPortions / recipe.portions : 1)} {ingredient.unit}</li>
                                     ))}
                                 </ul>
                             </div>
@@ -97,13 +98,13 @@ function Recipe({ recipe }) {
                         {ingredients.length === 1 &&
                             <ul>
                                 {ingredientGroup.ingredients.map((ingredient, ingredientIndex) => (
-                                    <li key={ingredientIndex}>{ingredient.name}: {ingredient.amount * (!isNaN(ingredientMultiplier) ? ingredientMultiplier : 1)} {ingredient.unit}</li>
+                                    <li key={ingredientIndex}>{ingredient.name}: {ingredient.amount * (!isNaN(wishedPortions) ? wishedPortions / recipe.portions : 1)} {ingredient.unit}</li>
                                 ))}
                             </ul>
                         }
                     </div>
                 ))}
-                <span>Portions: <input min={1} value={(!isNaN(ingredientMultiplier) ? ingredientMultiplier : "")} onChange={e => setIngredientMultiplier(parseInt(e.target.value))} type='number' /></span>
+                <span>Portions: <input min={1} value={(!isNaN(wishedPortions) ? wishedPortions : "")} onChange={e => setWishedPortions(parseInt(e.target.value))} type='number' /></span>
             </div>
             <div className='recipeSteps'>
                 {recipe.steps.sort(function (a, b) {
