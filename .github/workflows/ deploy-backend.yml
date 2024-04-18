@@ -2,8 +2,6 @@ name: deploy-backend
 run-name: Deploy Backend
 on:
   push:
-    branches:
-      - main
     tags:
       - v*
 
