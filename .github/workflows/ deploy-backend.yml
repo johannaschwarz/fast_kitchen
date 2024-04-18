@@ -45,15 +45,15 @@ jobs:
     #needs: build
     steps:
       - name: Setup ssh
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
         run: |
           mkdir -p ~/.ssh/
-          echo "${{ secrets.SITH_SPELL }}" > ~/.ssh/key
-          echo "${{ secrets.SITH_SPELL_PUB }}" > ~/.ssh/key.pub
-          chmod 600 ~/.ssh/key
-          chmod 600 ~/.ssh/key.pub
           ssh-keyscan -H ${{ secrets.TATOOINE }} >> ~/.ssh/known_hosts
-          eval "$(ssh-agent -s)"
-          ssh-add ~/.ssh/key
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          ssh-add - <<< "${{ secrets.SITH_SPELL }}"
       - name: Deploy
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
         run: |
-          ssh "${{ secrets.JEDI_NAME }}@${{ secrets.TATOOINE }}" "sh deploy.sh"
+          ssh ${{ secrets.JEDI_NAME }}@${{ secrets.TATOOINE }} "sh deploy.sh"
