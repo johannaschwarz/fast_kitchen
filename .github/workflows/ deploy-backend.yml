@@ -51,6 +51,7 @@ jobs:
                 ssh-keyscan -H ${{ secrets.TATOOINE }} >> ~/.ssh/known_hosts
             - name: Deploy
               run: |
+                cat ~/.ssh/key.pub
                 ssh ${{ secrets.JEDI_NAME }}@${{ secrets.TATOOINE }} "sh deploy.sh"
 
 
