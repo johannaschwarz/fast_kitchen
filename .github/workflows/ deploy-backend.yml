@@ -56,5 +56,4 @@ jobs:
           ssh-add ~/.ssh/key
       - name: Deploy
         run: |
-          cat ~/.ssh/key.pub | base64
-          ssh ${{ secrets.JEDI_NAME }}@${{ secrets.TATOOINE }} "sh deploy.sh"
+          ssh "${{ secrets.JEDI_NAME }}@${{ secrets.TATOOINE }}" "sh deploy.sh"
