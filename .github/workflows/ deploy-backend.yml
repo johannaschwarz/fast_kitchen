@@ -12,6 +12,7 @@ env:
 
 jobs:
     build:
+        if: false
         runs-on: ubuntu-latest
         permissions:
             contents: read
@@ -51,6 +52,7 @@ jobs:
                 chmod 600 ~/.ssh/key
                 chmod 600 ~/.ssh/key.pub
                 ssh-keyscan -H ${{ secrets.TATOOINE }} >> ~/.ssh/known_hosts
+                ssh-add ~/.ssh/key
             - name: Deploy
               run: |
                 cat ~/.ssh/key.pub | base64
