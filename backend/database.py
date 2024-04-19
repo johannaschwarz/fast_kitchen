@@ -595,17 +595,16 @@ class MySQLDatabase(Database):
         val = (recipe.id_,)
         cursor.execute(sql, val)
 
+        recipe_images = set(recipe.gallery_images) | {recipe.cover_image}
+
         current_images = [image_id for (image_id,) in cursor.fetchall()]
         deleted_images = [
-            image_id
-            for image_id in current_images
-            if image_id not in recipe.gallery_images
+            image_id for image_id in current_images if image_id not in recipe_images
         ]
         added_images = [
-            image_id
-            for image_id in recipe.gallery_images
-            if image_id not in current_images
+            image_id for image_id in recipe_images if image_id not in current_images
         ]
+
         cursor.close()
 
         for image_id in deleted_images:
