@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="FastKitchen",
-    version="0.1.3",
+    version="0.1.4",
 )
 
 app.add_middleware(
