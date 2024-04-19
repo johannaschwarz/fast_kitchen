@@ -75,8 +75,7 @@ function Recipe({ recipe }) {
                 <Stack direction="row" alignItems="center" gap={1}>
                     <Chip className='recipeLabel' icon={<TimerOutlinedIcon sx={{ fontSize: 15 }} />} label={recipe.cooking_time + " min"} />
                     {recipe.categories.map((category, index) => (
-                        // <span className="label" key={index}>{category}</span>
-                        <Chip className='recipeLabel' label={category} />
+                        <Chip key={index} className='recipeLabel' label={category} />
                     ))}
                 </Stack>
                 <p>{recipe.description}</p>
