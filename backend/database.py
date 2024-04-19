@@ -574,7 +574,7 @@ class MySQLDatabase(Database):
 
         cursor = self.recipes_database.cursor()
 
-        sql = "SELECT ImageID FROM Images WHERE RecipeID = %s AND StepID IS NULL"
+        sql = "SELECT i.ImageID FROM Images i, Recipes r WHERE i.RecipeID = %s AND r.RecipeID = i.RecipeID AND i.StepID IS NULL AND i.ImageID != r.CoverImage"
         val = (recipe_id,)
 
         cursor.execute(sql, val)
