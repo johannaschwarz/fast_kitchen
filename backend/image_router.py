@@ -9,7 +9,6 @@ from fastapi.routing import APIRouter
 from models import ImageID, UserInDB
 from pi_heif import register_heif_opener
 from PIL import Image as PILImage
-from pydantic import ValidationError
 from user_router import get_current_active_user
 from utils import resize_image
 
@@ -25,10 +24,11 @@ def create_image(
     _: Annotated[UserInDB, Depends(get_current_active_user)],
 ) -> ImageID:
     image = PILImage.open(image.file)
+    image.verify()
     image = resize_image(image)
 
     with io.BytesIO() as output:
-        image.save(output, format="PNG", optimize=True, quality=80)
+        image.save(output, format="webp", optimize=True, quality=80)
         contents = output.getvalue()
 
     id_ = database.create_image(contents)
@@ -42,11 +42,12 @@ def get_image(
 ) -> Response:
 
     try:
-        image = database.get_image(image_id)
-        return Response(content=image, media_type="image/png")
+        data = database.get_image(image_id)
+        img = PILImage.open(io.BytesIO(data))
+        return Response(content=data, media_type=f"image/{img.format.lower()}")
     except NotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
-    except ValidationError as e:
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
         ) from e
