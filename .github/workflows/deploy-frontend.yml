@@ -1,10 +1,10 @@
 name: deploy-frontend
 run-name: Deploy Frontend
 on:
-  branches:
-    - main
-  push:
-    tags:
+    push:
+      branches:
+        - main
+      tags:
       - v*
 
 jobs:
