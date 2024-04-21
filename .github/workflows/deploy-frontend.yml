@@ -36,12 +36,10 @@ jobs:
         with:
           name: production-build
       - name: 🚀 Sync files
-        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          username: ${{ secrets.YODA }}
           server: ${{ secrets.CORUSCANT }}
-          port: 21
-          sftp_only: false
+          username: ${{ secrets.YODA }}
           password: ${{ secrets.YODAS_SPELL }}
-          local_path: "./"
-          remote_path: "/homw/www/flottekueche.de"
+          protocol: ftp
+          port: 21
