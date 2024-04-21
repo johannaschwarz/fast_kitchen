@@ -1,25 +1,44 @@
-name: deploy-frontend
+name: 🎉 Deploy frontend on version
 run-name: Deploy Frontend
 on:
-    push:
-      branches:
-        - main
-      tags:
+  push:
+    branches:
+      - main
+    tags:
       - v*
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-        contents: read
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: 
+        with:
           node-version: 21
-      - name: Build
+      - name: 🔨 Build Project
         run: |
           cd frontend
           npm ci
           npm run build
+      - name: 📂 Archive build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: production build
+          path: artifacts/build
+  deploy:
+    if: false
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: 🚀 Sync files
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ftp.samkirkland.com
+          username: myFtpUserName
+          password: ${{ secrets.password }}
+          protocol: ftps
+          port: 1234 # todo replace with your web hosts ftps port
 

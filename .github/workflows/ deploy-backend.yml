@@ -1,4 +1,4 @@
-name: deploy-backend
+name: 🎉 Deploy backend on version
 run-name: Deploy Backend
 on:
   push:
@@ -15,11 +15,11 @@ jobs:
       IMAGE_NAME: fastkitchen_backend
     steps:
       - uses: actions/checkout@v4
-      - name: Build image
+      - name: 🔨 Build image
         run: docker build ./backend --file ./backend/Dockerfile --tag $IMAGE_NAME --label "runnumber=${GITHUB_RUN_ID}"
       - name: Log in to registry
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u $ --password-stdin
-      - name: Push image
+      - name: 🐳 Push image
         run: |
           IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME
 
@@ -42,12 +42,12 @@ jobs:
     env:
       SSH_AUTH_SOCK: /tmp/ssh_agent.sock
     steps:
-      - name: Setup ssh
+      - name: 🪄 Setup ssh
         run: |
           mkdir -p ~/.ssh/
           ssh-keyscan -H ${{ secrets.TATOOINE }} >> ~/.ssh/known_hosts
           ssh-agent -a $SSH_AUTH_SOCK > /dev/null
           ssh-add - <<< "${{ secrets.SITH_SPELL }}"
-      - name: Deploy
+      - name: 🚀 Deploy
         run: |
           ssh ${{ secrets.JEDI_NAME }}@${{ secrets.TATOOINE }} "sh deploy.sh"
