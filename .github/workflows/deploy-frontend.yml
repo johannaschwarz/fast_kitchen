@@ -1,0 +1,24 @@
+name: deploy-frontend
+run-name: Deploy Frontend
+on:
+  branches:
+    - main
+  push:
+    tags:
+      - v*
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+        contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: 
+          node-version: 21
+      - name: Build
+        run: |
+          npm ci
+          npm build
+
