@@ -1,4 +1,4 @@
-name: 🎉 Deploy backend on version
+name: 🎉 Deploy backend
 run-name: Deploy Backend
 on:
   push:

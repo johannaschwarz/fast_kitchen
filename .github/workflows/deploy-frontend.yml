@@ -1,4 +1,4 @@
-name: 🎉 Deploy frontend on version
+name: 🎉 Deploy frontend
 run-name: Deploy Frontend
 on:
   push:
@@ -26,7 +26,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: production build
-          path: /build
+          path: frontend/build
   deploy:
     if: false
     runs-on: ubuntu-latest
