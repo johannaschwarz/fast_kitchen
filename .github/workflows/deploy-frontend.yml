@@ -36,10 +36,10 @@ jobs:
         with:
           name: production-build
       - name: 🚀 Sync files
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        uses: wlixcc/SFTP-Deploy-Action@v1.2.4
         with:
-          server: ${{ secrets.CORUSCANT }}
           username: ${{ secrets.YODA }}
-          password: ${{ secrets.YODAS_SPELL }}
-          protocol: ftps
-          port: 22
+          server: ${{ secrets.CORUSCANT }}
+          ssh_private_key: ${{ secrets.YODAS_SPELL }}
+          local_path: "./"
+          remote_path: "/homw/www/flottekueche.de"
