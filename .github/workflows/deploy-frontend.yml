@@ -40,8 +40,8 @@ jobs:
         with:
           username: ${{ secrets.YODA }}
           server: ${{ secrets.CORUSCANT }}
-          port: 22
-          sftp_only: true
+          port: 21
+          sftp_only: false
           password: ${{ secrets.YODAS_SPELL }}
           local_path: "./"
           remote_path: "/homw/www/flottekueche.de"
