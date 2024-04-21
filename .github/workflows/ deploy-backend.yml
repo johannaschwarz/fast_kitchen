@@ -3,7 +3,7 @@ run-name: Deploy Backend
 on:
   push:
     tags:
-      - v*
+      - api-v*
 
 jobs:
   build:
