@@ -22,23 +22,23 @@ jobs:
           cd frontend
           npm ci
           npm run build
-      - name: 📂 Archive build artifacts
+      - name: 📂 Archive build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: production build
+          name: production-build
           path: frontend/build
   deploy:
-    if: false
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
+      - name: Download production build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: production-build
       - name: 🚀 Sync files
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
-          server: ftp.samkirkland.com
-          username: myFtpUserName
-          password: ${{ secrets.password }}
+          server: ${{ secrets.CORUSCANT }}
+          username: ${{ secrets.YODA }}
+          password: ${{ secrets.YODAS_SPELL }}
           protocol: ftps
-          port: 1234 # todo replace with your web hosts ftps port
-
+          port: 22
