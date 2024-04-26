@@ -143,17 +143,15 @@ function DeleteAlertDialog({ recipe_id, token }) {
     };
 
     const handleDeleteTrue = async () => {
-        if (open) {
-            const response = await fetch(API_BASE + 'recipe/' + recipe_id, {
-                method: 'DELETE',
-                headers: {
-                    "Authorization": "Bearer " + token,
-                }
-            })
-            handleClose()
-            if (response.ok) {
-                window.location.href = '/';
+        const response = await fetch(API_BASE + 'recipe/' + recipe_id, {
+            method: 'DELETE',
+            headers: {
+                "Authorization": "Bearer " + token,
             }
+        })
+        handleClose()
+        if (response.ok) {
+            window.location.href = '/';
         }
     }
 
