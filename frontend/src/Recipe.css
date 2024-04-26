@@ -129,6 +129,13 @@
     display: block;
 }
 
+.deleteButton {
+    background-color: #cc4545;
+}
+
+.deleteButton:hover {
+    background-color: #ba3d3d;
+}
 
 @media screen and (max-width: 1200px) {
     .stepCounterCircle {

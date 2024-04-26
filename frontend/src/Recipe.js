@@ -10,6 +10,9 @@ import Footer from './Footer.js';
 import Header from './Header.js';
 import './Recipe.css';
 import { AuthContext } from './index';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogTitle from '@mui/material/DialogTitle';
 
 function Recipe({ recipe }) {
     const { token, user, isAdmin } = useContext(AuthContext);
@@ -36,7 +39,6 @@ function Recipe({ recipe }) {
                 }
                 newIngredients[groupIndex].ingredients.push({
                     name: recipe.ingredients[i].name,
-                    amount: recipe.ingredients[i].amount,
                     unit: recipe.ingredients[i].unit,
                 });
             }
@@ -46,19 +48,6 @@ function Recipe({ recipe }) {
 
     if (recipe === null || recipe.id_ === undefined) {
         return null;
-    }
-
-    const deleteRecipe = async () => {
-        const response = await fetch(API_BASE + 'recipe/' + recipe.id_, {
-            method: 'DELETE',
-            headers: {
-                "Authorization": "Bearer " + token,
-            }
-        })
-
-        if (response.ok) {
-            window.location.href = '/';
-        }
     }
 
     return (
@@ -134,13 +123,61 @@ function Recipe({ recipe }) {
                     <h2>Options</h2>
                     <div className='inlineForm'>
                         <Link to={"/edit/" + recipe.id_} ><button>Edit</button></Link>
-                        <button onClick={deleteRecipe}>Delete</button>
+                        <DeleteAlertDialog recipe_id={recipe.id_} token={token} />
                     </div>
                 </div>
             }
         </div>
     );
 }
+
+function DeleteAlertDialog({ recipe_id, token }) {
+    const [open, setOpen] = React.useState(false);
+
+    const handleClickOpen = () => {
+        setOpen(true);
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
+
+    const handleDeleteTrue = async () => {
+        const response = await fetch(API_BASE + 'recipe/' + recipe_id, {
+            method: 'DELETE',
+            headers: {
+                "Authorization": "Bearer " + token,
+            }
+        })
+        handleClose()
+        if (response.ok) {
+            window.location.href = '/';
+        }
+    }
+
+    return (
+        <React.Fragment>
+            <button onClick={handleClickOpen} className='deleteButton'>Delete</button>
+            <Dialog
+                open={open}
+                onClose={handleClose}
+                aria-labelledby="alert-dialog-title"
+                aria-describedby="alert-dialog-description"
+            >
+                <DialogTitle id="alert-dialog-title" style={{ color: 'var(--text-color)' }}>
+                    {"Are you sure you want to delete this recipe?"}
+                </DialogTitle>
+                <DialogActions>
+                    <button onClick={handleDeleteTrue} className="deleteButton">Delete</button>
+                    <button onClick={handleClose} autoFocus>
+                        Close
+                    </button>
+                </DialogActions>
+            </Dialog >
+        </React.Fragment >
+    );
+}
+
 
 function RecipePage() {
     const { recipeId } = useParams();
