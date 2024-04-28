@@ -39,6 +39,7 @@ function Recipe({ recipe }) {
                 }
                 newIngredients[groupIndex].ingredients.push({
                     name: recipe.ingredients[i].name,
+                    amount: recipe.ingredients[i].amount,
                     unit: recipe.ingredients[i].unit,
                 });
             }
@@ -71,27 +72,29 @@ function Recipe({ recipe }) {
             </div>
             <div className='card'>
                 <h2>Ingredients:</h2>
-                {ingredients.map((ingredientGroup, groupIndex) => (
-                    <div key={groupIndex}>
-                        {ingredients.length > 1 &&
-                            <div>
-                                <h3>{ingredientGroup.group}</h3>
+                {console.log(ingredients)}
+                {
+                    ingredients.map((ingredientGroup, groupIndex) => (
+                        <div key={groupIndex}>
+                            {ingredients.length > 1 &&
+                                <div>
+                                    <h3>{ingredientGroup.group}</h3>
+                                    <ul>
+                                        {ingredientGroup.ingredients.map((ingredient, ingredientIndex) => (
+                                            <li key={ingredientIndex}>{ingredient.name}: {ingredient.amount * (!isNaN(wishedPortions) ? wishedPortions / recipe.portions : 1)} {ingredient.unit}</li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            }
+                            {ingredients.length === 1 &&
                                 <ul>
                                     {ingredientGroup.ingredients.map((ingredient, ingredientIndex) => (
                                         <li key={ingredientIndex}>{ingredient.name}: {ingredient.amount * (!isNaN(wishedPortions) ? wishedPortions / recipe.portions : 1)} {ingredient.unit}</li>
                                     ))}
                                 </ul>
-                            </div>
-                        }
-                        {ingredients.length === 1 &&
-                            <ul>
-                                {ingredientGroup.ingredients.map((ingredient, ingredientIndex) => (
-                                    <li key={ingredientIndex}>{ingredient.name}: {ingredient.amount * (!isNaN(wishedPortions) ? wishedPortions / recipe.portions : 1)} {ingredient.unit}</li>
-                                ))}
-                            </ul>
-                        }
-                    </div>
-                ))}
+                            }
+                        </div>
+                    ))}
                 <span>Portions: <input min={1} value={(!isNaN(wishedPortions) ? wishedPortions : "")} onChange={e => setWishedPortions(parseInt(e.target.value))} type='number' /></span>
             </div>
             <div className='recipeSteps'>
