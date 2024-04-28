@@ -24,7 +24,6 @@ def create_image(
     _: Annotated[UserInDB, Depends(get_current_active_user)],
 ) -> ImageID:
     image = PILImage.open(image.file)
-    image.verify()
     image = resize_image(image)
 
     with io.BytesIO() as output:
