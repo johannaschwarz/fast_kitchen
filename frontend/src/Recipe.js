@@ -13,6 +13,9 @@ import { AuthContext } from './index';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogTitle from '@mui/material/DialogTitle';
+import IconButton from '@mui/material/IconButton';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 
 function Recipe({ recipe }) {
     const { token, user, isAdmin } = useContext(AuthContext);
@@ -61,7 +64,18 @@ function Recipe({ recipe }) {
                         )}
                     </Carousel>
                 }
-                <h2>{recipe.title}</h2>
+                <Stack direction="row" alignItems="center" justifyContent="space-between">
+                    <h2>{recipe.title}</h2>
+                    {
+                        (isAdmin || parseInt(user) === recipe.creator_id) &&
+                        <Stack direction="row" alignItems="center" gap={1}>
+                            <IconButton component={Link} to={"/edit/" + recipe.id_} aria-label="edit">
+                                <EditIcon />
+                            </IconButton>
+                            <DeleteAlertDialog recipe_id={recipe.id_} token={token} />
+                        </Stack>
+                    }
+                </Stack>
                 <Stack direction="row" alignItems="center" gap={1}>
                     <Chip className='recipeLabel' icon={<TimerOutlinedIcon sx={{ fontSize: 15 }} />} label={recipe.cooking_time + " min"} />
                     {recipe.categories.map((category, index) => (
@@ -120,17 +134,7 @@ function Recipe({ recipe }) {
                     </div>
                 ))}
             </div>
-            {
-                (isAdmin || parseInt(user) === recipe.creator_id) &&
-                <div className='card'>
-                    <h2>Options</h2>
-                    <div className='inlineForm'>
-                        <Link to={"/edit/" + recipe.id_} ><button>Edit</button></Link>
-                        <DeleteAlertDialog recipe_id={recipe.id_} token={token} />
-                    </div>
-                </div>
-            }
-        </div>
+        </div >
     );
 }
 
@@ -160,7 +164,9 @@ function DeleteAlertDialog({ recipe_id, token }) {
 
     return (
         <React.Fragment>
-            <button onClick={handleClickOpen} className='deleteButton'>Delete</button>
+            <IconButton onClick={handleClickOpen} aria-label="delete" color="error">
+                <DeleteIcon />
+            </IconButton>
             <Dialog
                 open={open}
                 onClose={handleClose}
@@ -173,7 +179,7 @@ function DeleteAlertDialog({ recipe_id, token }) {
                 <DialogActions>
                     <button onClick={handleDeleteTrue} className="deleteButton">Delete</button>
                     <button onClick={handleClose} autoFocus>
-                        Close
+                        No
                     </button>
                 </DialogActions>
             </Dialog >
