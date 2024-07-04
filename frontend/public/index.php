@@ -1,4 +1,8 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 const API_BASE = 'https://api.flottekueche.de/';
 
 $title = "FastKitchen";
