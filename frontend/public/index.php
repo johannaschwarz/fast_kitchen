@@ -26,4 +26,4 @@ if (!empty($request_uri)) {
   }
 }
 
-require_once($_SERVER['DOCUMENT_ROOT'] . '/index.html');
+require_once($_SERVER['DOCUMENT_ROOT'] . '/html_doc.html');
