@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
 from enum import StrEnum
 
 import mysql.connector
@@ -26,41 +25,11 @@ class SortByEnum(StrEnum):
     COOKING_TIME = "CookingTime"
 
 
-class OrderEnum(StrEnum):
+class SortOrderEnum(StrEnum):
     """Enum for sorting options."""
 
     ASC = "ASC"
     DESC = "DESC"
-
-
-class SortBy:
-    """A class for sorting options."""
-
-    def __init__(self, by: str, order: str):
-        self.by = self._convert_to_sort_by_enum(by)
-        self.order = self._convert_to_order_enum(order)
-
-    def _convert_to_sort_by_enum(self, by: str) -> SortByEnum:
-        match by.lower():
-            case "clicks":
-                return SortByEnum.CLICKS
-            case "title":
-                return SortByEnum.TITLE
-            case "recipeid", "id":
-                return SortByEnum.ID
-            case "cookingtime":
-                return SortByEnum.COOKING_TIME
-            case _:
-                raise ValueError(f"Invalid sort by option: {by}")
-
-    def _convert_to_order_enum(self, order: str) -> OrderEnum:
-        match order.lower():
-            case "asc":
-                return OrderEnum.ASC
-            case "desc":
-                return OrderEnum.DESC
-            case _:
-                raise ValueError(f"Invalid order option: {order}")
 
 
 class Database(ABC):
@@ -95,7 +64,8 @@ class Database(ABC):
         page: int | None = None,
         search_string: str | None = None,
         filter_categories: list[str] | None = None,
-        sort_by: SortBy = SortBy(by="clicks", order="desc"),
+        sort_by: SortByEnum = SortByEnum.CLICKS,
+        sort_order: SortOrderEnum = SortOrderEnum.DESC,
     ) -> list[RecipeListing]:
         """
         Get all recipes that respect the given filters from the database.
@@ -340,7 +310,8 @@ class MySQLDatabase(Database):
         page: int | None = None,
         search_string: str | None = None,
         filter_categories: list[str] | None = None,
-        sort_by: SortBy = SortBy(by="clicks", order="desc"),
+        sort_by: SortByEnum = SortByEnum.CLICKS,
+        sort_order: SortOrderEnum = SortOrderEnum.DESC,
     ) -> list[RecipeListing]:
         """
         Get all recipes from the database.
@@ -365,7 +336,7 @@ class MySQLDatabase(Database):
 
         if filter_categories:
             cursor.execute(
-                f"SELECT DISTINCT r.RecipeID, r.Title, r.Description, r.CoverImage, r.UserID, r.Clicks FROM Recipes r, Categories c WHERE (r.Title LIKE CONCAT('%', %s, '%') OR r.Description LIKE CONCAT('%', %s, '%')) AND c.RecipeID = r.RecipeID AND c.Category IN ({', '.join(['%s'] * len(filter_categories))}) GROUP BY r.RecipeID HAVING COUNT(c.Category) = %s ORDER BY {sort_by.by} {sort_by.order} {limitation_query};",
+                f"SELECT DISTINCT r.RecipeID, r.Title, r.Description, r.CoverImage, r.UserID, r.Clicks FROM Recipes r, Categories c WHERE (r.Title LIKE CONCAT('%', %s, '%') OR r.Description LIKE CONCAT('%', %s, '%')) AND c.RecipeID = r.RecipeID AND c.Category IN ({', '.join(['%s'] * len(filter_categories))}) GROUP BY r.RecipeID HAVING COUNT(c.Category) = %s ORDER BY {sort_by} {sort_order} {limitation_query};",
                 (
                     search_string,
                     search_string,
@@ -376,7 +347,7 @@ class MySQLDatabase(Database):
             )
         else:
             cursor.execute(
-                f"SELECT RecipeID, Title, Description, CoverImage, UserID, Clicks FROM Recipes WHERE Title LIKE CONCAT('%', %s, '%') OR Description LIKE CONCAT('%', %s, '%') ORDER BY {sort_by.by} {sort_by.order} {limitation_query}",
+                f"SELECT RecipeID, Title, Description, CoverImage, UserID, Clicks FROM Recipes WHERE Title LIKE CONCAT('%', %s, '%') OR Description LIKE CONCAT('%', %s, '%') ORDER BY {sort_by} {sort_order} {limitation_query}",
                 (search_string, search_string) + limit_parameters,
             )
         result = cursor.fetchall()

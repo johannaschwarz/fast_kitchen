@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from database import Database, SortBy
+from database import Database, SortByEnum, SortOrderEnum
 from database_handler import DatabaseContextManager, get_database_connection
 from exceptions import NotFoundException, UpdateFailedException
 from fastapi import BackgroundTasks, Depends, HTTPException, Query, status
@@ -63,24 +63,24 @@ def get_all_recipes(
         int, Query(title="Page", description="The page number", example=1)
     ] = None,
     sort_by: Annotated[
-        str,
+        SortByEnum,
         Query(
             title="Sort by",
             description="The field to sort by",
-            example="clicks",
+            example=SortByEnum.CLICKS,
         ),
     ] = "clicks",
     sort_order: Annotated[
-        str,
+        SortOrderEnum,
         Query(
             title="Sort order",
             description="The order to sort by",
-            example="desc",
+            example=SortOrderEnum.DESC,
         ),
     ] = "desc",
 ) -> list[RecipeListing]:
     return database.get_all_recipes(
-        limit=limit, page=page, sort_by=SortBy(sort_by, sort_order)
+        limit=limit, page=page, sort_by=sort_by, sort_order=sort_order
     )
 
 
