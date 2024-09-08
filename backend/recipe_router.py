@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from database import Database
+from database import Database, SortBy
 from database_handler import DatabaseContextManager, get_database_connection
 from exceptions import NotFoundException, UpdateFailedException
 from fastapi import BackgroundTasks, Depends, HTTPException, Query, status
@@ -62,8 +62,26 @@ def get_all_recipes(
     page: Annotated[
         int, Query(title="Page", description="The page number", example=1)
     ] = None,
+    sort_by: Annotated[
+        str,
+        Query(
+            title="Sort by",
+            description="The field to sort by",
+            example="clicks",
+        ),
+    ] = "clicks",
+    sort_order: Annotated[
+        str,
+        Query(
+            title="Sort order",
+            description="The order to sort by",
+            example="desc",
+        ),
+    ] = "desc",
 ) -> list[RecipeListing]:
-    return database.get_all_recipes(limit=limit, page=page)
+    return database.get_all_recipes(
+        limit=limit, page=page, sort_by=SortBy(sort_by, sort_order)
+    )
 
 
 @recipe_router.get("/recipe/filtered")
