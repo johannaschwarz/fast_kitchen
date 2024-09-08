@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from enum import StrEnum
 
 import mysql.connector
 from exceptions import NotFoundException
@@ -13,6 +15,52 @@ from models import (
 )
 from pydantic import ValidationError
 from utils import load_config, load_credentials
+
+
+class SortByEnum(StrEnum):
+    """Enum for sorting options."""
+
+    CLICKS = "Clicks"
+    TITLE = "Title"
+    ID = "RecipeID"
+    COOKING_TIME = "CookingTime"
+
+
+class OrderEnum(StrEnum):
+    """Enum for sorting options."""
+
+    ASC = "ASC"
+    DESC = "DESC"
+
+
+class SortBy:
+    """A class for sorting options."""
+
+    def __init__(self, by: str, order: str):
+        self.by = self._convert_to_sort_by_enum(by)
+        self.order = self._convert_to_order_enum(order)
+
+    def _convert_to_sort_by_enum(self, by: str) -> SortByEnum:
+        match by.lower():
+            case "clicks":
+                return SortByEnum.CLICKS
+            case "title":
+                return SortByEnum.TITLE
+            case "recipeid", "id":
+                return SortByEnum.ID
+            case "cookingtime":
+                return SortByEnum.COOKING_TIME
+            case _:
+                raise ValueError(f"Invalid sort by option: {by}")
+
+    def _convert_to_order_enum(self, order: str) -> OrderEnum:
+        match order.lower():
+            case "asc":
+                return OrderEnum.ASC
+            case "desc":
+                return OrderEnum.DESC
+            case _:
+                raise ValueError(f"Invalid order option: {order}")
 
 
 class Database(ABC):
@@ -47,6 +95,7 @@ class Database(ABC):
         page: int | None = None,
         search_string: str | None = None,
         filter_categories: list[str] | None = None,
+        sort_by: SortBy = SortBy(by="clicks", order="desc"),
     ) -> list[RecipeListing]:
         """
         Get all recipes that respect the given filters from the database.
@@ -219,9 +268,11 @@ class MySQLDatabase(Database):
         Returns:
             The recipe object.
         """
+        self._increase_clicks_for_recipe(recipe_id)
+
         cursor = self.recipes_database.cursor()
 
-        sql = "SELECT RecipeID, Title, Description, CookingTime, CoverImage, Portions, UserID FROM Recipes WHERE RecipeID = %s"
+        sql = "SELECT RecipeID, Title, Description, CookingTime, CoverImage, Portions, UserID, Clicks FROM Recipes WHERE RecipeID = %s"
         val = (recipe_id,)
 
         cursor.execute(sql, val)
@@ -234,7 +285,16 @@ class MySQLDatabase(Database):
                 f"Recipe with id {recipe_id} not found in database."
             )
 
-        id_, title, description, cooking_time, cover_image, portions, user_id = result
+        (
+            id_,
+            title,
+            description,
+            cooking_time,
+            cover_image,
+            portions,
+            user_id,
+            clicks,
+        ) = result
 
         categories = self.get_categories_by_recipe(id_)
         ingredients = self._get_ingredients_by_recipe(id_)
@@ -256,7 +316,23 @@ class MySQLDatabase(Database):
             categories=categories,
             cover_image=cover_image,
             gallery_images=images,
+            clicks=clicks,
         )
+
+    def _increase_clicks_for_recipe(self, recipe_id: int):
+        """
+        Increase the number of clicks for a recipe in the database.
+        """
+
+        cursor = self.recipes_database.cursor()
+
+        sql = "UPDATE Recipes SET Clicks = Clicks + 1 WHERE RecipeID = %s"
+        val = (recipe_id,)
+
+        cursor.execute(sql, val)
+        self.recipes_database.commit()
+
+        cursor.close()
 
     def get_all_recipes(
         self,
@@ -264,6 +340,7 @@ class MySQLDatabase(Database):
         page: int | None = None,
         search_string: str | None = None,
         filter_categories: list[str] | None = None,
+        sort_by: SortBy = SortBy(by="clicks", order="desc"),
     ) -> list[RecipeListing]:
         """
         Get all recipes from the database.
@@ -288,7 +365,7 @@ class MySQLDatabase(Database):
 
         if filter_categories:
             cursor.execute(
-                f"SELECT DISTINCT r.RecipeID, r.Title, r.Description, r.CoverImage, r.UserID FROM Recipes r, Categories c WHERE (r.Title LIKE CONCAT('%', %s, '%') OR r.Description LIKE CONCAT('%', %s, '%')) AND c.RecipeID = r.RecipeID AND c.Category IN ({', '.join(['%s'] * len(filter_categories))}) GROUP BY r.RecipeID HAVING COUNT(c.Category) = %s {limitation_query};",
+                f"SELECT DISTINCT r.RecipeID, r.Title, r.Description, r.CoverImage, r.UserID, r.Clicks FROM Recipes r, Categories c WHERE (r.Title LIKE CONCAT('%', %s, '%') OR r.Description LIKE CONCAT('%', %s, '%')) AND c.RecipeID = r.RecipeID AND c.Category IN ({', '.join(['%s'] * len(filter_categories))}) GROUP BY r.RecipeID HAVING COUNT(c.Category) = %s ORDER BY {sort_by.by} {sort_by.order} {limitation_query};",
                 (
                     search_string,
                     search_string,
@@ -299,7 +376,7 @@ class MySQLDatabase(Database):
             )
         else:
             cursor.execute(
-                f"SELECT RecipeID, Title, Description, CoverImage, UserID FROM Recipes WHERE Title LIKE CONCAT('%', %s, '%') OR Description LIKE CONCAT('%', %s, '%') {limitation_query}",
+                f"SELECT RecipeID, Title, Description, CoverImage, UserID, Clicks FROM Recipes WHERE Title LIKE CONCAT('%', %s, '%') OR Description LIKE CONCAT('%', %s, '%') ORDER BY {sort_by.by} {sort_by.order} {limitation_query}",
                 (search_string, search_string) + limit_parameters,
             )
         result = cursor.fetchall()
@@ -307,7 +384,7 @@ class MySQLDatabase(Database):
 
         recipes = []
 
-        for id_, title, description, image, user_id in result:
+        for id_, title, description, image, user_id, clicks in result:
             categories = self.get_categories_by_recipe(id_)
             if not image:
                 images = self._get_gallery_images_by_recipe(id_)
@@ -323,6 +400,7 @@ class MySQLDatabase(Database):
                         creator=(
                             self.get_user_by_id(user_id).username if user_id else None
                         ),
+                        clicks=clicks,
                     )
                 )
             except ValidationError:
@@ -356,9 +434,6 @@ class MySQLDatabase(Database):
 
         Raises:
             UpdateFailedException: if the recipe could not be updated.
-
-        Returns:
-            True if the recipe was updated, False otherwise.
         """
         cursor = self.recipes_database.cursor()
 

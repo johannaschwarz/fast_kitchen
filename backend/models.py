@@ -50,6 +50,7 @@ class Recipe(RecipeBase):
     id_: int = -1
     creator_name: str | None = None
     creator_id: int | None = None
+    clicks: int | None = None
 
 
 class RecipeListing(BaseModel):
@@ -62,6 +63,7 @@ class RecipeListing(BaseModel):
     categories: list[str]
     cover_image: int | None = None
     rating: float | None = None
+    clicks: int | None = None
 
 
 class RecipeStep(BaseModel):
