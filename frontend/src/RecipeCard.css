@@ -59,11 +59,37 @@
     animation: animated-gradient 8s infinite ease-out;
 }
 
-.recipe-card .creator {
+.recipe-card .creator,
+.time {
     font-size: 12px;
     color: #999;
 }
 
+.image-container {
+    position: relative;
+    width: 100%;
+    height: auto;
+    overflow: hidden;
+}
+
+.cooking-time-box {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: rgba(0, 0, 0, 0.47);
+    /* Semi-transparent black */
+    color: white;
+    padding: 5px 10px;
+    border-radius: 0 20px 0 20px;
+    min-height: 40px;
+    display: flex;
+    align-items: center;
+}
+
+.cooking-time-box p {
+    margin: 0;
+    font-size: 14px;
+}
 
 @keyframes animated-gradient {
     100% {
