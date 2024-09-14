@@ -6,11 +6,11 @@ import { API_BASE } from './Config';
 import RecipeCard from './RecipeCard';
 import './Recipes.css';
 
+import { ArrowDownward, ArrowUpward } from '@mui/icons-material';
 import { ToggleButton } from '@mui/material';
-import { ArrowUpward, ArrowDownward } from '@mui/icons-material';
+import FormControl from '@mui/material/FormControl';
 import InputLabel from '@mui/material/InputLabel';
 import MenuItem from '@mui/material/MenuItem';
-import FormControl from '@mui/material/FormControl';
 import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
 
@@ -72,17 +72,18 @@ function Recipes({ filters, search }) {
     return (
         <div>
             <Stack
+                className='sort-controls'
                 direction="row"
                 spacing={2}
                 sx={{
                     justifyContent: "flex-end",
                     alignItems: "center",
                 }}>
-                <FormControl>
-                    <InputLabel id="demo-simple-select-label">Sorting</InputLabel>
+                <FormControl size="small">
+                    <InputLabel id="sort-label">Sorting</InputLabel>
                     <Select
-                        labelId="demo-simple-select-label"
-                        id="demo-simple-select"
+                        labelId="sort-label"
+                        id="sort-select"
                         value={sortByOption}
                         label="Sorting"
                         onChange={handleSortByChange}
@@ -93,10 +94,10 @@ function Recipes({ filters, search }) {
                         <MenuItem value={"CookingTime"}>Cooking Time</MenuItem>
                     </Select>
                 </FormControl>
-
-                <ToggleButton onClick={toggleSortOrder}>
+                <ToggleButton onClick={toggleSortOrder} size="small">
                     {sortOrder === 'ASC' ? <ArrowDownward /> : <ArrowUpward />}
                 </ToggleButton>
+
             </Stack>
 
             <section id="recipes">
