@@ -336,7 +336,7 @@ class MySQLDatabase(Database):
 
         if filter_categories:
             cursor.execute(
-                f"SELECT DISTINCT r.RecipeID, r.Title, r.Description, r.CoverImage, r.UserID, r.Clicks FROM Recipes r, Categories c WHERE (r.Title LIKE CONCAT('%', %s, '%') OR r.Description LIKE CONCAT('%', %s, '%')) AND c.RecipeID = r.RecipeID AND c.Category IN ({', '.join(['%s'] * len(filter_categories))}) GROUP BY r.RecipeID HAVING COUNT(c.Category) = %s ORDER BY {sort_by} {sort_order} {limitation_query};",
+                f"SELECT DISTINCT r.RecipeID, r.Title, r.Description, r.CoverImage, r.UserID, r.Clicks, r.CookingTime FROM Recipes r, Categories c WHERE (r.Title LIKE CONCAT('%', %s, '%') OR r.Description LIKE CONCAT('%', %s, '%')) AND c.RecipeID = r.RecipeID AND c.Category IN ({', '.join(['%s'] * len(filter_categories))}) GROUP BY r.RecipeID HAVING COUNT(c.Category) = %s ORDER BY {sort_by} {sort_order} {limitation_query};",
                 (
                     search_string,
                     search_string,
@@ -347,7 +347,7 @@ class MySQLDatabase(Database):
             )
         else:
             cursor.execute(
-                f"SELECT RecipeID, Title, Description, CoverImage, UserID, Clicks FROM Recipes WHERE Title LIKE CONCAT('%', %s, '%') OR Description LIKE CONCAT('%', %s, '%') ORDER BY {sort_by} {sort_order} {limitation_query}",
+                f"SELECT RecipeID, Title, Description, CoverImage, UserID, Clicks, CookingTime FROM Recipes WHERE Title LIKE CONCAT('%', %s, '%') OR Description LIKE CONCAT('%', %s, '%') ORDER BY {sort_by} {sort_order} {limitation_query}",
                 (search_string, search_string) + limit_parameters,
             )
         result = cursor.fetchall()
@@ -355,7 +355,7 @@ class MySQLDatabase(Database):
 
         recipes = []
 
-        for id_, title, description, image, user_id, clicks in result:
+        for id_, title, description, image, user_id, clicks, cooking_time in result:
             categories = self.get_categories_by_recipe(id_)
             if not image:
                 images = self._get_gallery_images_by_recipe(id_)
@@ -372,6 +372,7 @@ class MySQLDatabase(Database):
                             self.get_user_by_id(user_id).username if user_id else None
                         ),
                         clicks=clicks,
+                        cooking_time=cooking_time,
                     )
                 )
             except ValidationError:
