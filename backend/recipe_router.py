@@ -69,7 +69,7 @@ def get_all_recipes(
             description="The field to sort by",
             example=SortByEnum.CLICKS,
         ),
-    ] = "clicks",
+    ] = SortByEnum.CLICKS,
     sort_order: Annotated[
         SortOrderEnum,
         Query(
@@ -77,7 +77,7 @@ def get_all_recipes(
             description="The order to sort by",
             example=SortOrderEnum.DESC,
         ),
-    ] = "desc",
+    ] = SortOrderEnum.DESC,
 ) -> list[RecipeListing]:
     return database.get_all_recipes(
         limit=limit, page=page, sort_by=sort_by, sort_order=sort_order
@@ -114,9 +114,30 @@ def get_filtered_recipes(
     page: Annotated[
         int, Query(title="Page", description="The page number", example=1)
     ] = None,
+    sort_by: Annotated[
+        SortByEnum,
+        Query(
+            title="Sort by",
+            description="The field to sort by",
+            example=SortByEnum.CLICKS,
+        ),
+    ] = SortByEnum.CLICKS,
+    sort_order: Annotated[
+        SortOrderEnum,
+        Query(
+            title="Sort order",
+            description="The order to sort by",
+            example=SortOrderEnum.DESC,
+        ),
+    ] = SortOrderEnum.DESC,
 ) -> list[RecipeListing]:
     return database.get_all_recipes(
-        limit=limit, page=page, search_string=search, filter_categories=categories
+        limit=limit,
+        page=page,
+        search_string=search,
+        filter_categories=categories,
+        sort_by=sort_by,
+        sort_order=sort_order,
     )
 
 
