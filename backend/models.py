@@ -64,6 +64,7 @@ class RecipeListing(BaseModel):
     cover_image: int | None = None
     rating: float | None = None
     clicks: int | None = None
+    cooking_time: int
 
 
 class RecipeStep(BaseModel):
