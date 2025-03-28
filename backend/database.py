@@ -2,17 +2,11 @@ from abc import ABC, abstractmethod
 from enum import StrEnum
 
 import mysql.connector
-from exceptions import NotFoundException
-from models import (
-    Ingredient,
-    Recipe,
-    RecipeBase,
-    RecipeListing,
-    RecipeStep,
-    UnitEnum,
-    UserInDB,
-)
 from pydantic import ValidationError
+
+from exceptions import NotFoundException
+from models import (Ingredient, Recipe, RecipeBase, RecipeListing, RecipeStep,
+                    UnitEnum, UserInDB)
 from utils import load_config, load_credentials
 
 

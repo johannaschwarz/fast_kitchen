@@ -1,13 +1,14 @@
 from typing import Annotated
 
-from database import Database, SortByEnum, SortOrderEnum
-from database_handler import DatabaseContextManager, get_database_connection
-from exceptions import NotFoundException, UpdateFailedException
 from fastapi import BackgroundTasks, Depends, HTTPException, Query, status
 from fastapi.routing import APIRouter
 from fastapi.security import OAuth2PasswordBearer
-from models import Recipe, RecipeBase, RecipeListing, UserInDB
 from pydantic import ValidationError
+
+from database import Database, SortByEnum, SortOrderEnum
+from database_handler import DatabaseContextManager, get_database_connection
+from exceptions import NotFoundException, UpdateFailedException
+from models import Recipe, RecipeBase, RecipeListing, UserInDB
 from user_router import get_current_active_user
 
 recipe_router = APIRouter(tags=["Recipe"])
@@ -191,6 +192,6 @@ def get_recipes_by_category(
 
 @recipe_router.get("/category/all")
 def get_all_categories(
-    database: Annotated[Database, Depends(get_database_connection)]
+    database: Annotated[Database, Depends(get_database_connection)],
 ) -> list[str]:
     return database.get_categories()

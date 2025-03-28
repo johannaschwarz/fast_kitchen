@@ -1,14 +1,15 @@
 import io
 from typing import Annotated
 
+from fastapi import Depends, HTTPException, Response, UploadFile, status
+from fastapi.routing import APIRouter
+from pi_heif import register_heif_opener
+from PIL import Image as PILImage
+
 from database import Database
 from database_handler import get_database_connection
 from exceptions import NotFoundException
-from fastapi import Depends, HTTPException, Response, UploadFile, status
-from fastapi.routing import APIRouter
 from models import ImageID, UserInDB
-from pi_heif import register_heif_opener
-from PIL import Image as PILImage
 from user_router import get_current_active_user
 from utils import resize_image
 
