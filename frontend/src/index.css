@@ -135,13 +135,13 @@ select {
   font-size: 16px;
   padding: 10px;
   border: 1px solid var(--input-border);
-  border-radius: 20px;
+  border-radius: 4px;
   background-color: var(--input-bg);
   color: var(--text-color);
 }
 
 textarea {
-  border-end-end-radius: 5px;
+  border-end-end-radius: 4px;
   resize: vertical;
   min-height: 41px;
   font-family: Arial, Helvetica, sans-serif;
