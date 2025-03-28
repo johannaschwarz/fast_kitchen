@@ -90,17 +90,47 @@ const VisuallyHiddenInput = styled('input')({
 
 const measureUnits = ["g", "kg", "ml", "l", "pcs", "tbsp", "tsp"];
 
+const inputProps = {
+    style: {
+        color: 'var(--text-color)'
+    }
+};
+
+const textFieldSx = {
+    '& .MuiOutlinedInput-root': {
+        '& fieldset': {
+            borderColor: 'var(--input-border)',
+        },
+        '&:hover fieldset': {
+            borderColor: 'var(--input-border)',
+        },
+        '&.Mui-focused fieldset': {
+            borderColor: 'var(--primary-color)',
+        },
+        backgroundColor: 'var(--input-bg)',
+    },
+    '& .MuiInputLabel-root': {
+        color: 'var(--text-color)',
+    },
+    '& .MuiInputLabel-root.Mui-focused': {
+        color: 'var(--primary-color)',
+    },
+    '& .MuiSelect-icon': {
+        color: 'var(--text-color)',
+    },
+};
+
 function Ingredient({ ingredient, onChangeIngredient, onChangeAmount, onChangeUnit, onDelete }) {
     if (ingredient === null) {
         ingredient = { name: "", amount: 0, unit: "g", group: "" };
     }
     return (
         <Stack direction="row" spacing={2}>
-            <TextField type="text" id="ingredient" name="ingredient" label="Ingredient" onChange={onChangeIngredient} value={ingredient.name} />
-            <TextField min="0" type="number" id="amount" name="amount" label="Amount" onWheel={(e) => e.target.blur()} onChange={onChangeAmount} value={ingredient.amount} />
-            <TextField select label="Select" id="unit" name="unit" defaultValue={"g"} onChange={onChangeUnit} value={ingredient.unit} >
+            <TextField InputProps={inputProps} sx={textFieldSx} type="text" id="ingredient" name="ingredient" label="Ingredient" onChange={onChangeIngredient} value={ingredient.name} />
+            <TextField InputProps={inputProps} sx={textFieldSx} min="0" type="number" id="amount" name="amount" label="Amount" onWheel={(e) => e.target.blur()} onChange={onChangeAmount} value={ingredient.amount} />
+            <TextField InputProps={inputProps} sx={textFieldSx} select label="Select" id="unit" name="unit" defaultValue={"g"} onChange={onChangeUnit} value={ingredient.unit} >
                 {measureUnits.map((option) => (
-                    <MenuItem key={option} value={option}>
+                    <MenuItem key={option} value={option} sx={{ color: 'var(--text-color)', '&:hover': { backgroundColor: 'var(--input-border)' } }}>
                         {option}
                     </MenuItem>
                 ))}
@@ -489,9 +519,9 @@ function RecipeEditor() {
                 <h1>{recipeId === undefined ? "Create a new recipe" : "Edit your recipe"}</h1>
                 <form onSubmit={handleSubmit}>
                     <Stack>
-                        <TextField id="title" name="title" label="Title" value={title} onChange={e => setTitle(e.target.value)} required /><br />
-                        <TextField id="description" name="description" label="Description" value={description} onChange={e => setDescription(e.target.value)} required /><br />
-                        <TextField id="cookingTime" name="cookingTime" label="Cooking time in minutes" type="number" value={cookingTime} onWheel={(e) => e.target.blur()} onChange={e => setCookingTime(e.target.value)} required /><br />
+                        <TextField InputProps={inputProps} sx={textFieldSx} id="title" name="title" label="Title" value={title} onChange={e => setTitle(e.target.value)} required /><br />
+                        <TextField InputProps={inputProps} sx={textFieldSx} id="description" name="description" label="Description" value={description} onChange={e => setDescription(e.target.value)} required /><br />
+                        <TextField InputProps={inputProps} sx={textFieldSx} id="cookingTime" name="cookingTime" label="Cooking time in minutes" type="number" value={cookingTime} onWheel={(e) => e.target.blur()} onChange={e => setCookingTime(e.target.value)} required /><br />
                         <Autocomplete
                             disablePortal
                             options={filters}
@@ -500,9 +530,9 @@ function RecipeEditor() {
                             multiple
                             value={categories}
                             onChange={(_, value) => { setCategories(value) }}
-                            renderInput={(params) => <TextField {...params} label="Categories" />}
+                            renderInput={(params) => <TextField {...params} InputProps={{...params.InputProps, ...inputProps}} sx={textFieldSx} label="Categories" />}
                         /><br />
-                        <Divider />
+                        <Divider sx={{ borderColor: 'var(--input-border)' }} />
 
                         <h3>Images:</h3>
                         <UploadButton component="label" variant="contained" htmlFor="cover_image" startIcon={<CloudUploadIcon />}>
