@@ -1,15 +1,18 @@
 .filter-chip {
     padding: 8px 16px;
-    border: 1px solid #ccc;
+    border: 1px solid var(--input-border);
     border-radius: 20px;
     margin: 5px;
     cursor: pointer;
     font-size: 14px;
     user-select: none;
+    color: var(--text-color);
+    transition: all 0.2s ease;
 }
 
 .filter-chip.active {
-    background-color: #b4c2b3;
-    color: white;
+    background-color: var(--primary-color);
+    color: var(--text-color);
     font-weight: bold;
+    border-color: var(--primary-color);
 }

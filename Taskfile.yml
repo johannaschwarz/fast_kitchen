@@ -1,0 +1,41 @@
+version: '3'
+
+vars:
+  FRONTEND_DIR: frontend
+  BACKEND_DIR: backend
+
+tasks:
+  install-frontend:
+    dir: '{{.FRONTEND_DIR}}'
+    cmds:
+      - npm install
+
+  install-backend:
+    dir: '{{.BACKEND_DIR}}'
+    cmds:
+      - pip install -r requirements.txt
+
+  install:
+    desc: Install all dependencies
+    cmds:
+      - task: install-frontend
+      - task: install-backend
+
+  frontend:
+    desc: Start the frontend development server
+    dir: '{{.FRONTEND_DIR}}'
+    cmds:
+      - npm start
+
+  backend:
+    desc: Start the backend server
+    dir: '{{.BACKEND_DIR}}'
+    cmds:
+      - python app.py
+
+  clean:
+    desc: Clean up node_modules and python cache
+    cmds:
+      - rm -rf {{.FRONTEND_DIR}}/node_modules
+      - find . -type d -name "__pycache__" -exec rm -r {} +
+      - find . -type f -name "*.pyc" -delete
