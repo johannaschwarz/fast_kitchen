@@ -18,7 +18,7 @@ jobs:
       - name: 🔨 Build Project
         run: |
           cd frontend
-          npm ci --omit dev
+          npm ci
           npm run build
           mv build/index.html build/html_doc.php
       - name: 📂 Archive build artifact
