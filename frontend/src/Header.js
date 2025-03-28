@@ -1,5 +1,7 @@
 // Header.js
 import SearchIcon from '@mui/icons-material/Search';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
 import { Autocomplete, TextField } from '@mui/material';
 import InputAdornment from '@mui/material/InputAdornment';
 import React, { useContext, useEffect, useState } from 'react';
@@ -12,6 +14,17 @@ function Header({ setSearchInput }) {
     const [search, setSearch] = useState('');
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+
+    useEffect(() => {
+        // Set initial theme
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+    }, [theme]);
+
+    const toggleTheme = () => {
+        setTheme(theme === 'light' ? 'dark' : 'light');
+    };
 
     useEffect(() => {
         if (setSearchInput !== undefined) {
@@ -80,6 +93,9 @@ function Header({ setSearchInput }) {
                 onChange={(e) => {
                     setSearchInput(e.target.value)
                 }} />}
+            <button onClick={toggleTheme} className="theme-toggle" aria-label="Toggle dark mode">
+                {theme === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
+            </button>
             {!loggedIn && <Link id="login" to="/login"><button>Login</button></Link>}
             {loggedIn && <Link id="create-recipe" to="/create"><button>New Recipe</button></Link>}
         </header >

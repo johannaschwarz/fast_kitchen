@@ -3,6 +3,19 @@
   --secondary-color: #768375;
   --dark-green: #476444;
   --text-color: #454545;
+  --bg-color: #ffffff;
+  --card-bg: #ffffff;
+  --shadow-color: rgba(0, 0, 0, 0.2);
+}
+
+:root[data-theme="dark"] {
+  --primary-color: #7a8579;
+  --secondary-color: #657264;
+  --dark-green: #537551;
+  --text-color: #e1e1e1;
+  --bg-color: #1a1a1a;
+  --card-bg: #2d2d2d;
+  --shadow-color: rgba(0, 0, 0, 0.4);
 }
 
 * {
@@ -17,6 +30,9 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   padding: 0;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 header {
@@ -194,6 +210,46 @@ footer .link {
 
 .w100 {
   width: 100%;
+}
+
+.card,
+.imageCard,
+.recipe-card {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  box-shadow: 0 1px 3px var(--shadow-color);
+  transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.recipe-card:hover {
+  background-color: var(--card-bg);
+  box-shadow: 0 2px 5px var(--shadow-color);
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+  background: none;
+  border: none;
+  padding: 8px;
+  cursor: pointer;
+  color: var(--text-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  transition: background-color 0.2s ease;
+}
+
+.theme-toggle:hover {
+  background-color: var(--primary-color);
+  box-shadow: none;
+}
+
+.theme-toggle svg {
+  width: 20px;
+  height: 20px;
 }
 
 @media screen and (max-width: 1200px) {
