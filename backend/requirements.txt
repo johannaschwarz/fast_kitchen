@@ -6,3 +6,4 @@ pi-heif~=0.22.0
 pillow~=11.1.0
 python-jose[cryptography]~=3.4.0
 python-multipart~=0.0.9
+requests==2.32.3

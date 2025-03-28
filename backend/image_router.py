@@ -6,12 +6,12 @@ from fastapi.routing import APIRouter
 from pi_heif import register_heif_opener
 from PIL import Image as PILImage
 
+from image_tools import process_image
 from database import Database
 from database_handler import get_database_connection
 from exceptions import NotFoundException
 from models import ImageID, UserInDB
 from user_router import get_current_active_user
-from utils import resize_image
 
 register_heif_opener()
 
@@ -25,13 +25,9 @@ def create_image(
     _: Annotated[UserInDB, Depends(get_current_active_user)],
 ) -> ImageID:
     image = PILImage.open(image.file)
-    image = resize_image(image)
+    data = process_image(image)
 
-    with io.BytesIO() as output:
-        image.save(output, format="webp", optimize=True, quality=80)
-        contents = output.getvalue()
-
-    id_ = database.create_image(contents)
+    id_ = database.create_image(data)
 
     return ImageID(id_=id_)
 
