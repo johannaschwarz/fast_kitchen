@@ -11,7 +11,7 @@ from jose import JWTError, jwt
 from models import Authorization, NewUser, UserInDB
 from utils import load_credentials
 
-user_router = APIRouter()
+user_router = APIRouter(tags=["User"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 

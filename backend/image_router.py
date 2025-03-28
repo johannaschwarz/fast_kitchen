@@ -14,7 +14,7 @@ from utils import resize_image
 
 register_heif_opener()
 
-image_router = APIRouter()
+image_router = APIRouter(tags=["Image"])
 
 
 @image_router.post("/image/create")

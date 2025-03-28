@@ -10,7 +10,7 @@ from models import Recipe, RecipeBase, RecipeListing, UserInDB
 from pydantic import ValidationError
 from user_router import get_current_active_user
 
-recipe_router = APIRouter()
+recipe_router = APIRouter(tags=["Recipe"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
