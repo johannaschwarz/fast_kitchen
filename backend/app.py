@@ -8,7 +8,7 @@ import user_router
 
 app = FastAPI(
     title="FastKitchen",
-    version="0.2.3",
+    version="0.3.0",
 )
 
 app.add_middleware(
