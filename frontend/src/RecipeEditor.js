@@ -220,25 +220,43 @@ const IngredientList = ({ ingredients, setIngredients }) => {
                     <br />
                 </Stack>))}
             <br />
-            <button onClick={addIngredientGroup}>Add ingredient group</button>
+            <button type="button" onClick={addIngredientGroup}>Add ingredient group</button>
         </Stack>
     );
 };
 
 function Step({ index, step, onChangeDesciption, onDelete, onUploadImage, onDeleteImage }) {
-
     return (
         <div>
             <Stack direction={'row'} spacing={2} style={{ marginBottom: 10 }}>
                 <span>{index}.</span>
-                <Stack direction={'column'} spacing={1}>
-                    <Stack direction={'row'} spacing={2} style={{ marginBottom: 10 }}>
-                        <TextField type="text" id="step" name="step" label="Instruction" onChange={onChangeDesciption} value={step.description} />
-                        <UploadButton component="label" variant="contained" htmlFor={"step_image" + index} startIcon={<CloudUploadIcon />}>
-                            Image
-                            <VisuallyHiddenInput type="file" id={"step_image" + index} name="step_image" accept="image/*" onChange={onUploadImage} />
-                        </UploadButton><br />
-                        {step.description !== "" && < button type='button' onClick={onDelete} className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>}
+                <Stack direction={'column'} spacing={1} style={{ width: '100%' }}>
+                    <Stack direction={'row'} spacing={2} alignItems="center" style={{ marginBottom: 10 }}>
+                        <TextField 
+                            multiline
+                            minRows={1}
+                            maxRows={10}
+                            type="text" 
+                            id="step" 
+                            name="step" 
+                            label="Instruction" 
+                            onChange={onChangeDesciption} 
+                            value={step.description}
+                            sx={{
+                                ...textFieldSx,
+                                width: '100%',
+                                '& .MuiInputBase-root': {
+                                    alignItems: 'flex-start'
+                                }
+                            }}
+                        />
+                        <Stack direction="row" spacing={1} alignItems="center" style={{ flexShrink: 0 }}>
+                            <UploadButton component="label" variant="contained" htmlFor={"step_image" + index} startIcon={<CloudUploadIcon />}>
+                                Image
+                                <VisuallyHiddenInput type="file" id={"step_image" + index} name="step_image" accept="image/*" onChange={onUploadImage} />
+                            </UploadButton>
+                            {step.description !== "" && <button type='button' onClick={onDelete} className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>}
+                        </Stack>
                     </Stack>
                     {step.images.length > 0 && imagesList(step.images, "stepImg", onDeleteImage, "deleteIconStep")}
                 </Stack>
