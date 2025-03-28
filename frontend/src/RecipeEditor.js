@@ -1,10 +1,11 @@
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import LinkIcon from '@mui/icons-material/Link';
 import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOutlineOutlined';
-import { Alert, AlertTitle, Autocomplete, Button, Divider, MenuItem, Stack, TextField } from '@mui/material';
+import { Alert, AlertTitle, Autocomplete, Button, ButtonGroup, Divider, MenuItem, Stack, TextField } from '@mui/material';
 import styled from '@mui/material/styles/styled';
 import React, { useContext, useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { API_BASE } from './Config';
 import Footer from './Footer';
 import Header from "./Header";
@@ -91,9 +92,11 @@ const VisuallyHiddenInput = styled('input')({
 const measureUnits = ["g", "kg", "ml", "l", "pcs", "tbsp", "tsp"];
 
 const inputProps = {
-    style: {
-        color: 'var(--text-color)'
-    }
+    inputProps: {
+        style: {
+            color: 'var(--text-color)'
+        }
+    },
 };
 
 const textFieldSx = {
@@ -126,9 +129,9 @@ function Ingredient({ ingredient, onChangeIngredient, onChangeAmount, onChangeUn
     }
     return (
         <Stack direction="row" spacing={2}>
-            <TextField InputProps={inputProps} sx={textFieldSx} type="text" id="ingredient" name="ingredient" label="Ingredient" onChange={onChangeIngredient} value={ingredient.name} />
-            <TextField InputProps={inputProps} sx={textFieldSx} min="0" type="number" id="amount" name="amount" label="Amount" onWheel={(e) => e.target.blur()} onChange={onChangeAmount} value={ingredient.amount} />
-            <TextField InputProps={inputProps} sx={textFieldSx} select label="Select" id="unit" name="unit" defaultValue={"g"} onChange={onChangeUnit} value={ingredient.unit} >
+            <TextField slotProps={inputProps} sx={textFieldSx} type="text" id="ingredient" name="ingredient" label="Ingredient" onChange={onChangeIngredient} value={ingredient.name} />
+            <TextField slotProps={inputProps} sx={textFieldSx} min="0" type="number" id="amount" name="amount" label="Amount" onWheel={(e) => e.target.blur()} onChange={onChangeAmount} value={ingredient.amount} />
+            <TextField slotProps={inputProps} sx={textFieldSx} select label="Select" id="unit" name="unit" defaultValue={"g"} onChange={onChangeUnit} value={ingredient.unit} >
                 {measureUnits.map((option) => (
                     <MenuItem key={option} value={option} sx={{ color: 'var(--text-color)', '&:hover': { backgroundColor: 'var(--input-border)' } }}>
                         {option}
@@ -334,6 +337,7 @@ const StepsList = ({ steps, setSteps }) => {
 const defaultFilters = ['Vegan', 'Vegetarian', 'Quick & Easy'];
 function RecipeEditor() {
     const { loggedIn, token } = useContext(AuthContext);
+    const navigate = useNavigate();
     const { recipeId } = useParams();
     const [ingredients, setIngredients] = useState([{ group: "", ingredients: [{ name: "", amount: 0, unit: "g", group: "" }] }]);
     const [steps, setSteps] = useState([{ order_id: 0, description: "", images: [] }]);
@@ -347,7 +351,10 @@ function RecipeEditor() {
     const [storing, setStoring] = useState(false);
     const [loaded, setLoaded] = useState(false);
     const [alertMessage, setAlertMessage] = useState("");
+    const [alertSeverity, setAlertSeverity] = useState("error");
     const [filters, setFilters] = useState(defaultFilters);
+    const [importUrl, setImportUrl] = useState("");
+    const [importing, setImporting] = useState(false);
 
     useEffect(() => {
         fetch(API_BASE + 'category/all')
@@ -512,6 +519,43 @@ function RecipeEditor() {
         }
     };
 
+    const handleImport = async () => {
+        if (!importUrl) {
+            setAlertMessage("Please enter a URL to import");
+            setAlertSeverity("error");
+            return;
+        }
+
+        setImporting(true);
+        setAlertMessage("");
+
+        try {
+            const response = await fetch(API_BASE + 'parse-external-recipe?' + new URLSearchParams({
+                url: importUrl
+            }), {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                navigate('/edit/' + data.id_);
+            } else {
+                const error = await response.json();
+                setAlertMessage('Import failed: ' + error.detail);
+                setAlertSeverity("error");
+            }
+        } catch (err) {
+            console.error(err);
+            setAlertMessage('Import failed, please try again later.');
+            setAlertSeverity("error");
+        }
+
+        setImporting(false);
+    };
+
     const uploadGalleryImageOnChange = async (event) => {
         const file = event.target.files[0];
         uploadImage(file, token).then(id_ => { if (id_ !== -1) setGalleryImages([...galleryImages, id_]); event.target.value = null });
@@ -533,13 +577,47 @@ function RecipeEditor() {
     return (
         <div className="main">
             <Header />
-            <div className={"content " + (storing || (recipeId !== undefined && !loaded) ? 'hidden' : '')}>
+            <div className={"content " + ((storing || importing || (recipeId !== undefined && !loaded)) ? 'hidden' : '')}>
                 <h1>{recipeId === undefined ? "Create a new recipe" : "Edit your recipe"}</h1>
                 <form onSubmit={handleSubmit}>
                     <Stack>
-                        <TextField InputProps={inputProps} sx={textFieldSx} id="title" name="title" label="Title" value={title} onChange={e => setTitle(e.target.value)} required /><br />
-                        <TextField InputProps={inputProps} sx={textFieldSx} id="description" name="description" label="Description" value={description} onChange={e => setDescription(e.target.value)} required /><br />
-                        <TextField InputProps={inputProps} sx={textFieldSx} id="cookingTime" name="cookingTime" label="Cooking time in minutes" type="number" value={cookingTime} onWheel={(e) => e.target.blur()} onChange={e => setCookingTime(e.target.value)} required /><br />
+                        {recipeId === undefined && (
+                            <Stack direction="row" spacing={2} sx={{ marginBottom: 2 }}>
+                                <TextField
+                                    slotProps={inputProps}
+                                    sx={{ ...textFieldSx, flexGrow: 1 }}
+                                    placeholder="Enter URL to import recipe"
+                                    value={importUrl}
+                                    onChange={(e) => setImportUrl(e.target.value)}
+                                    disabled={importing}
+                                />
+                                <Button
+                                    variant="contained"
+                                    startIcon={<LinkIcon />}
+                                    onClick={handleImport}
+                                    disabled={importing || !importUrl}
+                                    sx={{
+                                        backgroundColor: 'var(--primary-color)',
+                                        '&:hover': {
+                                            backgroundColor: 'var(--secondary-color)',
+                                        },
+                                        fontWeight: "bold",
+                                        borderRadius: 20,
+                                    }}
+                                >
+                                    Import
+                                </Button>
+                            </Stack>
+                        )}
+                        
+                        {alertMessage && <Alert severity={alertSeverity} style={{ marginBottom: 20 }}>
+                            <AlertTitle>{alertSeverity === "error" ? "Error" : "Info"}</AlertTitle>
+                            {alertMessage}
+                        </Alert>}
+
+                        <TextField slotProps={inputProps} sx={textFieldSx} id="title" name="title" label="Title" value={title} onChange={e => setTitle(e.target.value)} required /><br />
+                        <TextField slotProps={inputProps} sx={textFieldSx} id="description" name="description" label="Description" value={description} onChange={e => setDescription(e.target.value)} required /><br />
+                        <TextField slotProps={inputProps} sx={textFieldSx} id="cookingTime" name="cookingTime" label="Cooking time in minutes" type="number" value={cookingTime} onWheel={(e) => e.target.blur()} onChange={e => setCookingTime(e.target.value)} required /><br />
                         <Autocomplete
                             disablePortal
                             options={filters}
@@ -548,7 +626,7 @@ function RecipeEditor() {
                             multiple
                             value={categories}
                             onChange={(_, value) => { setCategories(value) }}
-                            renderInput={(params) => <TextField {...params} InputProps={{...params.InputProps, ...inputProps}} sx={textFieldSx} label="Categories" />}
+                            renderInput={(params) => <TextField {...params} slotProps={{...params.InputProps, ...inputProps}} sx={textFieldSx} label="Categories" />}
                         /><br />
                         <Divider sx={{ borderColor: 'var(--input-border)' }} />
 
@@ -600,9 +678,11 @@ function RecipeEditor() {
                 alignItems: 'center',
                 justifyContent: 'center',
                 width: '100%',
+                flexDirection: 'column',
+                gap: '20px'
             }}>
                 <ThreeDots
-                    visible={storing || (recipeId !== undefined && !loaded)}
+                    visible={storing || importing || (recipeId !== undefined && !loaded)}
                     height="80"
                     width="80"
                     color="var(--dark-green)"
@@ -611,6 +691,7 @@ function RecipeEditor() {
                     wrapperStyle={{}}
                     wrapperClass=""
                 />
+                {importing && <p style={{ color: 'var(--text-color)' }}>Importing recipe...</p>}
             </div>
             <Footer />
         </div>

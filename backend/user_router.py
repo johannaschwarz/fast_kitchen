@@ -2,16 +2,17 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
 import bcrypt
-from database import Database
-from database_handler import get_database_connection
-from exceptions import CredentialsException, NotFoundException
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from jose import JWTError, jwt
+
+from database import Database
+from database_handler import get_database_connection
+from exceptions import CredentialsException, NotFoundException
 from models import Authorization, NewUser, UserInDB
 from utils import load_credentials
 
-user_router = APIRouter()
+user_router = APIRouter(tags=["User"])
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 

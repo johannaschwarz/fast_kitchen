@@ -1,8 +1,10 @@
-import image_router
-import recipe_router
-import user_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+import image_router
+import parser_router
+import recipe_router
+import user_router
 
 app = FastAPI(
     title="FastKitchen",
@@ -20,6 +22,7 @@ app.add_middleware(
 app.include_router(recipe_router.recipe_router)
 app.include_router(image_router.image_router)
 app.include_router(user_router.user_router)
+app.include_router(parser_router.parser_router)
 
 if __name__ == "__main__":
     import uvicorn

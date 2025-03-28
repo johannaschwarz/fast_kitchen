@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 from enum import StrEnum
 
 import mysql.connector
+from pydantic import ValidationError
+
 from exceptions import NotFoundException
 from models import (
     Ingredient,
@@ -12,7 +14,6 @@ from models import (
     UnitEnum,
     UserInDB,
 )
-from pydantic import ValidationError
 from utils import load_config, load_credentials
 
 
@@ -498,6 +499,9 @@ class MySQLDatabase(Database):
 
         cursor.close()
 
+        if not recipe_step.images:
+            return
+        
         for image_id in recipe_step.images:
             self._add_recipe_step_to_image(id_, image_id)
 
@@ -848,7 +852,7 @@ class MySQLDatabase(Database):
         val = (
             recipe_id,
             ingredient.name,
-            ingredient.unit,
+            str(ingredient.unit),
             ingredient.amount,
             ingredient.group,
         )
