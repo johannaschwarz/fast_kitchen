@@ -57,6 +57,12 @@ function Header({ setSearchInput }) {
 
     }, [search, setSearchInput]);
 
+    const inputProps = {
+        style: {
+            color: 'var(--text-color)'
+        }
+    };
+
     return (
         <header>
             <div id="logo">
@@ -79,26 +85,58 @@ function Header({ setSearchInput }) {
                 popupIcon={null}
                 renderInput={(params) => <TextField {...params} placeholder="Search for recipes" InputProps={{
                     ...params.InputProps,
-                    startAdornment: (<InputAdornment position="start"> <SearchIcon />
+                    ...inputProps,
+                    style: { color: 'var(--text-color)' },
+                    startAdornment: (<InputAdornment position="start" sx={{ color: 'var(--text-color)' }}> <SearchIcon />
                     </InputAdornment>)
+                }} sx={{
+                    '& .MuiOutlinedInput-root': {
+                        '& fieldset': {
+                            borderColor: 'var(--input-border)',
+                        },
+                        '&:hover fieldset': {
+                            borderColor: 'var(--input-border)',
+                        },
+                        '&.Mui-focused fieldset': {
+                            borderColor: 'var(--primary-color)',
+                        },
+                        backgroundColor: 'var(--input-bg)',
+                    },
                 }} />} />
             }
             {setSearchInput !== undefined && <TextField
                 className='search-bar'
                 placeholder="Search for recipes"
                 InputProps={{
-                    startAdornment: (<InputAdornment position="start"> <SearchIcon />
+                    ...inputProps,
+                    startAdornment: (<InputAdornment position="start" sx={{ color: 'var(--text-color)' }}> <SearchIcon />
                     </InputAdornment>)
+                }}
+                sx={{
+                    '& .MuiOutlinedInput-root': {
+                        '& fieldset': {
+                            borderColor: 'var(--input-border)',
+                        },
+                        '&:hover fieldset': {
+                            borderColor: 'var(--input-border)',
+                        },
+                        '&.Mui-focused fieldset': {
+                            borderColor: 'var(--primary-color)',
+                        },
+                        backgroundColor: 'var(--input-bg)',
+                    },
                 }}
                 onChange={(e) => {
                     setSearchInput(e.target.value)
                 }} />}
-            <button onClick={toggleTheme} className="theme-toggle" aria-label="Toggle dark mode">
-                {theme === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
-            </button>
-            {!loggedIn && <Link id="login" to="/login"><button>Login</button></Link>}
-            {loggedIn && <Link id="create-recipe" to="/create"><button>New Recipe</button></Link>}
-        </header >
+            <div className="header-buttons">
+                <button onClick={toggleTheme} className="theme-toggle" aria-label="Toggle dark mode">
+                    {theme === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
+                </button>
+                {!loggedIn && <Link id="login" to="/login"><button>Login</button></Link>}
+                {loggedIn && <Link id="create-recipe" to="/create"><button>New Recipe</button></Link>}
+            </div>
+        </header>
     );
 }
 

@@ -1,6 +1,6 @@
 .recipeLabel {
-    background-color: #a6bdd2 !important;
-    color: white !important;
+    background-color: var(--primary-color) !important;
+    color: var(--text-color) !important;
     font-weight: bold;
 }
 
@@ -35,13 +35,13 @@
 }
 
 /*Description border */
-/* .imageCard>p {
-    border-color: lightgrey;
+.imageCard>p {
+    border-color: var(--input-border);
     border-style: solid;
     border-width: 1px;
     border-radius: 15px;
     padding: 15px;
-} */
+}
 
 .card>h2,
 .imageCard>h2 {
