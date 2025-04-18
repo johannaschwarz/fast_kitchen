@@ -94,7 +94,7 @@ function Recipes({ filters, search }) {
                         <MenuItem value={"CookingTime"}>Cooking Time</MenuItem>
                     </Select>
                 </FormControl>
-                <ToggleButton onClick={toggleSortOrder} size="small">
+                <ToggleButton value="ASC" onClick={toggleSortOrder} size="small">
                     {sortOrder === 'ASC' ? <ArrowDownward /> : <ArrowUpward />}
                 </ToggleButton>
 
