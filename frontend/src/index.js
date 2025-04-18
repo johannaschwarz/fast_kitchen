@@ -1,3 +1,4 @@
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 import Cookies from 'js-cookie';
 import { React, createContext, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
@@ -95,11 +96,17 @@ const router = createBrowserRouter([
   }
 ]);
 
+const theme = createTheme({
+  colorSchemes: { light: true, dark: true },
+});
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   // <React.StrictMode>
-  <AuthContextProvider>
-    <RouterProvider router={router} />
-  </AuthContextProvider>
+  <ThemeProvider theme={theme}>
+    <AuthContextProvider>
+      <RouterProvider router={router} />
+    </AuthContextProvider>
+  </ThemeProvider >
   // </React.StrictMode>
 );
 

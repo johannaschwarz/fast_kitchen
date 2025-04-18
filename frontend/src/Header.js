@@ -1,9 +1,10 @@
 // Header.js
-import SearchIcon from '@mui/icons-material/Search';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
+import SearchIcon from '@mui/icons-material/Search';
 import { Autocomplete, TextField } from '@mui/material';
 import InputAdornment from '@mui/material/InputAdornment';
+import { useColorScheme } from '@mui/material/styles';
 import React, { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { API_BASE } from './Config';
@@ -14,17 +15,11 @@ function Header({ setSearchInput }) {
     const [search, setSearch] = useState('');
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+    const { mode, setMode } = useColorScheme();
 
     useEffect(() => {
-        // Set initial theme
-        document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
-    }, [theme]);
-
-    const toggleTheme = () => {
-        setTheme(theme === 'light' ? 'dark' : 'light');
-    };
+        document.documentElement.setAttribute('data-theme', mode);
+    }, [mode]);
 
     useEffect(() => {
         if (setSearchInput !== undefined) {
@@ -130,8 +125,10 @@ function Header({ setSearchInput }) {
                     setSearchInput(e.target.value)
                 }} />}
             <div className="header-buttons">
-                <button onClick={toggleTheme} className="theme-toggle" aria-label="Toggle dark mode">
-                    {theme === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
+                <button onClick={() => {
+                    setMode(mode !== 'dark' ? 'dark' : 'light');
+                }} className="theme-toggle" aria-label="Toggle dark mode">
+                    {mode !== 'dark' ? <DarkModeIcon /> : <LightModeIcon />}
                 </button>
                 {!loggedIn && <Link id="login" to="/login"><button>Login</button></Link>}
                 {loggedIn && <Link id="create-recipe" to="/create"><button>New Recipe</button></Link>}
