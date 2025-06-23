@@ -1,14 +1,13 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
 import image_router
 import parser_router
 import recipe_router
 import user_router
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI(
     title="FastKitchen",
-    version="0.3.1",
+    version="0.3.2",
 )
 
 app.add_middleware(

@@ -1,10 +1,10 @@
 import logging
-import requests
-from openai import OpenAI
 
-from models import LLMRecipe
-from utils import load_credentials
+import requests
 from bs4 import BeautifulSoup
+from models import LLMRecipe
+from openai import OpenAI
+from utils import load_credentials
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -54,6 +54,7 @@ def _clean_data(data: str) -> str:
         return soup.get_text(separator=" ", strip=True)
     return data
 
+
 def extract_from_url(recipe_url: str) -> LLMRecipe:
     """
     Extracts recipe information from the provided recipe URL.
@@ -65,17 +66,19 @@ def extract_from_url(recipe_url: str) -> LLMRecipe:
         text_data = data.text
 
         cover_img = None
-        
+
         if "<html" in text_data.lower():
             soup = BeautifulSoup(text_data, "html.parser")
             # Clean the data to remove unnecessary HTML tags
             text_data = _clean_data(text_data)
 
-            if (og_image := soup.find("meta", property="og:image")) and og_image.has_attr("content"):
+            if (
+                og_image := soup.find("meta", property="og:image")
+            ) and og_image.has_attr("content"):
                 cover_img = og_image.attrs.get("content")
 
         model = extract_from_data(text_data)
-        
+
         if not model.is_a_recipe:
             raise ValueError("The provided data is not a recipe.")
 
@@ -87,4 +90,6 @@ def extract_from_url(recipe_url: str) -> LLMRecipe:
 
         return model
 
-    raise ValueError("Failed to fetch recipe data from the URL.")
+    raise ValueError(
+        f"Failed to fetch recipe data from the URL. {recipe_url} returned HTTP {data.status_code}"
+    )
