@@ -61,7 +61,14 @@ def extract_from_url(recipe_url: str) -> LLMRecipe:
     :param recipe_url: The URL of the recipe.
     :return: A recipe object containing the extracted information.
     """
-    data = requests.get(recipe_url)
+    headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/122.0.0.0 Safari/537.36"
+        )
+    }
+    data = requests.get(recipe_url, headers=headers)
     if data.status_code == 200:
         text_data = data.text
 
@@ -91,5 +98,5 @@ def extract_from_url(recipe_url: str) -> LLMRecipe:
         return model
 
     raise ValueError(
-        f"Failed to fetch recipe data from the URL. {recipe_url} returned HTTP {data.status_code}"
+        f"Failed to fetch recipe data from the URL. {recipe_url} returned HTTP {data.status_code} Body: {data.text}"
     )
