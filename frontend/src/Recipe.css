@@ -75,6 +75,9 @@
     /* scroll-snap-type: y mandatory;*/
 }
 
+.recipeDescription {
+    margin-bottom: 0;
+}
 
 .recipeStep {
     display: flex;

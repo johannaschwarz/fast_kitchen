@@ -82,7 +82,7 @@ function Recipe({ recipe }) {
                         <Chip key={index} className='recipeLabel' label={category} />
                     ))}
                 </Stack>
-                <p>{recipe.description}</p>
+                <p className='recipeDescription'>{recipe.description}</p>
             </div>
             <div className='card'>
                 <h2>Ingredients:</h2>
