@@ -1,6 +1,12 @@
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 import TimerOutlinedIcon from '@mui/icons-material/TimerOutlined';
 import { Stack } from '@mui/material';
 import Chip from '@mui/material/Chip';
+import Dialog from '@mui/material/Dialog';
+import DialogActions from '@mui/material/DialogActions';
+import DialogTitle from '@mui/material/DialogTitle';
+import IconButton from '@mui/material/IconButton';
 import React, { useContext, useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
 import Carousel from 'react-material-ui-carousel';
@@ -10,12 +16,6 @@ import Footer from './Footer.js';
 import Header from './Header.js';
 import './Recipe.css';
 import { AuthContext } from './index';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogTitle from '@mui/material/DialogTitle';
-import IconButton from '@mui/material/IconButton';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
 
 function Recipe({ recipe }) {
     const { token, user, isAdmin } = useContext(AuthContext);
@@ -95,7 +95,7 @@ function Recipe({ recipe }) {
                                     <h3>{ingredientGroup.group}</h3>
                                     <ul>
                                         {ingredientGroup.ingredients.map((ingredient, ingredientIndex) => (
-                                            <li key={ingredientIndex}>{ingredient.name}: {ingredient.amount * (!isNaN(wishedPortions) ? wishedPortions / recipe.portions : 1)} {ingredient.unit}</li>
+                                            <li key={ingredientIndex}>{ingredient.name}: {Math.round(ingredient.amount * (!isNaN(wishedPortions) ? wishedPortions / recipe.portions : 1) * 10) / 10} {ingredient.unit}</li>
                                         ))}
                                     </ul>
                                 </div>
@@ -103,7 +103,7 @@ function Recipe({ recipe }) {
                             {ingredients.length === 1 &&
                                 <ul>
                                     {ingredientGroup.ingredients.map((ingredient, ingredientIndex) => (
-                                        <li key={ingredientIndex}>{ingredient.name}: {ingredient.amount * (!isNaN(wishedPortions) ? wishedPortions / recipe.portions : 1)} {ingredient.unit}</li>
+                                        <li key={ingredientIndex}>{ingredient.name}: {Math.round(ingredient.amount * (!isNaN(wishedPortions) ? wishedPortions / recipe.portions : 1) * 10) / 10} {ingredient.unit}</li>
                                     ))}
                                 </ul>
                             }
