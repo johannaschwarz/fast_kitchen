@@ -39,3 +39,11 @@ tasks:
       - rm -rf {{.FRONTEND_DIR}}/node_modules
       - find . -type d -name "__pycache__" -exec rm -r {} +
       - find . -type f -name "*.pyc" -delete
+
+  publish-fe:
+    vars:
+      FE_VERSION:
+        sh: bun -p "import { FASTKITCHEN_VERSION } from './frontend/src/Config.js'; FASTKITCHEN_VERSION"
+    cmds:
+      - git tag -a fe-{{.FE_VERSION}} -m "Frontend version {{.FE_VERSION}}"
+      - git push origin fe-{{.FE_VERSION}}
