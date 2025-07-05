@@ -250,7 +250,7 @@
 .clickable-portions:hover {
     font-weight: bold;
     color: var(--dark-green);
-    transform: scale(1.2);
+    transform: scale(1.1);
 }
 
 /* Amount input field */

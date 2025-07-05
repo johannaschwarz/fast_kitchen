@@ -18,8 +18,7 @@ import './Recipe.css';
 import { AuthContext } from './index';
 
 // Constants
-const ROUNDING_PRECISION = 10;
-const DECIMAL_PLACES = 2;
+const ROUNDING_DECIMAL_PLACES = 2;
 const WARNING_MESSAGES = {
     INVALID_NUMBER: 'Please enter a valid number',
     AMOUNT_TOO_SMALL: 'Amount must be greater than 0',
@@ -75,11 +74,11 @@ function Recipe({ recipe }) {
     const calculateAmount = (ingredient, portions) => {
         const baseAmount = ingredient.amount;
         const ratio = portions / recipe.portions;
-        return Math.round(baseAmount * ratio * ROUNDING_PRECISION) / ROUNDING_PRECISION;
+        return Math.round(baseAmount * ratio * Math.pow(10, ROUNDING_DECIMAL_PLACES)) / Math.pow(10, ROUNDING_DECIMAL_PLACES);
     };
 
     const roundToDecimals = (value) => {
-        return Math.round(value * Math.pow(10, DECIMAL_PLACES)) / Math.pow(10, DECIMAL_PLACES);
+        return Math.round(value * Math.pow(10, ROUNDING_DECIMAL_PLACES)) / Math.pow(10, ROUNDING_DECIMAL_PLACES);
     };
 
     const handleIngredientAmountChange = (ingredientId, inputValue) => {
