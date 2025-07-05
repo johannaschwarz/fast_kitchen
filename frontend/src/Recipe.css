@@ -4,6 +4,10 @@
     font-weight: bold;
 }
 
+.recipeLabel svg {
+    color: white !important;
+}
+
 .carousel-image {
     display: flex;
     margin-left: auto;
@@ -76,7 +80,13 @@
 }
 
 .recipeDescription {
-    margin-bottom: 0;
+    margin: 0;
+    padding: 16px;
+    background-color: var(--ingredients-bg, rgba(0, 0, 0, 0.02));
+    border: 1px solid var(--ingredients-border, rgba(0, 0, 0, 0.08));
+    border-radius: 12px;
+    margin-top: 12px;
+    margin-bottom: 20px;
 }
 
 .recipeStep {
