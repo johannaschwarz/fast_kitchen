@@ -7,7 +7,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogTitle from '@mui/material/DialogTitle';
 import IconButton from '@mui/material/IconButton';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useMemo } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
 import Carousel from 'react-material-ui-carousel';
 import { Link, useParams } from 'react-router-dom';
@@ -17,38 +17,253 @@ import Header from './Header.js';
 import './Recipe.css';
 import { AuthContext } from './index';
 
+// Constants
+const ROUNDING_PRECISION = 10;
+const DECIMAL_PLACES = 2;
+const WARNING_MESSAGES = {
+    INVALID_NUMBER: 'Please enter a valid number',
+    AMOUNT_TOO_SMALL: 'Amount must be greater than 0',
+    PORTIONS_TOO_SMALL: 'Portions must be greater than 0'
+};
+
 function Recipe({ recipe }) {
     const { token, user, isAdmin } = useContext(AuthContext);
 
     const [wishedPortions, setWishedPortions] = useState(1);
     const [galleryImages, setGalleryImages] = useState([]);
     const [ingredients, setIngredients] = useState([]);
+    const [customAmounts, setCustomAmounts] = useState({});
+    const [editingIngredient, setEditingIngredient] = useState(null);
+    const [editingPortions, setEditingPortions] = useState(false);
+    const [warnings, setWarnings] = useState({});
+
+    // Memoized ingredient grouping
+    const groupedIngredients = useMemo(() => {
+        if (!recipe?.ingredients) return [];
+
+        const groups = {};
+        recipe.ingredients.forEach((ingredient, index) => {
+            const group = ingredient.group || 'Main';
+            if (!groups[group]) {
+                groups[group] = [];
+            }
+            groups[group].push({
+                ...ingredient,
+                id: `${group}-${index}`
+            });
+        });
+
+        return Object.entries(groups).map(([groupName, groupIngredients]) => ({
+            group: groupName,
+            ingredients: groupIngredients
+        }));
+    }, [recipe?.ingredients]);
 
     useEffect(() => {
         if (recipe) {
             setWishedPortions(recipe.portions);
-            if (recipe.cover_image === null) {
-                setGalleryImages(recipe.gallery_images);
-            } else {
-                setGalleryImages([recipe.cover_image, ...recipe.gallery_images]);
-            }
-
-            let newIngredients = []
-            for (let i = 0; i < recipe.ingredients.length; i++) {
-                let groupIndex = newIngredients.findIndex(group => group.group === recipe.ingredients[i].group);
-                if (groupIndex === -1) {
-                    newIngredients.push({ group: recipe.ingredients[i].group, ingredients: [] });
-                    groupIndex = newIngredients.length - 1;
-                }
-                newIngredients[groupIndex].ingredients.push({
-                    name: recipe.ingredients[i].name,
-                    amount: recipe.ingredients[i].amount,
-                    unit: recipe.ingredients[i].unit,
-                });
-            }
-            setIngredients(newIngredients);
+            setGalleryImages(recipe.cover_image === null
+                ? recipe.gallery_images
+                : [recipe.cover_image, ...recipe.gallery_images]
+            );
+            setIngredients(groupedIngredients);
+            setCustomAmounts({});
+            setWarnings({});
         }
-    }, [recipe]);
+    }, [recipe, groupedIngredients]);
+
+    const calculateAmount = (ingredient, portions) => {
+        const baseAmount = ingredient.amount;
+        const ratio = portions / recipe.portions;
+        return Math.round(baseAmount * ratio * ROUNDING_PRECISION) / ROUNDING_PRECISION;
+    };
+
+    const roundToDecimals = (value) => {
+        return Math.round(value * Math.pow(10, DECIMAL_PLACES)) / Math.pow(10, DECIMAL_PLACES);
+    };
+
+    const handleIngredientAmountChange = (ingredientId, inputValue) => {
+        const ingredient = findIngredientById(ingredientId);
+        if (!ingredient) return;
+
+        setCustomAmounts(prev => ({
+            ...prev,
+            [ingredientId]: inputValue
+        }));
+    };
+
+    const clearWarning = (key) => {
+        setWarnings(prev => {
+            const newWarnings = { ...prev };
+            delete newWarnings[key];
+            return newWarnings;
+        });
+    };
+
+    const setWarning = (key, message) => {
+        setWarnings(prev => ({
+            ...prev,
+            [key]: message
+        }));
+    };
+
+    const validateAndApplyIngredientChange = (ingredientId) => {
+        const ingredient = findIngredientById(ingredientId);
+        if (!ingredient) return;
+
+        const inputValue = String(customAmounts[ingredientId] || '');
+        clearWarning(ingredientId);
+
+        // Handle empty or partial decimal input
+        if (inputValue === '' || inputValue === '.' || inputValue.endsWith('.') || inputValue === '0.') {
+            return;
+        }
+
+        const newAmount = parseFloat(inputValue);
+        if (isNaN(newAmount)) {
+            setWarning(ingredientId, WARNING_MESSAGES.INVALID_NUMBER);
+            return;
+        }
+
+        if (newAmount <= 0) {
+            setWarning(ingredientId, WARNING_MESSAGES.AMOUNT_TOO_SMALL);
+            return;
+        }
+
+        // Valid input - apply changes
+        const newPortions = (newAmount / ingredient.amount) * recipe.portions;
+        setWishedPortions(newPortions);
+
+        // Update custom amounts for other ingredients
+        const newCustomAmounts = {};
+        ingredients.forEach(group => {
+            group.ingredients.forEach(ing => {
+                if (ing.id !== ingredientId) {
+                    newCustomAmounts[ing.id] = calculateAmount(ing, newPortions);
+                }
+            });
+        });
+        setCustomAmounts(newCustomAmounts);
+    };
+
+    const findIngredientById = (ingredientId) => {
+        for (const group of ingredients) {
+            for (const ingredient of group.ingredients) {
+                if (ingredient.id === ingredientId) {
+                    return ingredient;
+                }
+            }
+        }
+        return null;
+    };
+
+    const getDisplayAmount = (ingredient) => {
+        // If there are any warnings, show 0 for all ingredients
+        if (Object.keys(warnings).length > 0) {
+            return 0;
+        }
+
+        if (customAmounts[ingredient.id] !== undefined) {
+            return customAmounts[ingredient.id];
+        }
+        return calculateAmount(ingredient, wishedPortions);
+    };
+
+    const getDisplayAmountForInput = (ingredient) => {
+        if (customAmounts[ingredient.id] !== undefined) {
+            return customAmounts[ingredient.id];
+        }
+        return calculateAmount(ingredient, wishedPortions);
+    };
+
+    const getDisplayPortionsForInput = () => {
+        if (wishedPortions === '') return "";
+        return wishedPortions;
+    };
+
+    const getDisplayPortions = () => {
+        // If there are any warnings, show 0 for portions
+        if (Object.keys(warnings).length > 0) {
+            return 0;
+        }
+
+        if (wishedPortions <= 0) return 0;
+        return roundToDecimals(wishedPortions);
+    };
+
+    const handlePortionsChange = (inputValue) => {
+        setWishedPortions(inputValue);
+    };
+
+    const validateAndApplyPortionsChange = () => {
+        const inputValue = String(wishedPortions);
+        clearWarning('portions');
+
+        // Handle empty or partial decimal input
+        if (inputValue === '' || inputValue === '.' || inputValue.endsWith('.') || inputValue === '0.') {
+            return;
+        }
+
+        const newPortions = parseFloat(inputValue);
+        if (isNaN(newPortions)) {
+            setWarning('portions', WARNING_MESSAGES.INVALID_NUMBER);
+            return;
+        }
+
+        if (newPortions <= 0) {
+            setWarning('portions', WARNING_MESSAGES.PORTIONS_TOO_SMALL);
+            return;
+        }
+
+        // Valid input - apply changes
+        setWishedPortions(newPortions);
+        setCustomAmounts({}); // Reset custom amounts when portions change
+    };
+
+    const renderIngredientInput = (ingredient) => (
+        <div className="ingredient-row">
+            <div className="ingredient-amount-and-name">
+                {editingIngredient === ingredient.id && (
+                    <input
+                        type="text"
+                        inputMode="decimal"
+                        value={getDisplayAmountForInput(ingredient)}
+                        onChange={(e) => handleIngredientAmountChange(ingredient.id, e.target.value)}
+                        onBlur={() => {
+                            validateAndApplyIngredientChange(ingredient.id);
+                            setEditingIngredient(null);
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                validateAndApplyIngredientChange(ingredient.id);
+                                setEditingIngredient(null);
+                            }
+                        }}
+                        autoFocus
+                        className="amount-input"
+                    />
+                )}
+                {!(editingIngredient === ingredient.id) && (
+                    <div className="ingredient-amount">
+                        <span
+                            className="clickable-amount"
+                            onClick={() => setEditingIngredient(ingredient.id)}
+                        >
+                            {getDisplayAmount(ingredient)} {ingredient.unit}
+                        </span>
+                    </div>
+                )}
+                <div className="ingredient-name-container">
+                    <span className="ingredient-name">{ingredient.name}</span>
+                </div>
+            </div>
+            {warnings[ingredient.id] && (
+                <div className="warning-message">
+                    {warnings[ingredient.id]}
+                </div>
+            )}
+        </div>
+    );
 
     if (recipe === null || recipe.id_ === undefined) {
         return null;
@@ -86,30 +301,79 @@ function Recipe({ recipe }) {
             </div>
             <div className='card'>
                 <h2>Ingredients:</h2>
-                {console.log(ingredients)}
-                {
-                    ingredients.map((ingredientGroup, groupIndex) => (
-                        <div key={groupIndex}>
-                            {ingredients.length > 1 &&
-                                <div>
-                                    <h3>{ingredientGroup.group}</h3>
-                                    <ul>
-                                        {ingredientGroup.ingredients.map((ingredient, ingredientIndex) => (
-                                            <li key={ingredientIndex}>{ingredient.name}: {Math.round(ingredient.amount * (!isNaN(wishedPortions) ? wishedPortions / recipe.portions : 1) * 10) / 10} {ingredient.unit}</li>
-                                        ))}
-                                    </ul>
+                <div className="ingredients-list">
+                    <div className="portions-row">
+                        <div className="portions-amount-and-label">
+                            {editingPortions && (
+                                <input
+                                    type="text"
+                                    inputMode="decimal"
+                                    value={getDisplayPortionsForInput()}
+                                    onChange={e => handlePortionsChange(e.target.value)}
+                                    onBlur={() => {
+                                        validateAndApplyPortionsChange();
+                                        setEditingPortions(false);
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            validateAndApplyPortionsChange();
+                                            setEditingPortions(false);
+                                        }
+                                    }}
+                                    autoFocus
+                                    className="portions-input"
+                                />
+                            )}
+                            {!editingPortions && (
+                                <div className="portions-amount">
+                                    <span
+                                        className="clickable-portions"
+                                        onClick={() => setEditingPortions(true)}
+                                    >
+                                        {getDisplayPortions()}
+                                    </span>
                                 </div>
-                            }
-                            {ingredients.length === 1 &&
-                                <ul>
-                                    {ingredientGroup.ingredients.map((ingredient, ingredientIndex) => (
-                                        <li key={ingredientIndex}>{ingredient.name}: {Math.round(ingredient.amount * (!isNaN(wishedPortions) ? wishedPortions / recipe.portions : 1) * 10) / 10} {ingredient.unit}</li>
-                                    ))}
-                                </ul>
-                            }
+                            )}
+                            <div className="portions-label-container">
+                                <span className="portions-label">Portions</span>
+                            </div>
                         </div>
-                    ))}
-                <span>Portions: <input min={1} value={(!isNaN(wishedPortions) ? wishedPortions : "")} onChange={e => setWishedPortions(parseInt(e.target.value))} type='number' /></span>
+
+                        {warnings['portions'] && (
+                            <div className="warning-message">
+                                {warnings['portions']}
+                            </div>
+                        )}
+                    </div>
+                    {
+                        ingredients.map((ingredientGroup, groupIndex) => (
+                            <div key={groupIndex}>
+                                {ingredients.length > 1 &&
+                                    <div>
+                                        <h3>{ingredientGroup.group}</h3>
+                                        {ingredientGroup.ingredients.map((ingredient, ingredientIndex) => (
+                                            <div key={ingredientIndex} className="ingredient-item">
+                                                {renderIngredientInput(ingredient)}
+                                            </div>
+                                        ))}
+                                    </div>
+                                }
+                                {ingredients.length === 1 &&
+                                    <div >
+
+                                        {ingredientGroup.ingredients.map((ingredient, ingredientIndex) => (
+                                            <div key={ingredientIndex} className="ingredient-item">
+                                                {renderIngredientInput(ingredient)}
+                                            </div>
+                                        ))}
+                                    </div>
+                                }
+
+                            </div>
+                        ))}
+                </div>
+
+
             </div>
             <div className='recipeSteps'>
                 {recipe.steps.sort(function (a, b) {
