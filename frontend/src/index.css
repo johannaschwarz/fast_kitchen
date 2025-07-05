@@ -10,6 +10,9 @@
   --input-border: #ccc;
   --missing-image-bg: #dfdfdf;
   --step-counter-bg: #ffffff;
+  --ingredients-bg: rgba(0, 0, 0, 0.02);
+  --ingredients-border: rgba(0, 0, 0, 0.08);
+  --portions-border: rgba(0, 0, 0, 0.1);
 }
 
 :root[data-theme="dark"] {
@@ -24,6 +27,9 @@
   --input-border: #444;
   --missing-image-bg: #3d3d3d;
   --step-counter-bg: #2d2d2d;
+  --ingredients-bg: rgba(255, 255, 255, 0.05);
+  --ingredients-border: rgba(255, 255, 255, 0.1);
+  --portions-border: rgba(255, 255, 255, 0.15);
 }
 
 * {
@@ -104,7 +110,8 @@ a {
   gap: 10px;
 }
 
-#login, #create-recipe {
+#login,
+#create-recipe {
   grid-column: 4;
 }
 

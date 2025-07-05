@@ -1,6 +1,6 @@
 .recipeLabel {
     background-color: var(--primary-color) !important;
-    color: var(--text-color) !important;
+    color: white !important;
     font-weight: bold;
 }
 
@@ -140,6 +140,181 @@
     background-color: #ba3d3d;
 }
 
+/* Clickable ingredient amounts */
+.clickable-amount {
+    cursor: pointer;
+    transition: font-weight 0.2s ease, color 0.2s ease;
+    font-weight: normal;
+    display: inline-block;
+    text-align: right;
+    width: 100%;
+}
+
+.clickable-amount:hover {
+    font-weight: bold;
+    color: var(--dark-green);
+}
+
+.clickable-amount:active {
+    transform: scale(0.95);
+}
+
+/* Ingredients layout */
+.ingredients-list {
+    margin: 0;
+    padding: 16px;
+    background-color: var(--ingredients-bg, rgba(0, 0, 0, 0.02));
+    border: 1px solid var(--ingredients-border, rgba(0, 0, 0, 0.08));
+    border-radius: 12px;
+    margin-top: 12px;
+    margin-bottom: 20px;
+}
+
+.ingredient-item {
+    margin-bottom: 8px;
+}
+
+.ingredient-item:last-child {
+    margin-bottom: 0;
+}
+
+.ingredient-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.ingredient-amount-and-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.ingredient-amount {
+    flex-shrink: 0;
+    width: 80px;
+    text-align: right;
+}
+
+.ingredient-name-container {
+    flex: 1;
+    text-align: left;
+}
+
+.ingredient-name {
+    font-weight: normal;
+}
+
+/* Portions styling */
+.portions-row {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--portions-border, rgba(0, 0, 0, 0.1));
+}
+
+.portions-amount-and-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.portions-amount {
+    flex-shrink: 0;
+}
+
+.portions-label-container {
+    flex: 1;
+    text-align: left;
+}
+
+.portions-label {
+    font-weight: bold;
+}
+
+.clickable-portions {
+    cursor: pointer;
+    transition: font-weight 0.2s ease, color 0.2s ease, transform 0.2s ease;
+    font-weight: bold;
+    display: inline-block;
+    text-align: left;
+    width: 100%;
+}
+
+.clickable-portions:hover {
+    font-weight: bold;
+    color: var(--dark-green);
+    transform: scale(1.1);
+}
+
+/* Amount input field */
+.amount-input {
+    border: 2px solid var(--primary-color);
+    border-radius: 16px;
+    padding: 2px 6px;
+    font-size: inherit;
+    font-family: inherit;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    min-width: 50px;
+    max-width: 80px;
+    text-align: center;
+    outline: none;
+}
+
+.amount-input:focus {
+    border-color: var(--dark-green);
+    box-shadow: 0 0 0 2px rgba(0, 128, 0, 0.2);
+}
+
+/* Portions input field */
+.portions-input {
+    border: 2px solid var(--primary-color);
+    border-radius: 16px;
+    padding: 2px 6px;
+    font-size: inherit;
+    font-family: inherit;
+    background-color: var(--background-color);
+    color: var(--text-color);
+    min-width: 50px;
+    max-width: 80px;
+    text-align: center;
+    outline: none;
+}
+
+.portions-input:focus {
+    border-color: var(--dark-green);
+    box-shadow: 0 0 0 2px rgba(0, 128, 0, 0.2);
+}
+
+/* Warning messages */
+.warning-message {
+    color: #d32f2f;
+    font-size: 0.875rem;
+    margin-top: 4px;
+    margin-left: 20px;
+    font-weight: 500;
+    animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 @media screen and (max-width: 1200px) {
     .stepCounterCircle {
         margin-right: 10px;
@@ -147,5 +322,18 @@
 
     .recipeStep .carousel-image {
         height: 200px;
+    }
+}
+
+/* Mobile-specific styling for clickable elements */
+@media (hover: none) and (pointer: coarse) {
+    .clickable-amount {
+        color: var(--dark-green) !important;
+        font-weight: bold !important;
+    }
+
+    .clickable-portions {
+        color: var(--dark-green) !important;
+        font-weight: bold !important;
     }
 }
