@@ -1,14 +1,13 @@
 from typing import Annotated
 
+from database import Database, SortByEnum, SortOrderEnum
+from database_handler import AsyncDatabaseContextManager, get_database_connection
+from exceptions import NotFoundException, UpdateFailedException
 from fastapi import BackgroundTasks, Depends, HTTPException, Query, status
 from fastapi.routing import APIRouter
 from fastapi.security import OAuth2PasswordBearer
-from pydantic import ValidationError
-
-from database import Database, SortByEnum, SortOrderEnum
-from database_handler import DatabaseContextManager, get_database_connection
-from exceptions import NotFoundException, UpdateFailedException
 from models import Recipe, RecipeBase, RecipeListing, UserInDB
+from pydantic import ValidationError
 from user_router import get_current_active_user
 
 recipe_router = APIRouter(tags=["Recipe"])
@@ -16,19 +15,19 @@ recipe_router = APIRouter(tags=["Recipe"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 
-def remove_unused_images():
-    with DatabaseContextManager() as database:
-        database.delete_unused_images()
+async def remove_unused_images():
+    async with AsyncDatabaseContextManager() as database:
+        await database.delete_unused_images()
 
 
 @recipe_router.post("/recipe/create")
-def create_recipe(
+async def create_recipe(
     recipe: RecipeBase,
     database: Annotated[Database, Depends(get_database_connection)],
     user: Annotated[UserInDB, Depends(get_current_active_user)],
     background_tasks: BackgroundTasks,
 ) -> Recipe:
-    id_ = database.create_recipe(recipe, user)
+    id_ = await database.create_recipe(recipe, user)
 
     background_tasks.add_task(remove_unused_images)
 
@@ -36,11 +35,11 @@ def create_recipe(
 
 
 @recipe_router.get("/recipe/specific/{recipe_id}")
-def get_recipe(
+async def get_recipe(
     recipe_id: int, database: Annotated[Database, Depends(get_database_connection)]
 ) -> Recipe:
     try:
-        return database.get_recipe(recipe_id)
+        return await database.get_recipe(recipe_id)
     except NotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
     except ValidationError as e:
@@ -50,7 +49,7 @@ def get_recipe(
 
 
 @recipe_router.get("/recipe/all")
-def get_all_recipes(
+async def get_all_recipes(
     database: Annotated[Database, Depends(get_database_connection)],
     limit: Annotated[
         int,
@@ -80,13 +79,13 @@ def get_all_recipes(
         ),
     ] = SortOrderEnum.DESC,
 ) -> list[RecipeListing]:
-    return database.get_all_recipes(
+    return await database.get_all_recipes(
         limit=limit, page=page, sort_by=sort_by, sort_order=sort_order
     )
 
 
 @recipe_router.get("/recipe/filtered")
-def get_filtered_recipes(
+async def get_filtered_recipes(
     database: Annotated[Database, Depends(get_database_connection)],
     categories: Annotated[
         list[str],
@@ -132,7 +131,7 @@ def get_filtered_recipes(
         ),
     ] = SortOrderEnum.DESC,
 ) -> list[RecipeListing]:
-    return database.get_all_recipes(
+    return await database.get_all_recipes(
         limit=limit,
         page=page,
         search_string=search,
@@ -143,20 +142,20 @@ def get_filtered_recipes(
 
 
 @recipe_router.put("/recipe/{recipe_id}")
-def update_recipe(
+async def update_recipe(
     recipe: Recipe,
     database: Annotated[Database, Depends(get_database_connection)],
     user: Annotated[UserInDB, Depends(get_current_active_user)],
     background_tasks: BackgroundTasks,
 ) -> Recipe:
-    if not database.is_authorized(user.id_, recipe.id_):
+    if not await database.is_authorized(user.id_, recipe.id_):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User is not authorized to update the recipe.",
         )
 
     try:
-        database.update_recipe(recipe)
+        await database.update_recipe(recipe)
     except UpdateFailedException as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
@@ -167,31 +166,35 @@ def update_recipe(
 
 
 @recipe_router.delete("/recipe/{recipe_id}")
-def delete_recipe(
+async def delete_recipe(
     recipe_id: int,
     database: Annotated[Database, Depends(get_database_connection)],
     user: Annotated[UserInDB, Depends(get_current_active_user)],
 ):
-    if not database.is_authorized(user.id_, recipe_id):
+    if not await database.is_authorized(user.id_, recipe_id):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User is not authorized to delete the recipe.",
         )
     try:
-        database.delete_recipe(recipe_id)
+        await database.delete_recipe(recipe_id)
     except NotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
 
 
 @recipe_router.get("/recipe/category/{category}")
-def get_recipes_by_category(
+async def get_recipes_by_category(
     category: str, database: Annotated[Database, Depends(get_database_connection)]
 ) -> list[int]:
-    return database.get_recipes_by_category(category)
+    return await database.get_recipes_by_category(category)
 
 
 @recipe_router.get("/category/all")
-def get_all_categories(
+async def get_all_categories(
     database: Annotated[Database, Depends(get_database_connection)],
 ) -> list[str]:
-    return database.get_categories()
+    return await database.get_categories()
+    return await database.get_categories()
+    return await database.get_categories()
+    return await database.get_categories()
+    return await database.get_categories()

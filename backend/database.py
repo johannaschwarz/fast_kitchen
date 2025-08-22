@@ -1,9 +1,8 @@
+import asyncio
 from abc import ABC, abstractmethod
 from enum import StrEnum
 
-import mysql.connector
-from pydantic import ValidationError
-
+import aiomysql
 from exceptions import NotFoundException
 from models import (
     Ingredient,
@@ -14,6 +13,7 @@ from models import (
     UnitEnum,
     UserInDB,
 )
+from pydantic import ValidationError
 from utils import load_config, load_credentials
 
 
@@ -37,7 +37,7 @@ class Database(ABC):
     """A MySQL database class."""
 
     @abstractmethod
-    def create_recipe(self, recipe: RecipeBase, user: UserInDB):
+    async def create_recipe(self, recipe: RecipeBase, user: UserInDB):
         """
         Create a new recipe in the database.
 
@@ -46,7 +46,7 @@ class Database(ABC):
         """
 
     @abstractmethod
-    def get_recipe(self, recipe_id: int) -> Recipe:
+    async def get_recipe(self, recipe_id: int) -> Recipe:
         """
         Get a recipe from the database.
 
@@ -59,7 +59,7 @@ class Database(ABC):
         """
 
     @abstractmethod
-    def get_all_recipes(
+    async def get_all_recipes(
         self,
         limit: int | None = None,
         page: int | None = None,
@@ -76,7 +76,7 @@ class Database(ABC):
         """
 
     @abstractmethod
-    def update_recipe(self, recipe: Recipe):
+    async def update_recipe(self, recipe: Recipe):
         """
         Update a recipe in the database.
 
@@ -85,7 +85,7 @@ class Database(ABC):
         """
 
     @abstractmethod
-    def delete_recipe(self, recipe_id: int):
+    async def delete_recipe(self, recipe_id: int):
         """
         Delete a recipe from the database.
 
@@ -94,11 +94,11 @@ class Database(ABC):
         """
 
     @abstractmethod
-    def is_authorized(self, user_id: int, recipe_id: int) -> bool:
+    async def is_authorized(self, user_id: int, recipe_id: int) -> bool:
         """Check if the user is authorized to access the recipe."""
 
     @abstractmethod
-    def create_image(self, image: bytes) -> int:
+    async def create_image(self, image: bytes) -> int:
         """
         Create a new image in the database.
 
@@ -107,7 +107,7 @@ class Database(ABC):
         """
 
     @abstractmethod
-    def get_image(self, image_id: int) -> bytes:
+    async def get_image(self, image_id: int) -> bytes:
         """
         Get an image from the database.
 
@@ -120,7 +120,7 @@ class Database(ABC):
         """
 
     @abstractmethod
-    def delete_image(self, image_id: int):
+    async def delete_image(self, image_id: int):
         """
         Delete an image from the database.
 
@@ -129,7 +129,7 @@ class Database(ABC):
         """
 
     @abstractmethod
-    def get_categories(self) -> list[str]:
+    async def get_categories(self) -> list[str]:
         """
         Get all categories from the database.
 
@@ -138,7 +138,7 @@ class Database(ABC):
         """
 
     @abstractmethod
-    def get_user_by_username(self, username: str) -> UserInDB:
+    async def get_user_by_username(self, username: str) -> UserInDB:
         """
         Get a user from the database using the username.
 
@@ -150,7 +150,7 @@ class Database(ABC):
         """
 
     @abstractmethod
-    def get_user_by_id(self, user_id: int) -> UserInDB:
+    async def get_user_by_id(self, user_id: int) -> UserInDB:
         """
         Get a user from the database using the user ID.
 
@@ -162,7 +162,7 @@ class Database(ABC):
         """
 
     @abstractmethod
-    def create_user(
+    async def create_user(
         self, username: str, password: str, is_admin: bool
     ) -> UserInDB | None:
         """
@@ -179,24 +179,36 @@ class MySQLDatabase(Database):
     CONFIG = load_config()
     CREDENTIALS = load_credentials()
 
-    def __init__(self):
+    def __init__(self, mysql_pool):
+        self.pool = mysql_pool
 
-        self.recipes_database = mysql.connector.connect(
-            host=self.CONFIG["database_ip"],
-            port=int(self.CONFIG["database_port"]),
-            user=self.CREDENTIALS["database_user"],
-            password=self.CREDENTIALS["database_password"],
-            database=self.CREDENTIALS["database_name"],
+    @staticmethod
+    async def create():
+        pool = await aiomysql.create_pool(
+            maxsize=20,
+            host=MySQLDatabase.CONFIG["database_ip"],
+            port=int(MySQLDatabase.CONFIG["database_port"]),
+            user=MySQLDatabase.CREDENTIALS["database_user"],
+            password=MySQLDatabase.CREDENTIALS["database_password"],
+            db=MySQLDatabase.CREDENTIALS["database_name"],
         )
+        return MySQLDatabase(pool)
 
-    def create_recipe(self, recipe: RecipeBase, user: UserInDB) -> int:
+    async def _run_query(self, query, values=None):
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                await cur.execute(query, values)
+                rows = await cur.fetchall()
+                return rows
+
+    async def create_recipe(self, recipe: RecipeBase, user: UserInDB) -> int:
         """
         Create a new recipe in the database.
 
         Returns:
             The ID of the new recipe.
         """
-        cursor = self.recipes_database.cursor()
+        cursor = await self.pool.cursor()
 
         sql = "INSERT INTO Recipes (Title, Description, CookingTime, CoverImage, Portions, UserID) VALUES (%s, %s, %s, %s, %s, %s)"
         val = (
@@ -207,28 +219,36 @@ class MySQLDatabase(Database):
             recipe.portions,
             user.id_,
         )
-        cursor.execute(sql, val)
+        await cursor.execute(sql, val)
 
-        self.recipes_database.commit()
+        await self.pool.commit()
         id_ = cursor.lastrowid
-        cursor.close()
+        await cursor.close()
 
-        for category in recipe.categories:
-            self.create_category(category, id_)
+        await asyncio.gather(
+            self.create_category(category, id_) for category in recipe.categories
+        )
 
-        for ingredient in recipe.ingredients:
+        await asyncio.gather(
             self._create_ingredient(ingredient, id_)
+            for ingredient in recipe.ingredients
+        )
 
         if recipe.gallery_images:
-            for image_id in recipe.gallery_images:
+            await asyncio.gather(
                 self._add_recipe_to_image(id_, image_id)
+                for image_id in recipe.gallery_images
+            )
 
-        for step in recipe.steps:
-            self._create_recipe_step(step, id_)
+        await asyncio.gather(
+            self._create_recipe_step(step, id_) for step in recipe.steps
+        )
+
+        # TODO: the distinct gathers could be aggregated into one for more concurrency
 
         return id_
 
-    def get_recipe(self, recipe_id: int) -> Recipe:
+    async def get_recipe(self, recipe_id: int) -> Recipe:
         """
         Get a recipe from the database.
 
@@ -239,19 +259,14 @@ class MySQLDatabase(Database):
         Returns:
             The recipe object.
         """
-        self._increase_clicks_for_recipe(recipe_id)
+        await self._increase_clicks_for_recipe(recipe_id)
 
-        cursor = self.recipes_database.cursor()
+        result = await self._run_query(
+            "SELECT RecipeID, Title, Description, CookingTime, CoverImage, Portions, UserID, Clicks FROM Recipes WHERE RecipeID = %s",
+            (recipe_id,),
+        )
 
-        sql = "SELECT RecipeID, Title, Description, CookingTime, CoverImage, Portions, UserID, Clicks FROM Recipes WHERE RecipeID = %s"
-        val = (recipe_id,)
-
-        cursor.execute(sql, val)
-
-        result = cursor.fetchone()
-
-        if cursor.rowcount == 0:
-            cursor.close()
+        if len(result) == 0:
             raise NotFoundException(
                 f"Recipe with id {recipe_id} not found in database."
             )
@@ -265,15 +280,14 @@ class MySQLDatabase(Database):
             portions,
             user_id,
             clicks,
-        ) = result
+        ) = result[0]
 
-        categories = self.get_categories_by_recipe(id_)
-        ingredients = self._get_ingredients_by_recipe(id_)
-        images = self._get_gallery_images_by_recipe(id_)
-        steps = self._get_recipe_steps_by_recipe(id_)
-        username = self.get_user_by_id(user_id).username if user_id else None
+        categories = await self.get_categories_by_recipe(id_)
+        ingredients = await self._get_ingredients_by_recipe(id_)
+        images = await self._get_gallery_images_by_recipe(id_)
+        steps = await self._get_recipe_steps_by_recipe(id_)
+        username = (await self.get_user_by_id(user_id)).username if user_id else None
 
-        cursor.close()
         return Recipe(
             id_=id_,
             title=title,
@@ -290,22 +304,15 @@ class MySQLDatabase(Database):
             clicks=clicks,
         )
 
-    def _increase_clicks_for_recipe(self, recipe_id: int):
+    async def _increase_clicks_for_recipe(self, recipe_id: int):
         """
         Increase the number of clicks for a recipe in the database.
         """
+        await self._run_query(
+            "UPDATE Recipes SET Clicks = Clicks + 1 WHERE RecipeID = %s", (recipe_id,)
+        )
 
-        cursor = self.recipes_database.cursor()
-
-        sql = "UPDATE Recipes SET Clicks = Clicks + 1 WHERE RecipeID = %s"
-        val = (recipe_id,)
-
-        cursor.execute(sql, val)
-        self.recipes_database.commit()
-
-        cursor.close()
-
-    def get_all_recipes(
+    async def get_all_recipes(
         self,
         limit: int | None = None,
         page: int | None = None,
@@ -323,44 +330,56 @@ class MySQLDatabase(Database):
         if not search_string:
             search_string = ""
 
-        cursor = self.recipes_database.cursor(prepared=True)
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cursor:
+                if limit:
+                    limitation_query = " LIMIT %s"
+                    limit_parameters = (limit,)
+                    if page:
+                        limitation_query += " OFFSET %s"
+                        limit_parameters = (limit, (page - 1) * limit)
+                else:
+                    limitation_query = ""
+                    limit_parameters = tuple()
 
-        if limit:
-            limitation_query = " LIMIT %s"
-            limit_parameters = (limit,)
-            if page:
-                limitation_query += " OFFSET %s"
-                limit_parameters = (limit, (page - 1) * limit)
-        else:
-            limitation_query = ""
-            limit_parameters = tuple()
-
-        if filter_categories:
-            cursor.execute(
-                f"SELECT DISTINCT r.RecipeID, r.Title, r.Description, r.CoverImage, r.UserID, r.Clicks, r.CookingTime FROM Recipes r, Categories c WHERE (r.Title LIKE CONCAT('%', %s, '%') OR r.Description LIKE CONCAT('%', %s, '%')) AND c.RecipeID = r.RecipeID AND c.Category IN ({', '.join(['%s'] * len(filter_categories))}) GROUP BY r.RecipeID HAVING COUNT(c.Category) = %s ORDER BY {sort_by} {sort_order} {limitation_query};",
-                (
-                    search_string,
-                    search_string,
-                    *filter_categories,
-                    len(filter_categories),
-                )
-                + limit_parameters,
-            )
-        else:
-            cursor.execute(
-                f"SELECT RecipeID, Title, Description, CoverImage, UserID, Clicks, CookingTime FROM Recipes WHERE Title LIKE CONCAT('%', %s, '%') OR Description LIKE CONCAT('%', %s, '%') ORDER BY {sort_by} {sort_order} {limitation_query}",
-                (search_string, search_string) + limit_parameters,
-            )
-        result = cursor.fetchall()
-        cursor.close()
-
+                if filter_categories:
+                    await cursor.execute(
+                        f"SELECT DISTINCT r.RecipeID, r.Title, r.Description, r.CoverImage, r.UserID, r.Clicks, r.CookingTime FROM Recipes r, Categories c WHERE (r.Title LIKE '%%%s%%'  OR r.Description LIKE '%%%s%%') AND c.RecipeID = r.RecipeID AND c.Category IN ({', '.join(['%s'] * len(filter_categories))}) GROUP BY r.RecipeID HAVING COUNT(c.Category) = %s ORDER BY {sort_by} {sort_order} {limitation_query};",
+                        (
+                            search_string,
+                            search_string,
+                            *filter_categories,
+                            len(filter_categories),
+                        )
+                        + limit_parameters,
+                    )
+                else:
+                    await cursor.execute(
+                        f"SELECT RecipeID, Title, Description, CoverImage, UserID, Clicks, CookingTime FROM Recipes WHERE Title LIKE CONCAT('%%', %s, '%%') OR Description LIKE CONCAT('%%', %s, '%%') ORDER BY {sort_by} {sort_order} {limitation_query}",
+                        (search_string, search_string) + limit_parameters,
+                    )
+                result = await cursor.fetchall()
         recipes = []
-
-        for id_, title, description, image, user_id, clicks, cooking_time in result:
-            categories = self.get_categories_by_recipe(id_)
-            if not image:
-                images = self._get_gallery_images_by_recipe(id_)
-                image = images[0] if images else None
+        recipe_categories, creators = await asyncio.gather(
+            asyncio.gather(*(self.get_categories_by_recipe(r[0]) for r in result)),
+            asyncio.gather(*(self.get_user_by_id(r[4]) for r in result)),
+        )
+        for (
+            (
+                id_,
+                title,
+                description,
+                image,
+                user_id,
+                clicks,
+                cooking_time,
+            ),
+            categories,
+            creator,
+        ) in zip(result, recipe_categories, creators):
+            # if not image:
+            #     images = await self._get_gallery_images_by_recipe(id_)
+            #     image = images[0] if images else None
             try:
                 recipes.append(
                     RecipeListing(
@@ -369,9 +388,7 @@ class MySQLDatabase(Database):
                         description=description if description else "",
                         cover_image=image,
                         categories=categories,
-                        creator=(
-                            self.get_user_by_id(user_id).username if user_id else None
-                        ),
+                        creator=(creator.username if user_id else None),
                         clicks=clicks,
                         cooking_time=cooking_time,
                     )
@@ -382,34 +399,29 @@ class MySQLDatabase(Database):
 
         return recipes
 
-    def get_recipes_by_category(self, category: str) -> list[int]:
+    async def get_recipes_by_category(self, category: str) -> list[int]:
         """
         Get all recipes by category from the database.
 
         Returns:
             A list of recipe IDs.
         """
-
-        cursor = self.recipes_database.cursor()
-
+        cursor = await self.pool.cursor()
         sql = "SELECT RecipeID FROM Categories WHERE Category = %s"
         val = (category,)
-        cursor.execute(sql, val)
-
-        result = cursor.fetchall()
-
-        cursor.close()
+        await cursor.execute(sql, val)
+        result = await cursor.fetchall()
+        await cursor.close()
         return [recipe_id for recipe_id, in result]
 
-    def update_recipe(self, recipe: Recipe):
+    async def update_recipe(self, recipe: Recipe):
         """
         Update a recipe in the database.
 
         Raises:
             UpdateFailedException: if the recipe could not be updated.
         """
-        cursor = self.recipes_database.cursor()
-
+        cursor = await self.pool.cursor()
         sql = "UPDATE Recipes SET Title = %s, Description = %s, CookingTime = %s, CoverImage = %s, Portions = %s WHERE RecipeID = %s"
         val = (
             recipe.title,
@@ -419,154 +431,119 @@ class MySQLDatabase(Database):
             recipe.portions,
             recipe.id_,
         )
+        await cursor.execute(sql, val)
+        await self.pool.commit()
+        await cursor.close()
+        await self._update_categories_by_recipe(recipe)
+        await self._update_ingredients_by_recipe(recipe)
+        await self._update_images_by_recipe(recipe)
+        await self._update_recipe_steps_by_recipe(recipe)
 
-        cursor.execute(sql, val)
-        self.recipes_database.commit()
-
-        cursor.close()
-
-        self._update_categories_by_recipe(recipe)
-        self._update_ingredients_by_recipe(recipe)
-        self._update_images_by_recipe(recipe)
-        self._update_recipe_steps_by_recipe(recipe)
-
-    def delete_recipe(self, recipe_id: int) -> bool:
+    async def delete_recipe(self, recipe_id: int) -> bool:
         """
         Delete a recipe from the database.
 
         Returns:
             True if the recipe was deleted, False otherwise.
         """
-
-        cursor = self.recipes_database.cursor()
-
+        cursor = await self.pool.cursor()
         sql = "DELETE FROM Recipes WHERE RecipeID = %s"
         val = (recipe_id,)
-
-        cursor.execute(sql, val)
-        self.recipes_database.commit()
-
+        await cursor.execute(sql, val)
+        await self.pool.commit()
         if cursor.rowcount == 0:
-            cursor.close()
+            await cursor.close()
             raise NotFoundException(
                 f"Recipe with id {recipe_id} not found in database."
             )
+        await cursor.close()
 
-        cursor.close()
-
-    def is_authorized(self, user_id: int, recipe_id: int) -> bool:
+    async def is_authorized(self, user_id: int, recipe_id: int) -> bool:
         """Check if the user is authorized to access the recipe."""
-        cursor = self.recipes_database.cursor()
-
+        cursor = await self.pool.cursor()
         sql = "SELECT IsAdmin, Disabled FROM Users WHERE UserID = %s"
         val = (user_id,)
-        cursor.execute(sql, val)
-        (is_admin, disabled) = cursor.fetchone()
-
-        cursor.close()
+        await cursor.execute(sql, val)
+        (is_admin, disabled) = await cursor.fetchone()
+        await cursor.close()
         if disabled:
             return False
         if is_admin:
             return True
-
-        cursor = self.recipes_database.cursor()
+        cursor = await self.pool.cursor()
         sql = "SELECT UserId FROM Recipes WHERE RecipeID = %s"
         val = (recipe_id,)
-
-        cursor.execute(sql, val)
-        result = cursor.fetchone()
-        cursor.close()
-
+        await cursor.execute(sql, val)
+        result = await cursor.fetchone()
+        await cursor.close()
         return result[0] == user_id
 
-    def _create_recipe_step(self, recipe_step: RecipeStep, recipe_id: int):
+    async def _create_recipe_step(self, recipe_step: RecipeStep, recipe_id: int):
         """
         Create a new recipe step in the database.
 
         Returns:
             The ID of the new recipe step.
         """
-
-        cursor = self.recipes_database.cursor()
-
+        cursor = await self.pool.cursor()
         sql = "INSERT INTO RecipeSteps (RecipeID, OrderID, Step) VALUES (%s, %s, %s)"
         val = (recipe_id, recipe_step.order_id, recipe_step.step)
-
-        cursor.execute(sql, val)
-        self.recipes_database.commit()
-
+        await cursor.execute(sql, val)
+        await self.pool.commit()
         id_ = cursor.lastrowid
-
-        cursor.close()
-
+        await cursor.close()
         if not recipe_step.images:
             return
-        
         for image_id in recipe_step.images:
-            self._add_recipe_step_to_image(id_, image_id)
+            await self._add_recipe_step_to_image(id_, image_id)
 
-    def _get_recipe_steps_by_recipe(self, recipe_id: int) -> list[RecipeStep]:
+    async def _get_recipe_steps_by_recipe(self, recipe_id: int) -> list[RecipeStep]:
         """
         Get all recipe steps for a recipe from the database.
 
         Returns:
             A list of recipe steps.
         """
-
-        cursor = self.recipes_database.cursor()
-
+        cursor = await self.pool.cursor()
         sql = "SELECT StepID, OrderID, Step FROM RecipeSteps WHERE RecipeID = %s"
         val = (recipe_id,)
-
-        cursor.execute(sql, val)
-
-        result = cursor.fetchall()
-
-        cursor.close()
-
+        await cursor.execute(sql, val)
+        result = await cursor.fetchall()
+        await cursor.close()
         steps = []
-
         for step_id, order_id, step in result:
-            images = self._get_images_by_recipe_step(step_id)
+            images = await self._get_images_by_recipe_step(step_id)
             steps.append(RecipeStep(order_id=order_id, step=step, images=images))
-
         return steps
 
-    def _update_recipe_steps_by_recipe(self, recipe: Recipe):
+    async def _update_recipe_steps_by_recipe(self, recipe: Recipe):
         """Update the steps for a recipe in the database."""
-        cursor = self.recipes_database.cursor()
-
+        cursor = await self.pool.cursor()
         sql = "Delete FROM RecipeSteps WHERE RecipeID = %s"
         val = (recipe.id_,)
-        cursor.execute(sql, val)
-        self.recipes_database.commit()
-        cursor.close()
-
+        await cursor.execute(sql, val)
+        await self.pool.commit()
+        await cursor.close()
         for step in recipe.steps:
-            self._create_recipe_step(step, recipe.id_)
+            await self._create_recipe_step(step, recipe.id_)
 
-    def create_image(self, image: bytes) -> int:
+    async def create_image(self, image: bytes) -> int:
         """
         Create a new image in the database.
 
         Returns:
             The ID of the new image.
         """
-
-        cursor = self.recipes_database.cursor()
-
+        cursor = await self.pool.cursor()
         sql = "INSERT INTO Images (Image) VALUES (%s)"
         val = (image,)
-
-        cursor.execute(sql, val)
-        self.recipes_database.commit()
-
+        await cursor.execute(sql, val)
+        await self.pool.commit()
         id_ = cursor.lastrowid
-
-        cursor.close()
+        await cursor.close()
         return id_
 
-    def get_image(self, image_id: int) -> bytes:
+    async def get_image(self, image_id: int) -> bytes:
         """
         Get an image from the database.
 
@@ -577,277 +554,186 @@ class MySQLDatabase(Database):
         Returns:
             The image object.
         """
-
-        cursor = self.recipes_database.cursor()
-
+        cursor = await self.pool.cursor()
         sql = "SELECT Image FROM Images WHERE ImageID = %s"
         val = (image_id,)
-
-        cursor.execute(sql, val)
-
-        result = cursor.fetchone()
+        await cursor.execute(sql, val)
+        result = await cursor.fetchone()
         if cursor.rowcount == 0:
-            cursor.close()
+            await cursor.close()
             raise NotFoundException(f"Image with id {image_id} not found in database.")
-
-        cursor.close()
+        await cursor.close()
         return result[0]
 
-    def delete_image(self, image_id: int):
+    async def delete_image(self, image_id: int):
         """
         Delete an image from the database.
 
         Raises:
             NotFoundException: if the image could not be found.
         """
+        await self._run_query("DELETE FROM Images WHERE ImageID = %s", (image_id,))
 
-        cursor = self.recipes_database.cursor()
-
-        sql = "DELETE FROM Images WHERE ImageID = %s"
-        val = (image_id,)
-
-        cursor.execute(sql, val)
-        self.recipes_database.commit()
-
-        if cursor.rowcount == 0:
-            cursor.close()
-            raise NotFoundException(f"Image with id {image_id} not found in database.")
-
-        cursor.close()
-
-    def _get_gallery_images_by_recipe(self, recipe_id: int) -> list[int]:
+    async def _get_gallery_images_by_recipe(self, recipe_id: int) -> list[int]:
         """
         Get all gallery images for a recipe from the database.
 
         Returns:
             A list of images.
         """
-
-        cursor = self.recipes_database.cursor()
-
         sql = "SELECT i.ImageID FROM Images i, Recipes r WHERE i.RecipeID = %s AND r.RecipeID = i.RecipeID AND i.StepID IS NULL AND i.ImageID != r.CoverImage"
-        val = (recipe_id,)
-
-        cursor.execute(sql, val)
-
-        result = cursor.fetchall()
-
-        cursor.close()
+        result = await self._run_query(sql, (recipe_id,))
         return [image_id for (image_id,) in result]
 
-    def _update_images_by_recipe(self, recipe: Recipe):
+    async def _update_images_by_recipe(self, recipe: Recipe):
         """
         Update the images for a recipe in the database.
         """
-
-        cursor = self.recipes_database.cursor()
-
+        cursor = await self.pool.cursor()
         sql = "SELECT ImageID FROM Images WHERE RecipeID = %s"
         val = (recipe.id_,)
-        cursor.execute(sql, val)
-
+        await cursor.execute(sql, val)
         recipe_images = set(recipe.gallery_images) | {recipe.cover_image}
-
-        current_images = [image_id for (image_id,) in cursor.fetchall()]
+        current_images = [image_id for (image_id,) in await cursor.fetchall()]
         deleted_images = [
             image_id for image_id in current_images if image_id not in recipe_images
         ]
         added_images = [
             image_id for image_id in recipe_images if image_id not in current_images
         ]
-
-        cursor.close()
-
+        await cursor.close()
         for image_id in deleted_images:
-            self._delete_image(image_id)
-
+            await self._delete_image(image_id)
         for image_id in added_images:
-            self._add_recipe_to_image(recipe.id_, image_id)
+            await self._add_recipe_to_image(recipe.id_, image_id)
 
-    def _add_recipe_to_image(self, recipe_id: int, image_id: int):
+    async def _add_recipe_to_image(self, recipe_id: int, image_id: int):
         """
         Add a recipe to an image in the database.
         """
-        cursor = self.recipes_database.cursor()
-
+        cursor = await self.pool.cursor()
         sql = "UPDATE Images SET RecipeID = %s WHERE ImageID = %s"
         val = (recipe_id, image_id)
+        await cursor.execute(sql, val)
+        await self.pool.commit()
+        await cursor.close()
 
-        cursor.execute(sql, val)
-        self.recipes_database.commit()
-
-        cursor.close()
-
-    def _add_recipe_step_to_image(self, step_id: int, image_id: int):
+    async def _add_recipe_step_to_image(self, step_id: int, image_id: int):
         """
         Add a recipe step to an image in the database.
         """
-        cursor = self.recipes_database.cursor()
-
+        cursor = await self.pool.cursor()
         sql = "UPDATE Images SET StepID = %s WHERE ImageID = %s"
         val = (step_id, image_id)
+        await cursor.execute(sql, val)
+        await self.pool.commit()
+        await cursor.close()
 
-        cursor.execute(sql, val)
-        self.recipes_database.commit()
-
-        cursor.close()
-
-    def _get_images_by_recipe_step(self, step_id: int) -> list[int]:
+    async def _get_images_by_recipe_step(self, step_id: int) -> list[int]:
         """
         Get all images for a recipe step from the database.
 
         Returns:
             A list of images.
         """
-
-        cursor = self.recipes_database.cursor()
-
+        cursor = await self.pool.cursor()
         sql = "SELECT ImageID FROM Images WHERE StepID = %s"
         val = (step_id,)
-
-        cursor.execute(sql, val)
-
-        result = cursor.fetchall()
-
-        cursor.close()
+        await cursor.execute(sql, val)
+        result = await cursor.fetchall()
+        await cursor.close()
         return [image_id for (image_id,) in result]
 
-    def _delete_image(self, image_id: int):
+    async def _delete_image(self, image_id: int):
         """
         Delete an image from the database.
 
         Raises:
             NotFoundException: if the image could not be found.
         """
-
-        cursor = self.recipes_database.cursor()
-
+        cursor = await self.pool.cursor()
         sql = "DELETE FROM Images WHERE ImageID = %s"
         val = (image_id,)
-
-        cursor.execute(sql, val)
-        self.recipes_database.commit()
-
+        await cursor.execute(sql, val)
+        await self.pool.commit()
         if cursor.rowcount == 0:
-            cursor.close()
+            await cursor.close()
             raise NotFoundException(f"Image with id {image_id} not found in database.")
+        await cursor.close()
 
-        cursor.close()
-
-    def delete_unused_images(self):
+    async def delete_unused_images(self):
         """
         Delete all images that are not used in any recipe.
         """
-
-        cursor = self.recipes_database.cursor()
-
+        cursor = await self.pool.cursor()
         sql = "DELETE FROM Images WHERE RecipeID IS NULL AND TimeStamp < DATE_SUB(NOW(), INTERVAL 1 DAY)"
-        cursor.execute(sql)
+        await cursor.execute(sql)
+        await self.pool.commit()
+        await cursor.close()
 
-        self.recipes_database.commit()
-        cursor.close()
-
-    def create_category(self, category: str, recipe_id: int):
+    async def create_category(self, category: str, recipe_id: int):
         """
         Create a new category in the database.
         """
-        cursor = self.recipes_database.cursor()
-
+        cursor = await self.pool.cursor()
         sql = "INSERT INTO Categories (RecipeID, Category) VALUES (%s, %s)"
         val = (recipe_id, category)
+        await cursor.execute(sql, val)
+        await self.pool.commit()
+        await cursor.close()
 
-        cursor.execute(sql, val)
-        self.recipes_database.commit()
-
-        cursor.close()
-
-    def get_categories_by_recipe(self, recipe_id: int) -> list[str]:
+    async def get_categories_by_recipe(self, recipe_id: int) -> list[str]:
         """
         Get all categories for a recipe from the database.
 
         Returns:
             A list of categories.
         """
-
-        cursor = self.recipes_database.cursor()
-
-        sql = "SELECT Category FROM Categories WHERE RecipeID = %s"
-        val = (recipe_id,)
-
-        cursor.execute(sql, val)
-
-        result = cursor.fetchall()
-
-        cursor.close()
+        result = await self._run_query(
+            "SELECT Category FROM Categories WHERE RecipeID = %s", (recipe_id,)
+        )
         return [category for category, in result]
 
-    def _update_categories_by_recipe(self, recipe: Recipe):
+    async def _update_categories_by_recipe(self, recipe: Recipe):
         """
         Update the categories for a recipe in the database.
         """
-
-        cursor = self.recipes_database.cursor()
-
+        cursor = await self.pool.cursor()
         sql = "DELETE FROM Categories WHERE RecipeID = %s"
         val = (recipe.id_,)
-
-        cursor.execute(sql, val)
-        self.recipes_database.commit()
-
+        await cursor.execute(sql, val)
+        await self.pool.commit()
         for category in recipe.categories:
-            self.create_category(category, recipe.id_)
+            await self.create_category(category, recipe.id_)
+        await cursor.close()
 
-        cursor.close()
-
-    def delete_category(self, category: str, recipe_id: int):
+    async def delete_category(self, category: str, recipe_id: int):
         """
         Delete a category from the database.
-
-        Raises:
-            NotFoundException: if the category could not be found.
         """
+        await self._run_query(
+            "DELETE FROM Categories WHERE RecipeID = %s AND Category = %s",
+            (recipe_id, category),
+        )
 
-        cursor = self.recipes_database.cursor()
-
-        sql = "DELETE FROM Categories WHERE RecipeID = %s AND Category = %s"
-        val = (recipe_id, category)
-
-        cursor.execute(sql, val)
-        self.recipes_database.commit()
-
-        if cursor.rowcount == 0:
-            cursor.close()
-            raise NotFoundException(
-                f"Category {category} for recipe {recipe_id} not found."
-            )
-
-        cursor.close()
-
-    def get_categories(self) -> list[str]:
+    async def get_categories(self) -> list[str]:
         """
         Get all categories from the database.
 
         Returns:
             A list of categories.
         """
+        return [
+            category
+            for category, in await self._run_query(
+                "SELECT DISTINCT Category FROM Categories"
+            )
+        ]
 
-        cursor = self.recipes_database.cursor()
-
-        sql = "SELECT DISTINCT Category FROM Categories"
-        cursor.execute(sql)
-
-        result = cursor.fetchall()
-
-        cursor.close()
-        return [category for category, in result]
-
-    def _create_ingredient(self, ingredient: Ingredient, recipe_id: int):
+    async def _create_ingredient(self, ingredient: Ingredient, recipe_id: int):
         """
         Create a new ingredient in the database.
         """
-
-        cursor = self.recipes_database.cursor()
-
         sql = "INSERT INTO Ingredients (RecipeID, Ingredient, Unit, Amount, IngredientGroup) VALUES (%s, %s, %s, %s, %s)"
         val = (
             recipe_id,
@@ -856,54 +742,38 @@ class MySQLDatabase(Database):
             ingredient.amount,
             ingredient.group,
         )
+        await self._run_query(sql, val)
 
-        cursor.execute(sql, val)
-        self.recipes_database.commit()
-
-        cursor.close()
-
-    def _get_ingredients_by_recipe(self, recipe_id: int) -> list[Ingredient]:
+    async def _get_ingredients_by_recipe(self, recipe_id: int) -> list[Ingredient]:
         """
         Get all ingredients for a recipe from the database.
 
         Returns:
             A list of ingredients.
         """
-
-        cursor = self.recipes_database.cursor()
-
-        sql = "SELECT Ingredient, Unit, Amount, IngredientGroup FROM Ingredients WHERE RecipeID = %s"
-        val = (recipe_id,)
-
-        cursor.execute(sql, val)
-
-        result = cursor.fetchall()
-
-        cursor.close()
+        result = await self._run_query(
+            "SELECT Ingredient, Unit, Amount, IngredientGroup FROM Ingredients WHERE RecipeID = %s",
+            (recipe_id,),
+        )
         return [
             Ingredient(name=ingredient, unit=UnitEnum(unit), amount=amount, group=group)
             for ingredient, unit, amount, group in result
         ]
 
-    def _update_ingredients_by_recipe(self, recipe: Recipe):
+    async def _update_ingredients_by_recipe(self, recipe: Recipe):
         """
         Update the ingredients for a recipe in the database.
         """
-
-        cursor = self.recipes_database.cursor()
-
+        cursor = await self.pool.cursor()
         sql = "DELETE FROM Ingredients WHERE RecipeID = %s"
         val = (recipe.id_,)
-
-        cursor.execute(sql, val)
-        self.recipes_database.commit()
-
+        await cursor.execute(sql, val)
+        await self.pool.commit()
         for ingredient in recipe.ingredients:
-            self._create_ingredient(ingredient, recipe.id_)
+            await self._create_ingredient(ingredient, recipe.id_)
+        await cursor.close()
 
-        cursor.close()
-
-    def get_user_by_username(self, username: str) -> UserInDB:
+    async def get_user_by_username(self, username: str) -> UserInDB:
         """
         Get a user from the database.
 
@@ -913,22 +783,18 @@ class MySQLDatabase(Database):
         Returns:
             The user object.
         """
-
-        cursor = self.recipes_database.cursor()
-
+        cursor = await self.pool.cursor()
         sql = "SELECT UserID, Username, Password, IsAdmin, Disabled FROM Users WHERE Username = %s"
         val = (username,)
-
-        cursor.execute(sql, val)
-        result = cursor.fetchone()
+        await cursor.execute(sql, val)
+        result = await cursor.fetchone()
         if cursor.rowcount == 0:
-            cursor.close()
+            await cursor.close()
             raise NotFoundException(
                 f"User with username {username} not found in database."
             )
-
         user_id, username, password, is_admin, disabled = result
-        cursor.close()
+        await cursor.close()
         return UserInDB(
             username=username,
             disabled=disabled,
@@ -937,7 +803,7 @@ class MySQLDatabase(Database):
             hashed_password=password,
         )
 
-    def get_user_by_id(self, user_id: int) -> UserInDB:
+    async def get_user_by_id(self, user_id: int) -> UserInDB:
         """
         Get a user from the database using the user ID.
 
@@ -947,23 +813,14 @@ class MySQLDatabase(Database):
         Returns:
             The user object.
         """
-
-        cursor = self.recipes_database.cursor()
-
         sql = (
             "SELECT Username, Password, IsAdmin, Disabled FROM Users WHERE UserID = %s"
         )
         val = (user_id,)
-
-        cursor.execute(sql, val)
-        result = cursor.fetchone()
-        if cursor.rowcount == 0:
-            cursor.close()
+        result = await self._run_query(sql, val)
+        if len(result) == 0:
             raise NotFoundException(f"User with id {user_id} not found in database.")
-
-        username, password, is_admin, disabled = result
-
-        cursor.close()
+        username, password, is_admin, disabled = result[0]
         return UserInDB(
             username=username,
             disabled=disabled,
@@ -972,29 +829,22 @@ class MySQLDatabase(Database):
             hashed_password=password,
         )
 
-    def create_user(
+    async def create_user(
         self, username: str, password: str, is_admin: bool
     ) -> UserInDB | None:
-        cursor = self.recipes_database.cursor()
-
+        cursor = await self.pool.cursor()
         sql = "INSERT INTO Users (Username, Password, IsAdmin, Disabled) VALUES (%s, %s, %s, 0)"
         val = (username, password, is_admin)
-
         try:
-            cursor.execute(sql, val)
+            await cursor.execute(sql, val)
         except mysql.connector.errors.IntegrityError:
             raise ValueError("User already exists in database.")
-
-        self.recipes_database.commit()
-
-        _ = cursor.fetchone()
+        await self.pool.commit()
         if cursor.rowcount == 0:
-            cursor.close()
+            await cursor.close()
             return None
-
         user_id = cursor.lastrowid
-
-        cursor.close()
+        await cursor.close()
         return UserInDB(
             username=username,
             disabled=False,
@@ -1003,5 +853,5 @@ class MySQLDatabase(Database):
             hashed_password=password,
         )
 
-    def close(self):
-        self.recipes_database.close()
+    async def close(self):
+        self.pool.close()
