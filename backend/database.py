@@ -198,6 +198,7 @@ class MySQLDatabase(Database):
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(query, values)
+                await conn.commit()
                 rows = await cur.fetchall()
                 return rows
 
@@ -223,26 +224,32 @@ class MySQLDatabase(Database):
                 await conn.commit()
                 id_ = cursor.lastrowid
 
-        await asyncio.gather(
-            self.create_category(category, id_) for category in recipe.categories
-        )
-
-        await asyncio.gather(
-            self._create_ingredient(ingredient, id_)
-            for ingredient in recipe.ingredients
-        )
+        queries = [
+            asyncio.gather(
+                *(self.create_category(category, id_) for category in recipe.categories)
+            ),
+            asyncio.gather(
+                *(
+                    self._create_ingredient(ingredient, id_)
+                    for ingredient in recipe.ingredients
+                )
+            ),
+            asyncio.gather(
+                *(self._create_recipe_step(step, id_) for step in recipe.steps)
+            ),
+        ]
 
         if recipe.gallery_images:
-            await asyncio.gather(
-                self._add_recipe_to_image(id_, image_id)
-                for image_id in recipe.gallery_images
+            queries.append(
+                asyncio.gather(
+                    *(
+                        self._add_recipe_to_image(id_, image_id)
+                        for image_id in recipe.gallery_images
+                    )
+                )
             )
 
-        await asyncio.gather(
-            self._create_recipe_step(step, id_) for step in recipe.steps
-        )
-
-        # TODO: the distinct gathers could be aggregated into one for more concurrency
+        await asyncio.gather(*queries)
 
         return id_
 
@@ -457,23 +464,23 @@ class MySQLDatabase(Database):
 
     async def is_authorized(self, user_id: int, recipe_id: int) -> bool:
         """Check if the user is authorized to access the recipe."""
-        cursor = await self.pool.cursor()
-        sql = "SELECT IsAdmin, Disabled FROM Users WHERE UserID = %s"
-        val = (user_id,)
-        await cursor.execute(sql, val)
-        (is_admin, disabled) = await cursor.fetchone()
-        await cursor.close()
-        if disabled:
-            return False
-        if is_admin:
-            return True
-        cursor = await self.pool.cursor()
-        sql = "SELECT UserId FROM Recipes WHERE RecipeID = %s"
-        val = (recipe_id,)
-        await cursor.execute(sql, val)
-        result = await cursor.fetchone()
-        await cursor.close()
-        return result[0] == user_id
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cursor:
+                sql = "SELECT IsAdmin, Disabled FROM Users WHERE UserID = %s"
+                val = (user_id,)
+                await cursor.execute(sql, val)
+                result = await cursor.fetchone()
+                is_admin, disabled = result
+                if disabled:
+                    return False
+                if is_admin:
+                    return True
+            async with conn.cursor() as cursor:
+                sql = "SELECT UserId FROM Recipes WHERE RecipeID = %s"
+                val = (recipe_id,)
+                await cursor.execute(sql, val)
+                result = await cursor.fetchone()
+                return result[0] == user_id
 
     async def _create_recipe_step(self, recipe_step: RecipeStep, recipe_id: int):
         """
@@ -589,19 +596,19 @@ class MySQLDatabase(Database):
         """
         Update the images for a recipe in the database.
         """
-        cursor = await self.pool.cursor()
-        sql = "SELECT ImageID FROM Images WHERE RecipeID = %s"
-        val = (recipe.id_,)
-        await cursor.execute(sql, val)
+        async with self.pool.acquire() as conn:
+            async with conn.cursor() as cursor:
+                sql = "SELECT ImageID FROM Images WHERE RecipeID = %s"
+                val = (recipe.id_,)
+                await cursor.execute(sql, val)
+                current_images = [image_id for (image_id,) in await cursor.fetchall()]
         recipe_images = set(recipe.gallery_images) | {recipe.cover_image}
-        current_images = [image_id for (image_id,) in await cursor.fetchall()]
         deleted_images = [
             image_id for image_id in current_images if image_id not in recipe_images
         ]
         added_images = [
             image_id for image_id in recipe_images if image_id not in current_images
         ]
-        await cursor.close()
         for image_id in deleted_images:
             await self._delete_image(image_id)
         for image_id in added_images:
