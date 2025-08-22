@@ -1,6 +1,6 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import Cookies from 'js-cookie';
-import { React, createContext, useEffect, useState } from 'react';
+import { createContext, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import {
   RouterProvider,
@@ -96,18 +96,33 @@ const router = createBrowserRouter([
   }
 ]);
 
-const theme = createTheme({
-  colorSchemes: { light: true, dark: true },
-});
+
+const ThemeModeContext = createContext({ mode: 'light', toggleThemeMode: () => { } });
+
+const ThemeModeProvider = ({ children }) => {
+  const [mode, setMode] = useState('light');
+  const theme = createTheme({
+    palette: {
+      mode,
+    },
+  });
+  const toggleThemeMode = () => {
+    setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
+  };
+  return (
+    <ThemeModeContext.Provider value={{ mode, toggleThemeMode }}>
+      <ThemeProvider theme={theme}>{children}</ThemeProvider>
+    </ThemeModeContext.Provider>
+  );
+};
+
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  // <React.StrictMode>
-  <ThemeProvider theme={theme}>
+  <ThemeModeProvider>
     <AuthContextProvider>
       <RouterProvider router={router} />
     </AuthContextProvider>
-  </ThemeProvider >
-  // </React.StrictMode>
+  </ThemeModeProvider>
 );
 
 // If you want to start measuring performance in your app, pass a function
@@ -115,4 +130,4 @@ ReactDOM.createRoot(document.getElementById("root")).render(
 // or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 reportWebVitals();
 
-export { AuthContext, AuthContextProvider };
+export { AuthContext, AuthContextProvider, ThemeModeContext };

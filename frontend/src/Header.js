@@ -4,18 +4,17 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import SearchIcon from '@mui/icons-material/Search';
 import { Autocomplete, TextField } from '@mui/material';
 import InputAdornment from '@mui/material/InputAdornment';
-import { useColorScheme } from '@mui/material/styles';
-import React, { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { API_BASE } from './Config';
-import { AuthContext } from './index';
+import { AuthContext, ThemeModeContext } from './index';
 
 function Header({ setSearchInput }) {
     const { loggedIn } = useContext(AuthContext);
     const [search, setSearch] = useState('');
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
-    const { mode, setMode } = useColorScheme();
+    const { mode, toggleThemeMode } = useContext(ThemeModeContext);
 
     useEffect(() => {
         document.documentElement.setAttribute('data-theme', mode);
@@ -125,9 +124,7 @@ function Header({ setSearchInput }) {
                     setSearchInput(e.target.value)
                 }} />}
             <div className="header-buttons">
-                <button onClick={() => {
-                    setMode(mode !== 'dark' ? 'dark' : 'light');
-                }} className="theme-toggle" aria-label="Toggle dark mode">
+                <button onClick={toggleThemeMode} className="theme-toggle" aria-label="Toggle dark mode">
                     {mode !== 'dark' ? <DarkModeIcon /> : <LightModeIcon />}
                 </button>
                 {!loggedIn && <Link id="login" to="/login"><button>Login</button></Link>}
