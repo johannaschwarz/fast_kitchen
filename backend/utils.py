@@ -1,3 +1,4 @@
+import asyncio
 import json
 from functools import cache
 
@@ -15,3 +16,13 @@ def load_credentials() -> dict:
     with open("assets/creds.json", encoding="utf-8") as f:
         return json.load(f)
 
+
+background_tasks = set()
+
+
+def run_background_task(task):
+    """Run a background task."""
+    loop = asyncio.get_event_loop()
+    task = loop.create_task(task)
+    background_tasks.add(task)
+    task.add_done_callback(background_tasks.discard)

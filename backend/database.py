@@ -14,7 +14,7 @@ from models import (
     UserInDB,
 )
 from pydantic import ValidationError
-from utils import load_config, load_credentials
+from utils import load_config, load_credentials, run_background_task
 
 
 class SortByEnum(StrEnum):
@@ -150,7 +150,7 @@ class Database(ABC):
         """
 
     @abstractmethod
-    async def get_user_by_id(self, user_id: int) -> UserInDB:
+    async def get_user_by_id(self, user_id: int | None) -> UserInDB | None:
         """
         Get a user from the database using the user ID.
 
@@ -265,14 +265,20 @@ class MySQLDatabase(Database):
         Returns:
             The recipe object.
         """
-        await self._increase_clicks_for_recipe(recipe_id)
+        run_background_task(self._increase_clicks_for_recipe(recipe_id))
 
-        result = await self._run_query(
-            "SELECT RecipeID, Title, Description, CookingTime, CoverImage, Portions, UserID, Clicks FROM Recipes WHERE RecipeID = %s",
-            (recipe_id,),
+        recipe, categories, ingredients, images, steps = await asyncio.gather(
+            self._run_query(
+                "SELECT r.RecipeID, r.Title, r.Description, r.CookingTime, r.CoverImage, r.Portions, u.Username, u.UserID, r.Clicks FROM Recipes r, Users u WHERE r.RecipeID = %s AND r.UserID = u.UserID",
+                (recipe_id,),
+            ),
+            self.get_categories_by_recipe(recipe_id),
+            self._get_ingredients_by_recipe(recipe_id),
+            self._get_gallery_images_by_recipe(recipe_id),
+            self._get_recipe_steps_by_recipe(recipe_id),
         )
 
-        if len(result) == 0:
+        if not recipe:
             raise NotFoundException(
                 f"Recipe with id {recipe_id} not found in database."
             )
@@ -284,21 +290,16 @@ class MySQLDatabase(Database):
             cooking_time,
             cover_image,
             portions,
+            user_name,
             user_id,
             clicks,
-        ) = result[0]
-
-        categories = await self.get_categories_by_recipe(id_)
-        ingredients = await self._get_ingredients_by_recipe(id_)
-        images = await self._get_gallery_images_by_recipe(id_)
-        steps = await self._get_recipe_steps_by_recipe(id_)
-        username = (await self.get_user_by_id(user_id)).username if user_id else None
+        ) = recipe[0]
 
         return Recipe(
             id_=id_,
             title=title,
-            creator_name=username,
-            creator_id=user_id if user_id else None,
+            creator_name=user_name,
+            creator_id=user_id,
             description=description,
             ingredients=ingredients,
             portions=portions,
@@ -807,7 +808,7 @@ class MySQLDatabase(Database):
             hashed_password=password,
         )
 
-    async def get_user_by_id(self, user_id: int) -> UserInDB:
+    async def get_user_by_id(self, user_id: int | None) -> UserInDB:
         """
         Get a user from the database using the user ID.
 
@@ -817,6 +818,8 @@ class MySQLDatabase(Database):
         Returns:
             The user object.
         """
+        if user_id is None:
+            return None
         sql = (
             "SELECT Username, Password, IsAdmin, Disabled FROM Users WHERE UserID = %s"
         )
@@ -860,4 +863,5 @@ class MySQLDatabase(Database):
         )
 
     async def close(self):
+        self.pool.close()
         await self.pool.wait_closed()
