@@ -191,6 +191,7 @@ class MySQLDatabase(Database):
             user=MySQLDatabase.CREDENTIALS["database_user"],
             password=MySQLDatabase.CREDENTIALS["database_password"],
             db=MySQLDatabase.CREDENTIALS["database_name"],
+            autocommit=True,
         )
         return MySQLDatabase(pool)
 
@@ -198,7 +199,7 @@ class MySQLDatabase(Database):
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cur:
                 await cur.execute(query, values)
-                await conn.commit()
+
                 rows = await cur.fetchall()
                 return rows
 
@@ -221,7 +222,7 @@ class MySQLDatabase(Database):
                     user.id_,
                 )
                 await cursor.execute(sql, val)
-                await conn.commit()
+
                 id_ = cursor.lastrowid
 
         queries = [
@@ -438,7 +439,7 @@ class MySQLDatabase(Database):
                     recipe.id_,
                 )
                 await cursor.execute(sql, val)
-                await conn.commit()
+
         await self._update_categories_by_recipe(recipe)
         await self._update_ingredients_by_recipe(recipe)
         await self._update_images_by_recipe(recipe)
@@ -456,7 +457,7 @@ class MySQLDatabase(Database):
                 sql = "DELETE FROM Recipes WHERE RecipeID = %s"
                 val = (recipe_id,)
                 await cursor.execute(sql, val)
-                await conn.commit()
+
                 if cursor.rowcount == 0:
                     raise NotFoundException(
                         f"Recipe with id {recipe_id} not found in database."
@@ -494,7 +495,7 @@ class MySQLDatabase(Database):
                 sql = "INSERT INTO RecipeSteps (RecipeID, OrderID, Step) VALUES (%s, %s, %s)"
                 val = (recipe_id, recipe_step.order_id, recipe_step.step)
                 await cursor.execute(sql, val)
-                await conn.commit()
+
                 id_ = cursor.lastrowid
         if not recipe_step.images:
             return
@@ -529,7 +530,7 @@ class MySQLDatabase(Database):
                 sql = "Delete FROM RecipeSteps WHERE RecipeID = %s"
                 val = (recipe.id_,)
                 await cursor.execute(sql, val)
-                await conn.commit()
+
         for step in recipe.steps:
             await self._create_recipe_step(step, recipe.id_)
 
@@ -545,7 +546,7 @@ class MySQLDatabase(Database):
                 sql = "INSERT INTO Images (Image) VALUES (%s)"
                 val = (image,)
                 await cursor.execute(sql, val)
-                await conn.commit()
+
                 id_ = cursor.lastrowid
         return id_
 
@@ -623,7 +624,6 @@ class MySQLDatabase(Database):
                 sql = "UPDATE Images SET RecipeID = %s WHERE ImageID = %s"
                 val = (recipe_id, image_id)
                 await cursor.execute(sql, val)
-                await conn.commit()
 
     async def _add_recipe_step_to_image(self, step_id: int, image_id: int):
         """
@@ -634,7 +634,6 @@ class MySQLDatabase(Database):
                 sql = "UPDATE Images SET StepID = %s WHERE ImageID = %s"
                 val = (step_id, image_id)
                 await cursor.execute(sql, val)
-                await conn.commit()
 
     async def _get_images_by_recipe_step(self, step_id: int) -> list[int]:
         """
@@ -663,7 +662,7 @@ class MySQLDatabase(Database):
                 sql = "DELETE FROM Images WHERE ImageID = %s"
                 val = (image_id,)
                 await cursor.execute(sql, val)
-                await conn.commit()
+
                 if cursor.rowcount == 0:
                     raise NotFoundException(
                         f"Image with id {image_id} not found in database."
@@ -677,7 +676,6 @@ class MySQLDatabase(Database):
             async with conn.cursor() as cursor:
                 sql = "DELETE FROM Images WHERE RecipeID IS NULL AND TimeStamp < DATE_SUB(NOW(), INTERVAL 1 DAY)"
                 await cursor.execute(sql)
-                await conn.commit()
 
     async def create_category(self, category: str, recipe_id: int):
         """
@@ -688,7 +686,6 @@ class MySQLDatabase(Database):
                 sql = "INSERT INTO Categories (RecipeID, Category) VALUES (%s, %s)"
                 val = (recipe_id, category)
                 await cursor.execute(sql, val)
-                await conn.commit()
 
     async def get_categories_by_recipe(self, recipe_id: int) -> list[str]:
         """
@@ -711,7 +708,7 @@ class MySQLDatabase(Database):
                 sql = "DELETE FROM Categories WHERE RecipeID = %s"
                 val = (recipe.id_,)
                 await cursor.execute(sql, val)
-                await conn.commit()
+
         for category in recipe.categories:
             await self.create_category(category, recipe.id_)
 
@@ -777,7 +774,7 @@ class MySQLDatabase(Database):
                 sql = "DELETE FROM Ingredients WHERE RecipeID = %s"
                 val = (recipe.id_,)
                 await cursor.execute(sql, val)
-                await conn.commit()
+
         for ingredient in recipe.ingredients:
             await self._create_ingredient(ingredient, recipe.id_)
 
@@ -850,7 +847,7 @@ class MySQLDatabase(Database):
                     if "Duplicate entry" in str(e):
                         raise ValueError("User already exists in database.")
                     raise
-                await conn.commit()
+
                 if cursor.rowcount == 0:
                     return None
                 user_id = cursor.lastrowid
