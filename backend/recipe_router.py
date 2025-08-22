@@ -1,7 +1,8 @@
 from typing import Annotated
 
 from database import Database, SortByEnum, SortOrderEnum
-from database_handler import AsyncDatabaseContextManager, get_database_connection
+from database_handler import (AsyncDatabaseContextManager,
+                              get_database_connection)
 from exceptions import NotFoundException, UpdateFailedException
 from fastapi import BackgroundTasks, Depends, HTTPException, Query, status
 from fastapi.routing import APIRouter
@@ -193,8 +194,4 @@ async def get_recipes_by_category(
 async def get_all_categories(
     database: Annotated[Database, Depends(get_database_connection)],
 ) -> list[str]:
-    return await database.get_categories()
-    return await database.get_categories()
-    return await database.get_categories()
-    return await database.get_categories()
-    return await database.get_categories()
+    return (await database.get_categories())
