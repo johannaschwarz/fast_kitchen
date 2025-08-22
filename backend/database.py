@@ -860,4 +860,4 @@ class MySQLDatabase(Database):
         )
 
     async def close(self):
-        self.pool.close()
+        await self.pool.wait_closed()
