@@ -2,13 +2,12 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
 import bcrypt
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from jose import JWTError, jwt
-
 from database import Database
 from database_handler import get_database_connection
 from exceptions import CredentialsException, NotFoundException
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from jose import JWTError, jwt
 from models import Authorization, NewUser, UserInDB
 from utils import load_credentials
 
@@ -29,11 +28,11 @@ def get_password_hash(password: str) -> str:
     return str(bcrypt.hashpw(password.encode(), bcrypt.gensalt()), encoding="utf-8")
 
 
-def authenticate_user(
+async def authenticate_user(
     database: Database, username: str, password: str
 ) -> UserInDB | None:
     try:
-        user = database.get_user_by_username(username)
+        user = await database.get_user_by_username(username)
 
         return user if verify_password(password, user.hashed_password) else None
 
@@ -60,7 +59,7 @@ async def get_current_user(
         if not user_id:
             raise CredentialsException()
 
-        return database.get_user_by_id(user_id)
+        return await database.get_user_by_id(user_id)
     except (JWTError, NotFoundException) as e:
         raise CredentialsException() from e
 
@@ -80,7 +79,7 @@ async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     database: Annotated[Database, Depends(get_database_connection)],
 ) -> Authorization:
-    user = authenticate_user(database, form_data.username, form_data.password)
+    user = await authenticate_user(database, form_data.username, form_data.password)
     if not user:
         raise CredentialsException()
 
@@ -100,7 +99,7 @@ async def login(
 
 
 @user_router.post("/user/create")
-def create_user(
+async def create_user(
     new_user: NewUser,
     database: Annotated[Database, Depends(get_database_connection)],
     user: Annotated[UserInDB, Depends(get_current_active_user)],
@@ -112,7 +111,9 @@ def create_user(
         )
     hashed_password = get_password_hash(new_user.password)
     try:
-        if database.create_user(new_user.username, hashed_password, new_user.is_admin):
+        if await database.create_user(
+            new_user.username, hashed_password, new_user.is_admin
+        ):
             return new_user
     except ValueError:
         raise HTTPException(

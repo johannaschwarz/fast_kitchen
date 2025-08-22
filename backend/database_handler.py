@@ -1,19 +1,20 @@
 from database import MySQLDatabase
 
 
-class DatabaseContextManager:
-    """A context manager for the database connection."""
+class AsyncDatabaseContextManager:
+    """An async context manager for the database connection."""
 
     def __init__(self):
-        self.db = MySQLDatabase()
+        self.db = None
 
-    def __enter__(self):
+    async def __aenter__(self):
+        self.db = await MySQLDatabase.create()
         return self.db
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.db.close()
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.db.close()
 
 
 async def get_database_connection():
-    with DatabaseContextManager() as database:
+    async with AsyncDatabaseContextManager() as database:
         yield database
