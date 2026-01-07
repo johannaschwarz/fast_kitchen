@@ -234,15 +234,15 @@ function Step({ index, step, onChangeDesciption, onDelete, onUploadImage, onDele
                 <span>{index}.</span>
                 <Stack direction={'column'} spacing={1} style={{ width: '100%' }}>
                     <Stack direction={'row'} spacing={2} alignItems="center" style={{ marginBottom: 10 }}>
-                        <TextField 
+                        <TextField
                             multiline
                             minRows={1}
                             maxRows={10}
-                            type="text" 
-                            id="step" 
-                            name="step" 
-                            label="Instruction" 
-                            onChange={onChangeDesciption} 
+                            type="text"
+                            id="step"
+                            name="step"
+                            label="Instruction"
+                            onChange={onChangeDesciption}
                             value={step.description}
                             sx={{
                                 ...textFieldSx,
@@ -591,6 +591,7 @@ function RecipeEditor() {
                                     disabled={importing}
                                 />
                                 <Button
+                                    type="button"
                                     variant="contained"
                                     startIcon={<LinkIcon />}
                                     onClick={handleImport}
@@ -608,7 +609,7 @@ function RecipeEditor() {
                                 </Button>
                             </Stack>
                         )}
-                        
+
                         {alertMessage && <Alert severity={alertSeverity} style={{ marginBottom: 20 }}>
                             <AlertTitle>{alertSeverity === "error" ? "Error" : "Info"}</AlertTitle>
                             {alertMessage}
@@ -625,7 +626,7 @@ function RecipeEditor() {
                             multiple
                             value={categories}
                             onChange={(_, value) => { setCategories(value) }}
-                            renderInput={(params) => <TextField {...params} slotProps={{...params.InputProps, ...inputProps}} sx={textFieldSx} label="Categories" />}
+                            renderInput={(params) => <TextField {...params} slotProps={{ ...params.InputProps, ...inputProps }} sx={textFieldSx} label="Categories" />}
                         /><br />
                         <Divider sx={{ borderColor: 'var(--input-border)' }} />
 
@@ -663,7 +664,23 @@ function RecipeEditor() {
                         </div>
                         <Divider />
                         <br />
-                        <button type="submit">{recipeId === undefined ? "Create" : "Change"}</button><br />
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            onClick={handleSubmit}
+                            sx={{
+                                backgroundColor: 'var(--primary-color)',
+                                '&:hover': {
+                                    backgroundColor: 'var(--secondary-color)',
+                                },
+                                fontWeight: "bold",
+                                borderRadius: 20,
+                                minWidth: 150,
+                                alignSelf: 'center',
+                            }}
+                        >
+                            {recipeId === undefined ? "Create" : "Change"}
+                        </Button><br />
                         {alertMessage && <Alert severity="error">
                             <AlertTitle>Error</AlertTitle>
                             {alertMessage}
