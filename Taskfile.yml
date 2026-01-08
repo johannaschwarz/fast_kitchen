@@ -45,5 +45,5 @@ tasks:
       FE_VERSION:
         sh: yq -r ".version" {{.FRONTEND_DIR}}/package.json | sed 's/^v//'
     cmds:
-      - git tag -a fe-{{.FE_VERSION}} -m "Frontend version {{.FE_VERSION}}"
+      - git tag -a fe-v{{.FE_VERSION}} -m "Frontend version {{.FE_VERSION}}"
       - git push origin fe-{{.FE_VERSION}}
