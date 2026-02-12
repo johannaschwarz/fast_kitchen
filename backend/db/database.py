@@ -217,7 +217,9 @@ class MySQLDatabase(Database):
                     recipe.title,
                     recipe.description,
                     recipe.cooking_time,
-                    recipe.cover_image if recipe.cover_image > 0 else None,
+                    recipe.cover_image
+                    if recipe.cover_image and recipe.cover_image > 0
+                    else None,
                     recipe.portions,
                     user.id_,
                 )
@@ -435,7 +437,9 @@ class MySQLDatabase(Database):
                     recipe.title,
                     recipe.description,
                     recipe.cooking_time,
-                    recipe.cover_image if recipe.cover_image > 0 else None,
+                    recipe.cover_image
+                    if recipe.cover_image and recipe.cover_image > 0
+                    else None,
                     recipe.portions,
                     recipe.id_,
                 )

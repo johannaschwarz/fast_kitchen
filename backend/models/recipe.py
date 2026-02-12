@@ -1,7 +1,7 @@
-
 from enum import StrEnum
 
 from pydantic import BaseModel, Field
+
 
 class UnitEnum(StrEnum):
     """Enum for units of measurement."""
@@ -45,11 +45,19 @@ class RecipeBase(BaseModel):
 
 
 class LLMRecipe(RecipeBase):
-    description: str | None = Field(description="A short description of the recipe. If none is provided, create a matching one. Don't make it too long but describe the meal in a delicious way.")
-    gallery_image_urls: list[str] = Field(description="A list of recipe image urls contained in the data that should be included in the recipe.")
-    categories: list[str] = Field(description="A list of recipe categories that should be included in the recipe. Focus on the most important labels. Less is more!")
+    description: str | None = Field(
+        description="A short description of the recipe. Focus on the meal not original recipe text, keep it one sentence and describe it in the simplest way."
+    )
+    gallery_image_urls: list[str] = Field(
+        description="A list of recipe image urls contained in the data that should be included in the recipe."
+    )
+    categories: list[str] = Field(
+        description="A list of recipe categories that should be included in the recipe. Focus on the most important labels. Less is more!"
+    )
+    is_a_recipe: bool = Field(
+        description="True if the data is a recipe for food or a drink, False otherwise."
+    )
 
-    is_a_recipe: bool = Field(description="True if the data is a recipe for food or a drink, False otherwise.")
 
 class Recipe(RecipeBase):
     """A recipe with all attributes."""
