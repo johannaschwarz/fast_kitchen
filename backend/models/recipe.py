@@ -57,6 +57,12 @@ class LLMRecipe(RecipeBase):
     is_a_recipe: bool = Field(
         description="True if the data is a recipe for food or a drink, False otherwise."
     )
+    steps: list["RecipeStep"] = Field(
+        description="A list of recipe steps. It is important to create not too many steps! Group instructions done at roughly the same time or fit semantically."
+    )
+    cooking_time: int = Field(
+        description="The total cooking time of the entire recipe in minutes."
+    )
 
 
 class Recipe(RecipeBase):

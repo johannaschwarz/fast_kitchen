@@ -2,7 +2,7 @@ import logging
 
 import requests
 from bs4 import BeautifulSoup
-from clients.openai import extract_from_web_data
+from clients.llm import llm
 from models.recipe import LLMRecipe
 
 logging.getLogger().setLevel(logging.INFO)
@@ -49,7 +49,7 @@ def extract_from_url(recipe_url: str) -> LLMRecipe:
             ) and og_image.has_attr("content"):
                 cover_img = og_image.attrs.get("content")
 
-        model = extract_from_web_data(text_data)
+        model = llm.call_llm(llm.WEB_SCRAPER_PROMPT, text_data)
 
         if not model.is_a_recipe:
             raise ValueError("The provided data is not a recipe.")
@@ -65,3 +65,17 @@ def extract_from_url(recipe_url: str) -> LLMRecipe:
     raise ValueError(
         f"Failed to fetch recipe data from the URL. {recipe_url} returned HTTP {data.status_code} Body: {data.text}"
     )
+
+
+def extract_from_text(recipe_text: str) -> LLMRecipe:
+    """
+    Extracts recipe information from the provided recipe text.
+    :param recipe_text: The text of the recipe.
+    :return: A recipe object containing the extracted information.
+    """
+    model = llm.call_llm(llm.USER_TEXT_PROMPT, recipe_text)
+
+    if not model.is_a_recipe:
+        raise ValueError("The provided data is not a recipe.")
+
+    return model
