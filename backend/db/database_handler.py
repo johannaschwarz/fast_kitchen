@@ -1,4 +1,4 @@
-from database import MySQLDatabase
+from db.database import MySQLDatabase
 
 
 class AsyncDatabaseContextManager:

@@ -2,14 +2,15 @@ import io
 from typing import Annotated
 
 import requests
-from database import Database
-from database_handler import get_database_connection
-from extractor import extract_from_url
+from db.database import Database
+from db.database_handler import get_database_connection
+from services.extractor import extract_from_url
 from fastapi import APIRouter, Depends, HTTPException
-from image_tools import process_image
-from models import LLMRecipe, Recipe, RecipeBase, UserInDB
+from services.image_tools import process_image
+from models.recipe import LLMRecipe, Recipe, RecipeBase
+from models.user import UserInDB
 from PIL import Image as PILImage
-from user_router import get_current_active_user
+from routers.user_router import get_current_active_user
 
 parser_router = APIRouter(tags=["Parser"])
 

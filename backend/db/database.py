@@ -4,15 +4,15 @@ from enum import StrEnum
 
 import aiomysql
 from exceptions import NotFoundException
-from models import (
+from models.recipe import (
     Ingredient,
     Recipe,
     RecipeBase,
     RecipeListing,
     RecipeStep,
     UnitEnum,
-    UserInDB,
 )
+from models.user import UserInDB
 from pydantic import ValidationError
 from utils import load_config, load_credentials, run_background_task
 
@@ -419,7 +419,7 @@ class MySQLDatabase(Database):
                 val = (category,)
                 await cursor.execute(sql, val)
                 result = await cursor.fetchall()
-        return [recipe_id for recipe_id, in result]
+        return [recipe_id for (recipe_id,) in result]
 
     async def update_recipe(self, recipe: Recipe):
         """
@@ -698,7 +698,7 @@ class MySQLDatabase(Database):
         result = await self._run_query(
             "SELECT Category FROM Categories WHERE RecipeID = %s", (recipe_id,)
         )
-        return [category for category, in result]
+        return [category for (category,) in result]
 
     async def _update_categories_by_recipe(self, recipe: Recipe):
         """
@@ -731,7 +731,7 @@ class MySQLDatabase(Database):
         """
         return [
             category
-            for category, in await self._run_query(
+            for (category,) in await self._run_query(
                 "SELECT DISTINCT Category FROM Categories"
             )
         ]

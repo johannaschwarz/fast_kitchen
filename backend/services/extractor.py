@@ -2,7 +2,7 @@ import logging
 
 import requests
 from bs4 import BeautifulSoup
-from models import LLMRecipe
+from models.recipe import LLMRecipe
 from openai import OpenAI
 from utils import load_credentials
 
