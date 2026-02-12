@@ -9,13 +9,13 @@ import DialogTitle from '@mui/material/DialogTitle';
 import IconButton from '@mui/material/IconButton';
 import React, { useContext, useEffect, useState, useMemo } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
-import Carousel from 'react-material-ui-carousel';
+import ImageCarousel from './ImageCarousel.jsx';
 import { Link, useParams } from 'react-router-dom';
 import { API_BASE } from './Config';
-import Footer from './Footer.js';
-import Header from './Header.js';
+import Footer from './Footer.jsx';
+import Header from './Header.jsx';
 import './Recipe.css';
-import { AuthContext } from './index';
+import { AuthContext } from './index.jsx';
 
 // Constants
 const ROUNDING_DECIMAL_PLACES = 2;
@@ -272,11 +272,11 @@ function Recipe({ recipe }) {
         <div>
             <div className='imageCard'>
                 {galleryImages.length > 0 &&
-                    <Carousel>
+                    <ImageCarousel>
                         {galleryImages.map((image, index) =>
                             <img key={index} className="carousel-image" src={API_BASE + "image/" + image} alt={recipe.name} />
                         )}
-                    </Carousel>
+                    </ImageCarousel>
                 }
                 <Stack direction="row" alignItems="center" justifyContent="space-between">
                     <h2>{recipe.title}</h2>
@@ -387,11 +387,11 @@ function Recipe({ recipe }) {
                             <div className="stepCounterBottomLine"></div>
                         </div>
                         <div className='imageCard recipeStepContent'>
-                            {step.images.length > 0 && <Carousel autoPlay={false} className="recipeStepCarousel">
+                            {step.images.length > 0 && <ImageCarousel autoPlay={false} className="recipeStepCarousel">
                                 {step.images.map((image, imgIndex) => (
                                     <img key={imgIndex} className="carousel-image" src={API_BASE + "image/" + image} alt={"Step" + index + " image " + imgIndex} />
                                 ))}
-                            </Carousel>}
+                            </ImageCarousel>}
                             <span className="instructionText">{step.step}</span>
                         </div>
                     </div>

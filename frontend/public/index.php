@@ -1,29 +1,60 @@
 <?php
+/**
+ * Pre-rendering entry point for FastKitchen.
+ */
+
 const API_BASE = 'https://api.flottekueche.de/';
 
-$title = "FastKitchen";
+$html = file_get_contents(__DIR__ . '/index.html');
 
-// get request uri
 $request_uri = $_SERVER['REQUEST_URI'];
+$path = parse_url($request_uri, PHP_URL_PATH);
 
-// check if request uri is empty
-if (!empty($request_uri)) {
-  $path = parse_url($request_uri, PHP_URL_PATH);
-  preg_match('/\/recipe\/[0-9]+/', $path, $matches);
-  if (count($matches) > 0) {
-    $recipe_id = str_replace('/recipe/', '', $path);
+// Check if this is a recipe page: /recipe/{id}
+if (preg_match('/^\/recipe\/(\d+)$/', $path, $matches)) {
+    $recipe_id = $matches[1];
 
-    // call api
-    $response = file_get_contents(API_BASE . 'recipe/specific/' . $recipe_id);
-    $recipe = json_decode($response, true);
-    if (isset($recipe['title'])) {
-      $title = $recipe['title'] . ' - FastKitchen';
-      $description = $recipe['description'];
-      if (isset($recipe['cover_image']) && !is_null($recipe['cover_image'])) {
-        $image_url = API_BASE . "image/" . $recipe['cover_image'];
-      }
+    // Fetch recipe data from API
+    $context = stream_context_create([
+        'http' => ['timeout' => 3]
+    ]);
+    $response = @file_get_contents(API_BASE . 'recipe/specific/' . $recipe_id, false, $context);
+
+    if ($response !== false) {
+        $recipe = json_decode($response, true);
+
+        if (isset($recipe['title'])) {
+            $title = htmlspecialchars($recipe['title'], ENT_QUOTES, 'UTF-8') . ' - FastKitchen';
+            $description = htmlspecialchars($recipe['description'] ?? '', ENT_QUOTES, 'UTF-8');
+
+            // Replace default OG tags with recipe-specific ones
+            $html = preg_replace(
+                '/<meta\s+property="og:title"\s+content="[^"]*"\s*\/?>/',
+                '<meta property="og:title" content="' . $title . '" />',
+                $html
+            );
+            $html = preg_replace(
+                '/<meta\s+property="og:description"\s+content="[^"]*"\s*\/?>/',
+                '<meta property="og:description" content="' . $description . '" />',
+                $html
+            );
+            $html = preg_replace(
+                '/<title>[^<]*<\/title>/',
+                '<title>' . $title . '</title>',
+                $html
+            );
+
+            // Add image tag if cover image exists
+            if (!empty($recipe['cover_image'])) {
+                $image_url = API_BASE . 'image/' . $recipe['cover_image'];
+                $html = str_replace(
+                    '<!-- OG_META -->',
+                    '<meta property="og:image" content="' . htmlspecialchars($image_url, ENT_QUOTES, 'UTF-8') . '" />' . "\n    " . '<!-- OG_META -->',
+                    $html
+                );
+            }
+        }
     }
-  }
 }
 
-require_once($_SERVER['DOCUMENT_ROOT'] . '/html_doc.php');
+echo $html;

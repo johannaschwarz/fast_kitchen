@@ -4,8 +4,8 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import { useContext, useState } from "react";
 import { Navigate } from "react-router-dom";
 import { API_BASE } from "./Config.js";
-import Footer from './Footer.js';
-import Header from './Header.js';
+import Footer from './Footer.jsx';
+import Header from './Header.jsx';
 import { AuthContext } from "./index";
 
 function Registration() {

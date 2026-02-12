@@ -1,0 +1,95 @@
+.image-carousel {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 20px;
+}
+
+.image-carousel-viewport {
+    overflow: hidden;
+    width: 100%;
+}
+
+.image-carousel-track {
+    display: flex;
+    transition: transform 0.4s ease-in-out;
+}
+
+.image-carousel-slide {
+    min-width: 100%;
+    flex-shrink: 0;
+}
+
+.image-carousel-slide img {
+    width: 100%;
+    display: block;
+}
+
+/* Navigation buttons */
+.image-carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.35);
+    color: #fff;
+    border: none;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.25s ease, background 0.2s ease;
+    z-index: 2;
+    padding: 0;
+}
+
+.image-carousel:hover .image-carousel-btn {
+    opacity: 1;
+}
+
+.image-carousel-btn:hover {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.image-carousel-btn-prev {
+    left: 10px;
+}
+
+.image-carousel-btn-next {
+    right: 10px;
+}
+
+/* Dot indicators */
+.image-carousel-dots {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 0;
+    position: absolute;
+    bottom: 4px;
+    left: 0;
+    right: 0;
+}
+
+.image-carousel-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.image-carousel-dot.active {
+    background: #fff;
+    transform: scale(1.25);
+}
+
+.image-carousel-dot:hover {
+    background: rgba(255, 255, 255, 0.85);
+}
