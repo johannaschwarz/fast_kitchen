@@ -43,7 +43,8 @@ tasks:
   publish-fe:
     vars:
       FE_VERSION:
-        sh: yq -r ".version" {{.FRONTEND_DIR}}/package.json | sed 's/^v//'
+        sh: yq -r ".version" {{.FRONTEND_DIR}}/package.json | sed 's/^v//' | exit -1
     cmds:
+      - echo "Frontend version {{.FE_VERSION}}"
       - git tag -a fe-v{{.FE_VERSION}} -m "Frontend version {{.FE_VERSION}}"
       - git push origin fe-v{{.FE_VERSION}}
