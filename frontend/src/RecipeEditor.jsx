@@ -2,14 +2,14 @@ import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import LinkIcon from '@mui/icons-material/Link';
 import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOutlineOutlined';
 import { Alert, AlertTitle, Autocomplete, Button, Divider, MenuItem, Stack, TextField } from '@mui/material';
-import styled from '@mui/material/styles/styled';
+import { styled } from '@mui/material/styles';
 import React, { useContext, useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { API_BASE } from './Config';
 import Footer from './Footer';
 import Header from "./Header";
-import { AuthContext } from './index';
+import { AuthContext } from './index.jsx';
 
 import './RecipeEditor.css';
 

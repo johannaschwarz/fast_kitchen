@@ -7,7 +7,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { API_BASE } from './Config';
-import { AuthContext, ThemeModeContext } from './index';
+import { AuthContext, ThemeModeContext } from './index.jsx';
 
 function Header({ setSearchInput }) {
     const { loggedIn } = useContext(AuthContext);

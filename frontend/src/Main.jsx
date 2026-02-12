@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import Filters from './Filters.js';
-import Footer from './Footer.js';
-import Header from './Header.js';
-import Recipes from './Recipes.js';
+import Filters from './Filters.jsx';
+import Footer from './Footer.jsx';
+import Header from './Header.jsx';
+import Recipes from './Recipes.jsx';
 
 function Main() {
   const [filters, setFilters] = useState([]);

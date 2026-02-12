@@ -1,8 +1,8 @@
 import { Alert, CircularProgress, Stack, TextField } from "@mui/material";
 import { useContext, useState } from "react";
 import { API_BASE } from "./Config";
-import Footer from './Footer.js';
-import Header from './Header.js';
+import Footer from './Footer.jsx';
+import Header from './Header.jsx';
 import { AuthContext } from "./index";
 
 const Login = () => {

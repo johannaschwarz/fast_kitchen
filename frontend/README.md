@@ -2,9 +2,10 @@
 
 ## Development
 
-1. Setup
+1.  Setup
 
         npm install
-2. Run
 
-        npm start
+2.  Run
+
+        npm run dev

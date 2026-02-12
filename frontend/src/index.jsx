@@ -6,14 +6,14 @@ import {
   RouterProvider,
   createBrowserRouter,
 } from "react-router-dom";
-import LegalNotice from './LegalNotice.js';
-import Login from './Login.js';
-import Main from './Main.js';
-import RecipePage from './Recipe.js';
-import RecipeEditor from './RecipeEditor.js';
-import Registration from './Registration.js';
+import LegalNotice from './LegalNotice.jsx';
+import Login from './Login.jsx';
+import Main from './Main.jsx';
+import RecipePage from './Recipe.jsx';
+import RecipeEditor from './RecipeEditor.jsx';
+import Registration from './Registration.jsx';
 import './index.css';
-import reportWebVitals from './reportWebVitals';
+
 
 const AuthContext = createContext();
 
@@ -125,9 +125,5 @@ ReactDOM.createRoot(document.getElementById("root")).render(
   </ThemeModeProvider>
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
 
 export { AuthContext, AuthContextProvider, ThemeModeContext };
