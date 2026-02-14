@@ -1,10 +1,10 @@
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import LinkIcon from '@mui/icons-material/Link';
 import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOutlineOutlined';
-import { Alert, AlertTitle, Autocomplete, Button, Divider, MenuItem, Stack, TextField } from '@mui/material';
+import { Alert, AlertTitle, Autocomplete, Box, Button, Divider, MenuItem, Stack, TextField } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import React, { useContext, useEffect, useState } from 'react';
-import { ThreeDots } from 'react-loader-spinner';
+
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { API_BASE } from './Config';
 import Footer from './Footer';
@@ -353,7 +353,9 @@ function RecipeEditor() {
     const [alertSeverity, setAlertSeverity] = useState("error");
     const [filters, setFilters] = useState(defaultFilters);
     const [importUrl, setImportUrl] = useState("");
+    const [importText, setImportText] = useState("");
     const [importing, setImporting] = useState(false);
+    const [inputMode, setInputMode] = useState(0); // 0 = manual, 1 = from text
 
     useEffect(() => {
         fetch(API_BASE + 'category/all')
@@ -555,6 +557,44 @@ function RecipeEditor() {
         setImporting(false);
     };
 
+    const handleTextImport = async () => {
+        if (!importText.trim()) {
+            setAlertMessage("Please enter recipe text to parse");
+            setAlertSeverity("error");
+            return;
+        }
+
+        setImporting(true);
+        setAlertMessage("");
+
+        try {
+            const response = await fetch(API_BASE + 'parse-recipe-text?' + new URLSearchParams({
+                text: importText
+            }), {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'Bearer ' + token,
+                },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setInputMode(0);
+                navigate('/edit/' + data.id_);
+            } else {
+                const error = await response.json();
+                setAlertMessage('Parsing failed: ' + error.detail);
+                setAlertSeverity("error");
+            }
+        } catch (err) {
+            console.error(err);
+            setAlertMessage('Parsing failed, please try again later.');
+            setAlertSeverity("error");
+        }
+
+        setImporting(false);
+    };
+
     const uploadGalleryImageOnChange = async (event) => {
         const file = event.target.files[0];
         uploadImage(file, token).then(id_ => { if (id_ !== -1) setGalleryImages([...galleryImages, id_]); event.target.value = null });
@@ -649,25 +689,73 @@ function RecipeEditor() {
                         </UploadButton><br />
                         {galleryImages.length > 0 && imagesList(galleryImages, "galleryImg", deleteGalleryImageOnChange)}<br />
 
-                        <Divider />
+                        <Divider sx={{ borderColor: 'var(--input-border)' }} />
 
-                        <h3>Ingredients:</h3>
-                        <Stack spacing={2} marginBottom={2}>
-                            <TextField value={portions} min="1" type="number" id="portions" name="portions" label="Portions" onWheel={(e) => e.target.blur()} onChange={e => setPortions(e.target.value)} required /><br />
-                            <IngredientList ingredients={ingredients} setIngredients={setIngredients} />
-                        </Stack>
-                        <Divider />
+                        {recipeId === undefined && (
+                            <Stack direction="row" spacing={0} sx={{ mt: 2, mb: 0 }}>
+                                {['Manual', 'From Text'].map((label, i) => (
+                                    <Box
+                                        key={label}
+                                        onClick={() => setInputMode(i)}
+                                        sx={{
+                                            px: 2,
+                                            py: 1,
+                                            cursor: 'pointer',
+                                            fontSize: '0.9rem',
+                                            fontWeight: inputMode === i ? 'bold' : 'normal',
+                                            color: inputMode === i ? 'var(--primary-color)' : 'var(--text-color)',
+                                            borderBottom: inputMode === i ? '2px solid var(--primary-color)' : '2px solid transparent',
+                                            opacity: inputMode === i ? 1 : 0.6,
+                                            transition: 'all 0.15s ease',
+                                            '&:hover': { opacity: 1 },
+                                            userSelect: 'none',
+                                        }}
+                                    >
+                                        {label}
+                                    </Box>
+                                ))}
+                            </Stack>
+                        )}
 
-                        <h3>Steps:</h3>
-                        <div>
-                            <StepsList steps={steps} setSteps={setSteps} />
-                        </div>
-                        <Divider />
+                        {inputMode === 0 ? (
+                            <>
+                                <h3>Ingredients:</h3>
+                                <Stack spacing={2} marginBottom={2}>
+                                    <TextField value={portions} min="1" type="number" id="portions" name="portions" label="Portions" onWheel={(e) => e.target.blur()} onChange={e => setPortions(e.target.value)} required /><br />
+                                    <IngredientList ingredients={ingredients} setIngredients={setIngredients} />
+                                </Stack>
+                                <Divider sx={{ borderColor: 'var(--input-border)' }} />
+
+                                <h3>Steps:</h3>
+                                <div>
+                                    <StepsList steps={steps} setSteps={setSteps} />
+                                </div>
+                            </>
+                        ) : (
+                            <Stack spacing={1.5} sx={{ mt: 1 }}>
+                                <span style={{ color: 'var(--text-color)', fontSize: '0.82rem', opacity: 0.55, fontStyle: 'italic' }}>
+                                    Your text will be parsed into a structured recipe - this may take a moment.
+                                </span>
+                                <TextField
+                                    multiline
+                                    minRows={10}
+                                    maxRows={25}
+                                    placeholder={"e.g.\n\nSpaghetti Carbonara\n\n400g spaghetti\n200g pancetta\n4 eggs\n100g parmesan\n\n1. Cook spaghetti…\n2. Fry pancetta…"}
+                                    value={importText}
+                                    onChange={(e) => setImportText(e.target.value)}
+                                    disabled={importing}
+                                    slotProps={inputProps}
+                                    sx={{ ...textFieldSx, width: '100%' }}
+                                />
+                            </Stack>
+                        )}
+                        <Divider sx={{ borderColor: 'var(--input-border)' }} />
                         <br />
                         <Button
-                            type="submit"
+                            type={inputMode === 0 ? "submit" : "button"}
                             variant="contained"
-                            onClick={handleSubmit}
+                            onClick={inputMode === 0 ? handleSubmit : handleTextImport}
+                            disabled={inputMode === 1 && (importing || !importText.trim())}
                             sx={{
                                 backgroundColor: 'var(--primary-color)',
                                 '&:hover': {
@@ -681,34 +769,31 @@ function RecipeEditor() {
                         >
                             {recipeId === undefined ? "Create" : "Change"}
                         </Button><br />
-                        {alertMessage && <Alert severity="error">
-                            <AlertTitle>Error</AlertTitle>
+                        {alertMessage && <Alert severity={alertSeverity}>
+                            <AlertTitle>{alertSeverity === "error" ? "Error" : "Info"}</AlertTitle>
                             {alertMessage}
                         </Alert>}
                     </Stack>
                 </form>
             </div>
 
-            <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '100%',
-                flexDirection: 'column',
-                gap: '20px'
-            }}>
-                <ThreeDots
-                    visible={storing || importing || (recipeId !== undefined && !loaded)}
-                    height="80"
-                    width="80"
-                    color="var(--dark-green)"
-                    radius="9"
-                    ariaLabel="three-dots-loading"
-                    wrapperStyle={{}}
-                    wrapperClass=""
-                />
-                {importing && <p style={{ color: 'var(--text-color)' }}>Importing recipe...</p>}
-            </div>
+            {(storing || importing || (recipeId !== undefined && !loaded)) && (
+                <div className="loading-overlay">
+                    <div className="loading-card">
+                        <div className="loading-spinner" />
+                        <p className="loading-title">
+                            {importing ? 'Importing recipe…' : storing ? 'Saving recipe…' : 'Loading recipe…'}
+                        </p>
+                        <p className="loading-hint">
+                            {importing
+                                ? 'Parsing your recipe — this may take a moment'
+                                : storing
+                                    ? 'Almost there…'
+                                    : 'Fetching recipe details…'}
+                        </p>
+                    </div>
+                </div>
+            )}
             <Footer />
         </div>
     )
