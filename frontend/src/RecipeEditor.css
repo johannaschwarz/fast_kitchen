@@ -1,57 +1,116 @@
 .galleryImg {
-    width: 400px;
-    border-radius: 10px;
-    object-fit: cover;
-    height: 400px;
-    position: relative;
-    display: inline-block;
+  width: 400px;
+  border-radius: 10px;
+  object-fit: cover;
+  height: 400px;
+  position: relative;
+  display: inline-block;
 }
 
 .stepImg {
-    width: 100px;
-    height: 100px;
-    object-fit: cover;
-    border-radius: 10px;
-    position: relative;
-    display: inline-block;
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 10px;
+  position: relative;
+  display: inline-block;
 }
 
 .deleteIconStep {
-    padding: 3px
+  padding: 3px;
 }
 
 .coverImg {
-    width: 400px;
-    border-radius: 10px;
-    object-fit: cover;
-    max-height: 400px;
-    display: block;
+  width: 400px;
+  border-radius: 10px;
+  object-fit: cover;
+  max-height: 400px;
+  display: block;
 }
 
 .deleteIcon,
 .deleteIconStep {
-    top: 0;
-    left: 0;
-    position: absolute;
-    background: rgba(42, 42, 42, 0.488);
-    border: none;
-    border-radius: 0;
-    border-start-start-radius: 10px;
-    border-end-end-radius: 10px;
-    box-shadow: none;
-    color: #c2c2c2;
+  top: 0;
+  left: 0;
+  position: absolute;
+  background: rgba(42, 42, 42, 0.488);
+  border: none;
+  border-radius: 0;
+  border-start-start-radius: 10px;
+  border-end-end-radius: 10px;
+  box-shadow: none;
+  color: #c2c2c2;
 }
 
 .deleteIcon:hover,
 .deleteIconStep:hover {
-    background: rgba(42, 42, 42, 0.788);
-    color: #fff;
+  background: rgba(42, 42, 42, 0.788);
+  color: #fff;
 }
 
 .uploadImgContainer {
-    position: relative;
+  position: relative;
 }
 
 .imageList {
-    overflow-x: auto;
+  overflow-x: auto;
+}
+
+/* ── Loading overlay ── */
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.loading-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  flex: 1;
+  padding: 60px 20px;
+}
+
+.loading-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    animation: fadeInUp 0.35s ease-out;
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 3px solid var(--input-border);
+    border-top-color: var(--dark-green);
+    animation: spin 0.85s linear infinite;
+}
+
+.loading-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.loading-hint {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--text-color);
+    opacity: 0.4;
 }
