@@ -45,6 +45,14 @@ tasks:
       FE_VERSION:
         sh: yq -r ".version" {{.FRONTEND_DIR}}/package.json | sed 's/^v//' || exit -1
     cmds:
-      - echo "Frontend version {{.FE_VERSION}}"
       - git tag -a fe-v{{.FE_VERSION}} -m "Frontend version {{.FE_VERSION}}"
       - git push origin fe-v{{.FE_VERSION}}
+  
+  publish-api:
+    vars:
+      API_VERSION:
+        sh: grep '^__version__' {{.BACKEND_DIR}}/app.py | sed 's/.*"\(.*\)".*/\1/' | sed 's/^v//' || exit -1
+    cmds:
+      - git tag -a api-v{{.API_VERSION}} -m "Backend version {{.API_VERSION}}"
+      - git push origin api-v{{.API_VERSION}}
+    
