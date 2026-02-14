@@ -1,7 +1,7 @@
-import image_router
-import parser_router
-import recipe_router
-import user_router
+from routers import image_router
+from routers import parser_router
+from routers import recipe_router
+from routers import user_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 

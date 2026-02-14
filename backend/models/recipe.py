@@ -15,6 +15,20 @@ class UnitEnum(StrEnum):
     TSP = "tsp"
 
 
+class CategoryEnum(StrEnum):
+    """Enum for category options."""
+
+    MAIN = "Hauptgericht"
+    SIDE = "Beilage"
+    BREAD = "Brot"
+    SAUCE = "Sauce"
+    VEGETARIAN = "Vegetarisch"
+    VEGAN = "Vegan"
+    DRINK = "Getränk"
+    BAKED = "Gebäck"
+    ASIAN = "Asia"
+
+
 class Ingredient(BaseModel):
     """An ingredient model."""
 
@@ -39,17 +53,31 @@ class RecipeBase(BaseModel):
     ingredients: list[Ingredient]
     cooking_time: int
     steps: list["RecipeStep"]
-    categories: list[str]
+    categories: list[CategoryEnum]
     gallery_images: list[int] | None = None
     cover_image: int | None = None
 
 
 class LLMRecipe(RecipeBase):
-    description: str | None = Field(description="A short description of the recipe. If none is provided, create a matching one. Don't make it too long but describe the meal in a delicious way.")
-    gallery_image_urls: list[str] = Field(description="A list of recipe image urls contained in the data that should be included in the recipe.")
-    categories: list[str] = Field(description="A list of recipe categories that should be included in the recipe. Focus on the most important labels. Less is more!")
+    description: str | None = Field(
+        description="A short description of the recipe. Focus on the meal not original recipe text, keep it one sentence and describe it in the simplest way."
+    )
+    gallery_image_urls: list[str] = Field(
+        description="A list of recipe image urls contained in the data that should be included in the recipe."
+    )
+    categories: list[CategoryEnum] = Field(
+        description="A list of recipe categories that should be included in the recipe. Focus on the most important labels. Less is more!"
+    )
+    is_a_recipe: bool = Field(
+        description="True if the data is a recipe for food or a drink, False otherwise."
+    )
+    steps: list["RecipeStep"] = Field(
+        description="A list of recipe steps. It is important to create not too many steps! Group instructions done at roughly the same time or fit semantically."
+    )
+    cooking_time: int = Field(
+        description="The total cooking time of the entire recipe in minutes."
+    )
 
-    is_a_recipe: bool = Field(description="True if the data is a recipe for food or a drink, False otherwise.")
 
 class Recipe(RecipeBase):
     """A recipe with all attributes."""
@@ -67,7 +95,7 @@ class RecipeListing(BaseModel):
     title: str
     creator: str | None = None
     description: str
-    categories: list[str]
+    categories: list[CategoryEnum]
     cover_image: int | None = None
     rating: float | None = None
     clicks: int | None = None
@@ -86,36 +114,3 @@ class ImageID(BaseModel):
     """An image model with an id."""
 
     id_: int = -1
-
-
-class User(BaseModel):
-    """Model for a user."""
-
-    username: str
-    disabled: bool | None = None
-
-
-class UserInDB(User):
-    """Model for a user in the database."""
-
-    id_: int
-    is_admin: bool
-    hashed_password: str
-
-
-class NewUser(BaseModel):
-    username: str
-    password: str
-    is_admin: bool
-
-
-class Authorization(BaseModel):
-    access_token: str
-    token_type: str
-    user_id: int
-    is_admin: bool
-    disabled: bool
-
-
-class TokenData(BaseModel):
-    user_id: int

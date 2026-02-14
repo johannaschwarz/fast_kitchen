@@ -4,15 +4,16 @@ from enum import StrEnum
 
 import aiomysql
 from exceptions import NotFoundException
-from models import (
+from models.recipe import (
+    CategoryEnum,
     Ingredient,
     Recipe,
     RecipeBase,
     RecipeListing,
     RecipeStep,
     UnitEnum,
-    UserInDB,
 )
+from models.user import UserInDB
 from pydantic import ValidationError
 from utils import load_config, load_credentials, run_background_task
 
@@ -64,7 +65,7 @@ class Database(ABC):
         limit: int | None = None,
         page: int | None = None,
         search_string: str | None = None,
-        filter_categories: list[str] | None = None,
+        filter_categories: list[CategoryEnum] | None = None,
         sort_by: SortByEnum = SortByEnum.CLICKS,
         sort_order: SortOrderEnum = SortOrderEnum.DESC,
     ) -> list[RecipeListing]:
@@ -129,7 +130,7 @@ class Database(ABC):
         """
 
     @abstractmethod
-    async def get_categories(self) -> list[str]:
+    async def get_categories(self) -> list[CategoryEnum]:
         """
         Get all categories from the database.
 
@@ -217,7 +218,9 @@ class MySQLDatabase(Database):
                     recipe.title,
                     recipe.description,
                     recipe.cooking_time,
-                    recipe.cover_image if recipe.cover_image > 0 else None,
+                    recipe.cover_image
+                    if recipe.cover_image and recipe.cover_image > 0
+                    else None,
                     recipe.portions,
                     user.id_,
                 )
@@ -324,7 +327,7 @@ class MySQLDatabase(Database):
         limit: int | None = None,
         page: int | None = None,
         search_string: str | None = None,
-        filter_categories: list[str] | None = None,
+        filter_categories: list[CategoryEnum] | None = None,
         sort_by: SortByEnum = SortByEnum.CLICKS,
         sort_order: SortOrderEnum = SortOrderEnum.DESC,
     ) -> list[RecipeListing]:
@@ -406,7 +409,7 @@ class MySQLDatabase(Database):
 
         return recipes
 
-    async def get_recipes_by_category(self, category: str) -> list[int]:
+    async def get_recipes_by_category(self, category: CategoryEnum) -> list[int]:
         """
         Get all recipes by category from the database.
 
@@ -419,7 +422,7 @@ class MySQLDatabase(Database):
                 val = (category,)
                 await cursor.execute(sql, val)
                 result = await cursor.fetchall()
-        return [recipe_id for recipe_id, in result]
+        return [recipe_id for (recipe_id,) in result]
 
     async def update_recipe(self, recipe: Recipe):
         """
@@ -435,7 +438,9 @@ class MySQLDatabase(Database):
                     recipe.title,
                     recipe.description,
                     recipe.cooking_time,
-                    recipe.cover_image if recipe.cover_image > 0 else None,
+                    recipe.cover_image
+                    if recipe.cover_image and recipe.cover_image > 0
+                    else None,
                     recipe.portions,
                     recipe.id_,
                 )
@@ -678,17 +683,19 @@ class MySQLDatabase(Database):
                 sql = "DELETE FROM Images WHERE RecipeID IS NULL AND TimeStamp < DATE_SUB(NOW(), INTERVAL 1 DAY)"
                 await cursor.execute(sql)
 
-    async def create_category(self, category: str, recipe_id: int):
+    async def create_category(self, category: CategoryEnum, recipe_id: int):
         """
         Create a new category in the database.
         """
+        if category not in CategoryEnum:
+            return
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cursor:
                 sql = "INSERT INTO Categories (RecipeID, Category) VALUES (%s, %s)"
                 val = (recipe_id, category)
                 await cursor.execute(sql, val)
 
-    async def get_categories_by_recipe(self, recipe_id: int) -> list[str]:
+    async def get_categories_by_recipe(self, recipe_id: int) -> list[CategoryEnum]:
         """
         Get all categories for a recipe from the database.
 
@@ -698,7 +705,7 @@ class MySQLDatabase(Database):
         result = await self._run_query(
             "SELECT Category FROM Categories WHERE RecipeID = %s", (recipe_id,)
         )
-        return [category for category, in result]
+        return [category for (category,) in result]
 
     async def _update_categories_by_recipe(self, recipe: Recipe):
         """
@@ -731,7 +738,7 @@ class MySQLDatabase(Database):
         """
         return [
             category
-            for category, in await self._run_query(
+            for (category,) in await self._run_query(
                 "SELECT DISTINCT Category FROM Categories"
             )
         ]

@@ -1,16 +1,17 @@
 import io
 from typing import Annotated
 
-from database import Database
-from database_handler import get_database_connection
+from db.database import Database
+from db.database_handler import get_database_connection
 from exceptions import NotFoundException
 from fastapi import Depends, HTTPException, Response, UploadFile, status
 from fastapi.routing import APIRouter
-from image_tools import process_image
-from models import ImageID, UserInDB
+from services.image_tools import process_image
+from models.recipe import ImageID
+from models.user import UserInDB
 from pi_heif import register_heif_opener
 from PIL import Image as PILImage
-from user_router import get_current_active_user
+from routers.user_router import get_current_active_user
 
 register_heif_opener()
 

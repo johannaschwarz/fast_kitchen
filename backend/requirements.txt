@@ -2,10 +2,12 @@ bcrypt~=4.1.2
 beautifulsoup4==4.13.3
 fastapi[standard]~=0.114.2
 mysql-connector-python~=8.3.0
-openai==1.69.0
 pi-heif~=0.22.0
 pillow~=11.1.0
 python-jose[cryptography]~=3.4.0
 python-multipart~=0.0.9
 requests==2.32.3
 aiomysql~=0.2.0
+langchain==1.2.10
+langchain-openai==1.1.9
+langchain-google-genai==4.2.0
