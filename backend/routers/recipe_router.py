@@ -6,7 +6,7 @@ from exceptions import NotFoundException, UpdateFailedException
 from fastapi import BackgroundTasks, Depends, HTTPException, Query, status
 from fastapi.routing import APIRouter
 from fastapi.security import OAuth2PasswordBearer
-from models.recipe import Recipe, RecipeBase, RecipeListing
+from models.recipe import CategoryEnum, Recipe, RecipeBase, RecipeListing
 from models.user import UserInDB
 from pydantic import ValidationError
 from routers.user_router import get_current_active_user
@@ -89,11 +89,11 @@ async def get_all_recipes(
 async def get_filtered_recipes(
     database: Annotated[Database, Depends(get_database_connection)],
     categories: Annotated[
-        list[str],
+        list[CategoryEnum],
         Query(
             title="Categories",
             description="A list of categories to filter recipes by",
-            example=["Asian", "Breakfast"],
+            example=[CategoryEnum.ASIAN, CategoryEnum.VEGETARIAN],
         ),
     ] = None,
     search: Annotated[
@@ -185,7 +185,8 @@ async def delete_recipe(
 
 @recipe_router.get("/recipe/category/{category}")
 async def get_recipes_by_category(
-    category: str, database: Annotated[Database, Depends(get_database_connection)]
+    category: CategoryEnum,
+    database: Annotated[Database, Depends(get_database_connection)],
 ) -> list[int]:
     return await database.get_recipes_by_category(category)
 
@@ -193,5 +194,5 @@ async def get_recipes_by_category(
 @recipe_router.get("/category/all")
 async def get_all_categories(
     database: Annotated[Database, Depends(get_database_connection)],
-) -> list[str]:
+) -> list[CategoryEnum]:
     return await database.get_categories()

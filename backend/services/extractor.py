@@ -2,7 +2,7 @@ import logging
 
 import requests
 from bs4 import BeautifulSoup
-from clients.llm import llm
+from clients import llm
 from models.recipe import LLMRecipe
 
 logging.getLogger().setLevel(logging.INFO)

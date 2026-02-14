@@ -15,6 +15,20 @@ class UnitEnum(StrEnum):
     TSP = "tsp"
 
 
+class CategoryEnum(StrEnum):
+    """Enum for category options."""
+
+    MAIN = "Hauptgericht"
+    SIDE = "Beilage"
+    BREAD = "Brot"
+    SAUCE = "Sauce"
+    VEGETARIAN = "Vegetarisch"
+    VEGAN = "Vegan"
+    DRINK = "Getränk"
+    BAKED = "Gebäck"
+    ASIAN = "Asia"
+
+
 class Ingredient(BaseModel):
     """An ingredient model."""
 
@@ -39,7 +53,7 @@ class RecipeBase(BaseModel):
     ingredients: list[Ingredient]
     cooking_time: int
     steps: list["RecipeStep"]
-    categories: list[str]
+    categories: list[CategoryEnum]
     gallery_images: list[int] | None = None
     cover_image: int | None = None
 
@@ -51,7 +65,7 @@ class LLMRecipe(RecipeBase):
     gallery_image_urls: list[str] = Field(
         description="A list of recipe image urls contained in the data that should be included in the recipe."
     )
-    categories: list[str] = Field(
+    categories: list[CategoryEnum] = Field(
         description="A list of recipe categories that should be included in the recipe. Focus on the most important labels. Less is more!"
     )
     is_a_recipe: bool = Field(
@@ -81,7 +95,7 @@ class RecipeListing(BaseModel):
     title: str
     creator: str | None = None
     description: str
-    categories: list[str]
+    categories: list[CategoryEnum]
     cover_image: int | None = None
     rating: float | None = None
     clicks: int | None = None

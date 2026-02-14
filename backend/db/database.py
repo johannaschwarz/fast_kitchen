@@ -5,6 +5,7 @@ from enum import StrEnum
 import aiomysql
 from exceptions import NotFoundException
 from models.recipe import (
+    CategoryEnum,
     Ingredient,
     Recipe,
     RecipeBase,
@@ -64,7 +65,7 @@ class Database(ABC):
         limit: int | None = None,
         page: int | None = None,
         search_string: str | None = None,
-        filter_categories: list[str] | None = None,
+        filter_categories: list[CategoryEnum] | None = None,
         sort_by: SortByEnum = SortByEnum.CLICKS,
         sort_order: SortOrderEnum = SortOrderEnum.DESC,
     ) -> list[RecipeListing]:
@@ -129,7 +130,7 @@ class Database(ABC):
         """
 
     @abstractmethod
-    async def get_categories(self) -> list[str]:
+    async def get_categories(self) -> list[CategoryEnum]:
         """
         Get all categories from the database.
 
@@ -326,7 +327,7 @@ class MySQLDatabase(Database):
         limit: int | None = None,
         page: int | None = None,
         search_string: str | None = None,
-        filter_categories: list[str] | None = None,
+        filter_categories: list[CategoryEnum] | None = None,
         sort_by: SortByEnum = SortByEnum.CLICKS,
         sort_order: SortOrderEnum = SortOrderEnum.DESC,
     ) -> list[RecipeListing]:
@@ -408,7 +409,7 @@ class MySQLDatabase(Database):
 
         return recipes
 
-    async def get_recipes_by_category(self, category: str) -> list[int]:
+    async def get_recipes_by_category(self, category: CategoryEnum) -> list[int]:
         """
         Get all recipes by category from the database.
 
@@ -682,17 +683,19 @@ class MySQLDatabase(Database):
                 sql = "DELETE FROM Images WHERE RecipeID IS NULL AND TimeStamp < DATE_SUB(NOW(), INTERVAL 1 DAY)"
                 await cursor.execute(sql)
 
-    async def create_category(self, category: str, recipe_id: int):
+    async def create_category(self, category: CategoryEnum, recipe_id: int):
         """
         Create a new category in the database.
         """
+        if category not in CategoryEnum:
+            return
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cursor:
                 sql = "INSERT INTO Categories (RecipeID, Category) VALUES (%s, %s)"
                 val = (recipe_id, category)
                 await cursor.execute(sql, val)
 
-    async def get_categories_by_recipe(self, recipe_id: int) -> list[str]:
+    async def get_categories_by_recipe(self, recipe_id: int) -> list[CategoryEnum]:
         """
         Get all categories for a recipe from the database.
 
