@@ -24,6 +24,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: production-build
+          include-hidden-files: true
           path: frontend/dist
   deploy:
     runs-on: ubuntu-latest
