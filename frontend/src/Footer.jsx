@@ -14,7 +14,7 @@ function Footer() {
                     {(loggedIn && isAdmin) && <Link className="link" to="/register">Create user</Link>}
                     <Link className="link" to="/legalnotice">Legal notice</Link>
                 </Stack>
-                <span>© 2025 FastKitchen {FASTKITCHEN_VERSION}</span>
+                <span>© 2026 FastKitchen {FASTKITCHEN_VERSION}</span>
             </Stack>
         </footer>
     )

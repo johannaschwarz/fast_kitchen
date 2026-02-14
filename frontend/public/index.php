@@ -24,7 +24,7 @@ if (preg_match('/^\/recipe\/(\d+)$/', $path, $matches)) {
         $recipe = json_decode($response, true);
 
         if (isset($recipe['title'])) {
-            $title = htmlspecialchars($recipe['title'], ENT_QUOTES, 'UTF-8') . ' - FastKitchen';
+            $title = htmlspecialchars($recipe['title'], ENT_QUOTES, 'UTF-8') . ' - FlotteKüche';
             $description = htmlspecialchars($recipe['description'] ?? '', ENT_QUOTES, 'UTF-8');
 
             // Replace default OG tags with recipe-specific ones
