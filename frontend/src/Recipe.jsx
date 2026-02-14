@@ -466,7 +466,7 @@ function RecipePage() {
             .then((data) => {
                 console.log(data)
                 setRecipe(data)
-                document.title = "FastKitchen - " + data.title + " Recipe";
+                document.title = "FlotteKüche - " + data.title + " Rezept";
             })
             .catch((err) => {
                 console.log(err.message)
