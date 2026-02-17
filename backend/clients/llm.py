@@ -9,8 +9,8 @@ from langchain_core.callbacks import UsageMetadataCallbackHandler
 
 MODEL = load_config()["extraction_llm"]
 os.environ["OPENAI_API_KEY"] = load_credentials()["openai_key"]
+os.environ["GEMINI_API_KEY"] = load_credentials()["gemini_key"]
 
-model = init_chat_model()
 logging.getLogger().setLevel(logging.INFO)
 
 WEB_SCRAPER_PROMPT = """You are a web scraper.
@@ -28,6 +28,15 @@ USER_TEXT_PROMPT = """You are a recipe extractor.
                 IF THE DATA IS NOT A RECIPE FOR A MEAL OR DRINK RETURN NOTHING!!!"""
 
 
+def get_model_provider(model: str) -> str:
+    if model.startswith("gpt"):
+        return "openai"
+    elif model.startswith("gemini"):
+        return "google_genai"
+    else:
+        raise ValueError(f"Unknown model provider: {model}")
+
+
 def call_llm(system_prompt: str, recipe_data: str) -> LLMRecipe:
     """
     Calls the configured LLM with the given system_prompt and recipe_data.
@@ -35,6 +44,7 @@ def call_llm(system_prompt: str, recipe_data: str) -> LLMRecipe:
     :param recipe_data: The recipe data to pass to the LLM.
     :return: A recipe object containing the extracted information.
     """
+    model = init_chat_model(MODEL, model_provider=get_model_provider(MODEL))
     usage_callback = UsageMetadataCallbackHandler()
     response = model.with_structured_output(LLMRecipe).invoke(
         [
@@ -47,7 +57,10 @@ def call_llm(system_prompt: str, recipe_data: str) -> LLMRecipe:
                 "content": recipe_data,
             },
         ],
-        config={"configurable": {"model": MODEL}, "callbacks": [usage_callback]},
+        config={
+            "configurable": {"model": MODEL},
+            "callbacks": [usage_callback],
+        },
     )
 
     logging.info(f"Token Usage: {usage_callback.usage_metadata}")
