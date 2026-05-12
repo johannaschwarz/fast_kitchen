@@ -7,22 +7,20 @@ function LegalNotice() {
             <Header />
             <div className='content'>
                 <h1>Impressum</h1>
-                <p>Angaben gemäß § 5 TMG</p>
 
-                <h2>Name und Anschrift</h2>
-                <p>Niklas Rousset<br />
+                <h2>Angaben gemäß § 5 DDG</h2>
+                <p>
+                    Niklas Rousset & Johanna Schwarz<br />
                     Firnhaberstr. 29<br />
                     86159 Augsburg<br />
-                    Deutschland<br /><br />
-                    E-Mail: byrousset@gmail.com<br />
-                    Telefon: 0821 60841050
+                    Deutschland
                 </p>
 
-                <h2>Inhaltlich verantwortlich</h2>
-                <p>Johanna Schwarz<br />
-                    Firnhaberstr. 29<br />
-                    86159 Augsburg<br />
-                    Deutschland</p>
+                <h2>Kontakt</h2>
+                <p>
+                    Telefon: 0821 60841050<br />
+                    E-Mail: byrousset@gmail.com
+                </p>
             </div>
         </div>
     );
