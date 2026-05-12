@@ -9,6 +9,7 @@ import {
 import LegalNotice from './LegalNotice.jsx';
 import Login from './Login.jsx';
 import Main from './Main.jsx';
+import PrivacyPolicy from './PrivacyPolicy.jsx';
 import RecipePage from './Recipe.jsx';
 import RecipeEditor from './RecipeEditor.jsx';
 import Registration from './Registration.jsx';
@@ -85,6 +86,10 @@ const router = createBrowserRouter([
   {
     path: "/legalnotice",
     element: <LegalNotice />
+  },
+  {
+    path: "/privacy",
+    element: <PrivacyPolicy />
   },
   {
     path: "/login",

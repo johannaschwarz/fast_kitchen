@@ -13,6 +13,7 @@ function Footer() {
                     {loggedIn && <span className="link" onClick={logout}>Log out</span>}
                     {(loggedIn && isAdmin) && <Link className="link" to="/register">Create user</Link>}
                     <Link className="link" to="/legalnotice">Legal notice / Impressum</Link>
+                    <Link className="link" to="/privacy">Privacy policy / Datenschutzerklärung</Link>
                 </Stack>
                 <span>© 2026 FlotteKüche {FASTKITCHEN_VERSION}</span>
             </Stack>
