@@ -62,9 +62,6 @@ class LLMRecipe(RecipeBase):
     description: str | None = Field(
         description="A short description of the recipe. Focus on the meal not original recipe text, keep it one sentence and describe it in the simplest way."
     )
-    gallery_image_urls: list[str] = Field(
-        description="A list of recipe image urls contained in the data that should be included in the recipe."
-    )
     categories: list[CategoryEnum] = Field(
         description="A list of recipe categories that should be included in the recipe. Focus on the most important labels. Less is more!"
     )

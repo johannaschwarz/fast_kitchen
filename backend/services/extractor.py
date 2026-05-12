@@ -37,25 +37,14 @@ def extract_from_url(recipe_url: str) -> LLMRecipe:
     if data.status_code == 200:
         text_data = data.text
 
-        cover_img = None
-
         if "<html" in text_data.lower():
-            soup = BeautifulSoup(text_data, "html.parser")
             # Clean the data to remove unnecessary HTML tags
             text_data = _clean_data(text_data)
-
-            if (
-                og_image := soup.find("meta", property="og:image")
-            ) and og_image.has_attr("content"):
-                cover_img = og_image.attrs.get("content")
 
         model = llm.call_llm(llm.WEB_SCRAPER_PROMPT, text_data)
 
         if not model.is_a_recipe:
             raise ValueError("The provided data is not a recipe.")
-
-        if cover_img:
-            model.gallery_image_urls.append(cover_img)
 
         # Add the URL to the recipe
         model.description += f"\n\nOriginal: {recipe_url}"

@@ -1,15 +1,11 @@
-import io
 from typing import Annotated
 
-import requests
 from db.database import Database
 from db.database_handler import get_database_connection
 from services.extractor import extract_from_url, extract_from_text
 from fastapi import APIRouter, Depends, HTTPException
-from services.image_tools import process_image
 from models.recipe import LLMRecipe, Recipe, RecipeBase
 from models.user import UserInDB
-from PIL import Image as PILImage
 from routers.user_router import get_current_active_user
 
 parser_router = APIRouter(tags=["Parser"])
@@ -23,19 +19,6 @@ async def process_llm_model(
     :param database: The database connection.
     :param recipe: The recipe object containing the extracted information.
     """
-
-    gallery_images: list[int] = []
-    for image_url in recipe.gallery_image_urls:
-        image_reponse = requests.get(image_url)
-        if image_reponse.status_code == 200:
-            image = PILImage.open(io.BytesIO(image_reponse.content))
-            data = process_image(image)
-            image_id = await database.create_image(data)
-            gallery_images.append(image_id)
-
-    recipe.gallery_images = gallery_images
-    recipe.cover_image = gallery_images[0] if gallery_images else None
-
     recipe = RecipeBase.model_validate(recipe)
 
     return await database.create_recipe(recipe, user), recipe
