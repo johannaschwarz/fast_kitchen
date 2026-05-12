@@ -1,4 +1,5 @@
 import React from 'react';
+import Footer from './Footer.jsx';
 import Header from './Header.jsx';
 
 function PrivacyPolicy() {
@@ -68,6 +69,7 @@ function PrivacyPolicy() {
                     Bei Fragen hierzu sowie zu weiteren Themen rund um den Datenschutz können Sie sich jederzeit an die oben unter "Verantwortlicher" angegebene Adresse wenden. Des Weiteren steht Ihnen ein Beschwerderecht bei der zuständigen Aufsichtsbehörde zu (Art. 77 DSGVO).
                 </p>
             </div>
+            <Footer />
         </div>
     );
 }

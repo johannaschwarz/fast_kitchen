@@ -1,4 +1,5 @@
 import React from 'react';
+import Footer from './Footer.jsx';
 import Header from './Header.jsx';
 
 function LegalNotice() {
@@ -22,6 +23,7 @@ function LegalNotice() {
                     E-Mail: byrousset@gmail.com
                 </p>
             </div>
+            <Footer />
         </div>
     );
 }
