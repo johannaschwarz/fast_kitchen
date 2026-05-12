@@ -12,7 +12,7 @@ function Footer() {
                 <Stack direction={"row"} spacing={2} justifyContent={"center"}>
                     {loggedIn && <span className="link" onClick={logout}>Log out</span>}
                     {(loggedIn && isAdmin) && <Link className="link" to="/register">Create user</Link>}
-                    <Link className="link" to="/legalnotice">Legal notice</Link>
+                    <Link className="link" to="/legalnotice">Legal notice / Impressum</Link>
                 </Stack>
                 <span>© 2026 FlotteKüche {FASTKITCHEN_VERSION}</span>
             </Stack>
