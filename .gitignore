@@ -11,6 +11,8 @@ __pycache__
 
 backend/assets/config.json
 backend/assets/creds.json
+gobackend/assets/config.json
+gobackend/assets/creds.json
 
 ############
 # FRONTEND #

@@ -1,0 +1,12 @@
+version: "2"
+sql:
+  - engine: "mysql"
+    queries: "query.sql"
+    schema: "schema.sql"
+    gen:
+      go:
+        package: "database"
+        out: "."
+        overrides:
+          - db_type: "int"
+            go_type: "int"
