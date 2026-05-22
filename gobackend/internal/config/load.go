@@ -24,7 +24,6 @@ type Config struct {
 func LoadConfig(ctx context.Context, log *slog.Logger) (*Config, error) {
 	jsonFile, err := os.Open(CONFIG_PATH)
 	if err != nil {
-		log.ErrorContext(ctx, "Failed to open config file", "error", err)
 		return nil, err
 	}
 	defer jsonFile.Close()
@@ -32,7 +31,6 @@ func LoadConfig(ctx context.Context, log *slog.Logger) (*Config, error) {
 	var config Config
 	err = json.NewDecoder(jsonFile).Decode(&config)
 	if err != nil {
-		log.ErrorContext(ctx, "Failed to decode config file", "error", err)
 		return nil, err
 	}
 
@@ -42,7 +40,6 @@ func LoadConfig(ctx context.Context, log *slog.Logger) (*Config, error) {
 func LoadCreds(ctx context.Context, log *slog.Logger) (*Creds, error) {
 	jsonFile, err := os.Open(CREDS_PATH)
 	if err != nil {
-		log.ErrorContext(ctx, "Failed to open creds file", "error", err)
 		return nil, err
 	}
 	defer jsonFile.Close()
@@ -50,7 +47,6 @@ func LoadCreds(ctx context.Context, log *slog.Logger) (*Creds, error) {
 	var creds Creds
 	err = json.NewDecoder(jsonFile).Decode(&creds)
 	if err != nil {
-		log.ErrorContext(ctx, "Failed to decode creds file", "error", err)
 		return nil, err
 	}
 
