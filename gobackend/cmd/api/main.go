@@ -20,11 +20,9 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func run() error {
+func run(logger *slog.Logger) error {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
-
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
 	cfg, err := config.LoadConfig(ctx, logger)
 	if err != nil {
@@ -79,8 +77,9 @@ func run() error {
 }
 
 func main() {
-	if err := run(); err != nil {
-		fmt.Fprintf(os.Stderr, "error: %s", err.Error())
+	log := slog.New(slog.NewJSONHandler(os.Stdout, nil))
+	if err := run(log); err != nil {
+		log.Error("run failed", "error", err.Error())
 		os.Exit(1)
 	}
 }
