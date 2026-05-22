@@ -3,6 +3,8 @@ version: '3'
 vars:
   FRONTEND_DIR: frontend
   BACKEND_DIR: backend
+  GOBACKEND_DIR: gobackend
+  SQLC_DIR: gobackend/internal/driven/adapters/database
 
 tasks:
   install-frontend:
@@ -14,6 +16,13 @@ tasks:
     dir: '{{.BACKEND_DIR}}'
     cmds:
       - pip install -r requirements.txt
+
+  install-sqlc:
+    dir: '{{.GOBACKEND_DIR}}'
+    status:
+      - command -v sqlc && sqlc version | grep -q "1.31.1"
+    cmds:
+      - go install github.com/sqlc-dev/sqlc/cmd/sqlc@v1.31.1
 
   install:
     desc: Install all dependencies
@@ -32,6 +41,20 @@ tasks:
     dir: '{{.BACKEND_DIR}}'
     cmds:
       - python app.py
+    
+  gobackend:
+    desc: Start the go backend server
+    dir: '{{.GOBACKEND_DIR}}'
+    cmds:
+      - go run cmd/api/main.go
+  
+  gensqlc:
+    desc: Generate sqlc code
+    dir: '{{.SQLC_DIR}}'
+    deps:
+      - install-sqlc
+    cmds:
+      - PATH="$PATH:$HOME/go/bin" sqlc generate -f sqlc.yml
 
   clean:
     desc: Clean up node_modules and python cache
