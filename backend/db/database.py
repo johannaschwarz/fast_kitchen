@@ -179,6 +179,8 @@ class MySQLDatabase(Database):
 
     CONFIG = load_config()
     CREDENTIALS = load_credentials()
+    # MySQL user connection limit; shared across all requests via a single pool.
+    MAX_POOL_SIZE = 14
 
     def __init__(self, mysql_pool):
         self.pool = mysql_pool
@@ -186,7 +188,7 @@ class MySQLDatabase(Database):
     @staticmethod
     async def create():
         pool = await aiomysql.create_pool(
-            maxsize=20,
+            maxsize=MySQLDatabase.MAX_POOL_SIZE,
             host=MySQLDatabase.CONFIG["database_ip"],
             port=int(MySQLDatabase.CONFIG["database_port"]),
             user=MySQLDatabase.CREDENTIALS["database_user"],
