@@ -11,8 +11,8 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
           node-version: 21
       - name: 🔨 Build Project
@@ -21,7 +21,7 @@ jobs:
           npm ci
           npm run build
       - name: 📂 Archive build artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: production-build
           include-hidden-files: true
@@ -31,7 +31,7 @@ jobs:
     needs: build
     steps:
       - name: Download production build artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: production-build
       - name: 🚀 Sync files
