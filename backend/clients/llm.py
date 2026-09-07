@@ -1,11 +1,10 @@
-from utils import load_config
 import logging
 import os
 
-from models.recipe import LLMRecipe
-from utils import load_credentials
 from langchain.chat_models import init_chat_model
 from langchain_core.callbacks import UsageMetadataCallbackHandler
+from models.recipe import LLMRecipe
+from utils import load_config, load_credentials
 
 MODEL = load_config()["extraction_llm"]
 os.environ["OPENAI_API_KEY"] = load_credentials()["openai_key"]
@@ -21,11 +20,15 @@ WEB_SCRAPER_PROMPT = """You are a web scraper.
                 IF THE DATA IS NOT A RECIPE FOR A MEAL OR DRINK RETURN NOTHING!!!"""
 
 USER_TEXT_PROMPT = """You are a recipe extractor.
-                You only output German. Even ingredients. You only use celsius for temperature.
+                You only output German. Even ingredients. You only use celsius for temperature, also instead of using cups as a unit you use milliliters.
                 You are given a piece of data that holds information about a recipe.
                 You are also given a schema that is the target format of the recipe.
+                It is also VERY important to keep the right order of instruction steps!
                 You need to extract the information from the data and return it in the schema format.
-                IF THE DATA IS NOT A RECIPE FOR A MEAL OR DRINK RETURN NOTHING!!!"""
+                IF THE DATA IS NOT A RECIPE FOR A MEAL OR DRINK RETURN NOTHING!!!
+                
+                If the original recipe contains some embellishment in it's text or unique ways of writing that don't affect the recipe at its core, do not pass that on into our recipe.
+                """
 
 
 def get_model_provider(model: str) -> str:
