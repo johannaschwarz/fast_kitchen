@@ -197,7 +197,7 @@
 
 .ingredient-amount-and-name {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 8px;
     width: 100%;
 }
@@ -210,7 +210,17 @@
 
 .ingredient-name-container {
     flex: 1;
+    min-width: 0;
     text-align: left;
+}
+
+.yeast-conversion {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    color: var(--dark-green);
+    overflow-wrap: anywhere;
 }
 
 .ingredient-name {

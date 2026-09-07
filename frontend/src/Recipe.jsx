@@ -16,6 +16,7 @@ import Footer from './Footer.jsx';
 import Header from './Header.jsx';
 import './Recipe.css';
 import { AuthContext } from './index.jsx';
+import { getYeastConversion } from './yeastConversion.js';
 
 // Constants
 const ROUNDING_DECIMAL_PLACES = 2;
@@ -219,50 +220,58 @@ function Recipe({ recipe }) {
         setCustomAmounts({}); // Reset custom amounts when portions change
     };
 
-    const renderIngredientInput = (ingredient) => (
-        <div className="ingredient-row">
-            <div className="ingredient-amount-and-name">
-                {editingIngredient === ingredient.id && (
-                    <input
-                        type="text"
-                        inputMode="decimal"
-                        value={getDisplayAmountForInput(ingredient)}
-                        onChange={(e) => handleIngredientAmountChange(ingredient.id, e.target.value)}
-                        onBlur={() => {
-                            validateAndApplyIngredientChange(ingredient.id);
-                            setEditingIngredient(null);
-                        }}
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
+    const renderIngredientInput = (ingredient) => {
+        const yeastConversion = getYeastConversion(ingredient, getDisplayAmount(ingredient));
+        return (
+            <div className="ingredient-row">
+                <div className="ingredient-amount-and-name">
+                    {editingIngredient === ingredient.id && (
+                        <input
+                            type="text"
+                            inputMode="decimal"
+                            value={getDisplayAmountForInput(ingredient)}
+                            onChange={(e) => handleIngredientAmountChange(ingredient.id, e.target.value)}
+                            onBlur={() => {
                                 validateAndApplyIngredientChange(ingredient.id);
                                 setEditingIngredient(null);
-                            }
-                        }}
-                        autoFocus
-                        className="amount-input"
-                    />
-                )}
-                {!(editingIngredient === ingredient.id) && (
-                    <div className="ingredient-amount">
-                        <span
-                            className="clickable-amount"
-                            onClick={() => setEditingIngredient(ingredient.id)}
-                        >
-                            {getDisplayAmount(ingredient)} {ingredient.unit}
-                        </span>
+                            }}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                    validateAndApplyIngredientChange(ingredient.id);
+                                    setEditingIngredient(null);
+                                }
+                            }}
+                            autoFocus
+                            className="amount-input"
+                        />
+                    )}
+                    {!(editingIngredient === ingredient.id) && (
+                        <div className="ingredient-amount">
+                            <span
+                                className="clickable-amount"
+                                onClick={() => setEditingIngredient(ingredient.id)}
+                            >
+                                {getDisplayAmount(ingredient)} {ingredient.unit}
+                            </span>
+                        </div>
+                    )}
+                    <div className="ingredient-name-container">
+                        <span className="ingredient-name">{ingredient.name}</span>
+                        {yeastConversion && (
+                            <span className="yeast-conversion" title={yeastConversion.title}>
+                                {yeastConversion.text}
+                            </span>
+                        )}
+                    </div>
+                </div>
+                {warnings[ingredient.id] && (
+                    <div className="warning-message">
+                        {warnings[ingredient.id]}
                     </div>
                 )}
-                <div className="ingredient-name-container">
-                    <span className="ingredient-name">{ingredient.name}</span>
-                </div>
             </div>
-            {warnings[ingredient.id] && (
-                <div className="warning-message">
-                    {warnings[ingredient.id]}
-                </div>
-            )}
-        </div>
-    );
+        );
+    };
 
     if (recipe === null || recipe.id_ === undefined) {
         return null;
