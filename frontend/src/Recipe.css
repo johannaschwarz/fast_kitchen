@@ -216,6 +216,7 @@
 
 .yeast-conversion {
     display: block;
+    white-space: pre-line;
     margin-top: 4px;
     font-size: 0.875rem;
     line-height: 1.4;

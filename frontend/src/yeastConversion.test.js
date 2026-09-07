@@ -22,9 +22,15 @@ test('dry yeast names convert to fresh yeast in either language', () => {
     }
 });
 
-test('unspecified yeast makes the fresh-yeast assumption visible', () => {
-    assert.equal(convert('Hefe', 21).text, '≈ 7 g Trockenhefe (als frische Hefe angenommen)');
-    assert.equal(convert('yeast', 21).text, '≈ 7 g dry yeast (assuming fresh yeast)');
+test('unspecified or ambiguous yeast shows both conditional conversions', () => {
+    for (const name of ['Hefe', 'Backhefe', 'frische Hefe oder Trockenhefe']) {
+        assert.equal(convert(name, 21).text, 'Falls frisch: ≈ 7 g Trockenhefe\nFalls trocken: ≈ 63 g frische Hefe');
+    }
+    for (const name of ['yeast', 'fresh or dry yeast']) {
+        assert.equal(convert(name, 21).text, 'If fresh: ≈ 7 g dry yeast\nIf dry: ≈ 63 g fresh yeast');
+    }
+    assert.equal(convert('Hefe', 0.0105, 'kg').text, 'Falls frisch: ≈ 3,5 g Trockenhefe\nFalls trocken: ≈ 31,5 g frische Hefe');
+    assert.equal(convert('yeast', 42).text, 'If fresh: ≈ 14 g dry yeast\nIf dry: ≈ 126 g fresh yeast');
 });
 
 test('uses the current scaled amount and converts kilograms to grams before rounding', () => {
@@ -35,8 +41,8 @@ test('uses the current scaled amount and converts kilograms to grams before roun
     assert.equal(convert('fresh yeast', 0.01).text, '≈ < 0.01 g dry yeast');
 });
 
-test('does not substitute non-baking yeast, other ingredients, or mixed yeast types', () => {
-    for (const name of ['flour', 'Hefeflocken', 'Hefeextrakt', 'Bierhefe', 'nutritional yeast', "brewer’s yeast", 'yeast flakes', 'inactive yeast', 'yeast extract', 'Hefeteig', 'yeast-free flour', 'Mehl ohne Hefe', 'frische Hefe oder Trockenhefe', 'fresh or dry yeast']) {
+test('does not substitute non-baking yeast or other ingredients', () => {
+    for (const name of ['flour', 'Hefeflocken', 'Hefeextrakt', 'Bierhefe', 'nutritional yeast', "brewer’s yeast", 'yeast flakes', 'inactive yeast', 'yeast extract', 'Hefeteig', 'yeast-free flour', 'Mehl ohne Hefe']) {
         assert.equal(convert(name, 21), null, name);
     }
 });
