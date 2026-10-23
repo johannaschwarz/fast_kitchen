@@ -4,6 +4,7 @@ import { ThreeDots } from 'react-loader-spinner';
 import { Link } from "react-router-dom";
 import { API_BASE } from './Config';
 import RecipeCard from './RecipeCard';
+import { loadRecipeResults } from './loadRecipeResults.js';
 import './Recipes.css';
 
 import { ArrowDownward, ArrowUpward } from '@mui/icons-material';
@@ -41,10 +42,11 @@ function Recipes({ filters, search }) {
             params.append("search", search);
         }
 
-        fetch(API_BASE + (filtered ? 'recipe/filtered?' : 'recipe/all?') + params)
-            .then((response) => response.json())
-            .then((data) => setResult({ key: queryKey, recipes: data }))
-            .catch((error) => console.error('Error fetching recipes:', error));
+        return loadRecipeResults(
+            API_BASE + (filtered ? 'recipe/filtered?' : 'recipe/all?') + params,
+            queryKey,
+            setResult,
+        );
     }, [filters, search, sortByOption, sortOrder, queryKey]);
 
     return (
