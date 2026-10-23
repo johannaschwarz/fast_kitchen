@@ -25,7 +25,6 @@ function Header({ setSearchInput }) {
             return
         }
 
-        setResults([])
         let params = new URLSearchParams()
 
         if (search != null && search.length > 0) {
@@ -37,7 +36,6 @@ function Header({ setSearchInput }) {
         // Limit the number of results to 10
         params.append("limit", 10)
 
-        setLoading(true)
         fetch(API_BASE + 'recipe/filtered?' + new URLSearchParams(params))
             .then((response) => response.json())
             .then((data) => {
@@ -68,7 +66,11 @@ function Header({ setSearchInput }) {
                 getOptionLabel={(option) =>
                     typeof option === 'string' ? option : option.title
                 }
-                onInputChange={(_e, val) => setSearch(val)}
+                onInputChange={(_e, val) => {
+                    setResults([])
+                    setSearch(val)
+                    setLoading(val.length > 0)
+                }}
                 renderOption={(props, option) => {
                     return (
                         <Link  {...props} className='search-result' to={`/recipe/${option.id_}`}>{option.title}</Link>

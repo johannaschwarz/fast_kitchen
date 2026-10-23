@@ -15,24 +15,11 @@ import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
 
 function Recipes({ filters, search }) {
-    const [recipes, setRecipies] = useState(null)
+    const [result, setResult] = useState({ key: null, recipes: null })
     const [sortByOption, setSortByOption] = useState('Clicks');
     const [sortOrder, setSortOrder] = useState('DESC');
-
-    const fetchSortedRecipes = async (sortByOption, sortOrder) => {
-        setRecipies(null);
-        try {
-            let params = new URLSearchParams()
-            params.append("sort_by", sortByOption)
-            params.append("sort_order", sortOrder)
-
-            const response = await fetch(API_BASE + 'recipe/all?' + new URLSearchParams(params));
-            const data = await response.json();
-            setRecipies(data);
-        } catch (error) {
-            console.error('Error fetching sorted recipes:', error);
-        }
-    }
+    const queryKey = JSON.stringify([filters, search, sortByOption, sortOrder]);
+    const recipes = result.key === queryKey ? result.recipes : null;
 
     const handleSortByChange = (e) => {
         setSortByOption(e.target.value);
@@ -43,31 +30,22 @@ function Recipes({ filters, search }) {
     }
 
     useEffect(() => {
-        if ((filters != null && filters.length > 0) || (search != null && search.length > 0)) {
-            setRecipies(null)
-            let params = new URLSearchParams()
-            params.append("sort_by", sortByOption)
-            params.append("sort_order", sortOrder)
-
-            if (filters != null && filters.length > 0) {
-                filters.map((filter) => params.append("categories", filter))
-            }
-            if (search != null && search.length > 0) {
-                params.append("search", search)
-            }
-
-            fetch(API_BASE + 'recipe/filtered?' + new URLSearchParams(params))
-                .then((response) => response.json())
-                .then((data) => {
-                    setRecipies(data)
-                })
-                .catch((err) => {
-                    console.log(err.message)
-                });
-        } else {
-            fetchSortedRecipes(sortByOption, sortOrder);
+        const params = new URLSearchParams();
+        params.append("sort_by", sortByOption);
+        params.append("sort_order", sortOrder);
+        const filtered = (filters != null && filters.length > 0) || (search != null && search.length > 0);
+        if (filters != null && filters.length > 0) {
+            filters.forEach((filter) => params.append("categories", filter));
         }
-    }, [filters, search, sortByOption, sortOrder]);
+        if (search != null && search.length > 0) {
+            params.append("search", search);
+        }
+
+        fetch(API_BASE + (filtered ? 'recipe/filtered?' : 'recipe/all?') + params)
+            .then((response) => response.json())
+            .then((data) => setResult({ key: queryKey, recipes: data }))
+            .catch((error) => console.error('Error fetching recipes:', error));
+    }, [filters, search, sortByOption, sortOrder, queryKey]);
 
     return (
         <div>
