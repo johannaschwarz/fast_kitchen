@@ -1,2 +1,3 @@
 # Recipe Manager Web App
-[flottekueche.de](https://flottekueche.de)
+
+Visit the web app at [flottekueche.de](https://flottekueche.de).
