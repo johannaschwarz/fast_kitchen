@@ -242,7 +242,7 @@ function Step({ index, step, onChangeDesciption, onDelete, onUploadImage, onDele
                             type="text"
                             id="step"
                             name="step"
-                            label="Anleitung"
+                            label="Schritt"
                             onChange={onChangeDesciption}
                             value={step.description}
                             sx={{
@@ -455,7 +455,7 @@ function RecipeEditor() {
         }
 
         if (steps.filter(step => step.description.trim() !== "").length === 0) {
-            setAlertMessage("Bitte gib mindestens einen Zubereitungsschritt ein.");
+            setAlertMessage("Bitte gib mindestens einen Schritt ein.");
             return false;
         }
         return true;
@@ -584,12 +584,12 @@ function RecipeEditor() {
                 navigate('/edit/' + data.id_);
             } else {
                 const error = await response.json();
-                setAlertMessage('Rezept konnte nicht erkannt werden: ' + error.detail);
+                setAlertMessage('Rezept konnte nicht verarbeitet werden: ' + error.detail);
                 setAlertSeverity("error");
             }
         } catch (err) {
             console.error(err);
-            setAlertMessage('Das Rezept konnte nicht erkannt werden. Bitte versuch es später erneut.');
+            setAlertMessage('Das Rezept konnte nicht verarbeitet werden. Bitte versuch es später erneut.');
             setAlertSeverity("error");
         }
 
@@ -727,7 +727,7 @@ function RecipeEditor() {
                                 </Stack>
                                 <Divider sx={{ borderColor: 'var(--input-border)' }} />
 
-                                <h3>Zubereitung:</h3>
+                                <h3>Anleitung:</h3>
                                 <div>
                                     <StepsList steps={steps} setSteps={setSteps} />
                                 </div>
@@ -787,7 +787,7 @@ function RecipeEditor() {
                         </p>
                         <p className="loading-hint">
                             {importing
-                                ? 'Dein Rezept wird erkannt. Das kann einen Moment dauern.'
+                                ? 'Dein Rezept wird verarbeitet. Das kann einen Moment dauern.'
                                 : storing
                                     ? 'Fast geschafft…'
                                     : 'Rezeptdetails werden abgerufen…'}
