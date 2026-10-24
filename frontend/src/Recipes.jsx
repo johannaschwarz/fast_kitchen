@@ -72,9 +72,9 @@ function Recipes({ filters, search, sortByOption, sortOrder, setSortByOption, se
                         onChange={handleSortByChange}
                     >
                         <MenuItem value={"Clicks"}>Aufrufe</MenuItem>
-                        <MenuItem value={"RecipeID"}>Erstellungsdatum</MenuItem>
+                        <MenuItem value={"RecipeID"}>Datum</MenuItem>
                         <MenuItem value={"Title"}>Titel</MenuItem>
-                        <MenuItem value={"CookingTime"}>Zubereitungszeit</MenuItem>
+                        <MenuItem value={"CookingTime"}>Zeit</MenuItem>
                     </Select>
                 </FormControl>
                 <ToggleButton aria-label={sortOrder === 'ASC' ? 'Absteigend sortieren' : 'Aufsteigend sortieren'} value="ASC" onClick={toggleSortOrder} size="small">
