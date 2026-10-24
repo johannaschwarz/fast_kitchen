@@ -180,7 +180,7 @@ class MySQLDatabase(Database):
     CONFIG = load_config()
     CREDENTIALS = load_credentials()
     # MySQL user connection limit; shared across all requests via a single pool.
-    MAX_POOL_SIZE = 14
+    MAX_POOL_SIZE = 7
 
     def __init__(self, mysql_pool):
         self.pool = mysql_pool
