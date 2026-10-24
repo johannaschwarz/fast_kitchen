@@ -672,7 +672,7 @@ function RecipeEditor() {
                         <Divider sx={{ borderColor: 'var(--input-border)' }} />
 
                         <h3>Bilder:</h3>
-                        <UploadButton component="label" variant="contained" htmlFor="cover_image" startIcon={<CloudUploadIcon />}>
+                        <UploadButton component="label" variant="contained" htmlFor="cover_image" startIcon={<CloudUploadIcon />} sx={{ textTransform: 'none' }}>
                             Titelbild
                             <VisuallyHiddenInput type="file" id="cover_image" name="cover_image" accept="image/*" onChange={uploadCoverImageOnChange} />
                         </UploadButton><br />
@@ -684,7 +684,7 @@ function RecipeEditor() {
                         }
                         <br />
 
-                        <UploadButton component="label" variant="contained" htmlFor="gallery_images" startIcon={<CloudUploadIcon />}>
+                        <UploadButton component="label" variant="contained" htmlFor="gallery_images" startIcon={<CloudUploadIcon />} sx={{ textTransform: 'none' }}>
                             Bilder Galerie
                             <VisuallyHiddenInput type="file" id="gallery_images" name="gallery_images" accept="image/*" onChange={uploadGalleryImageOnChange} />
                         </UploadButton><br />
