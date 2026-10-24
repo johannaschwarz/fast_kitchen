@@ -16,3 +16,7 @@
     font-weight: bold;
     border-color: var(--primary-color);
 }
+
+:root:not([data-theme="dark"]) .filter-chip.active {
+    color: white;
+}

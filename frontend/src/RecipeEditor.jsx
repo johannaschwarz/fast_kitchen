@@ -131,7 +131,7 @@ function Ingredient({ ingredient, onChangeIngredient, onChangeAmount, onChangeUn
         <Stack direction="row" spacing={2}>
             <TextField slotProps={inputProps} sx={textFieldSx} type="text" id="ingredient" name="ingredient" label="Zutat" onChange={onChangeIngredient} value={ingredient.name} />
             <TextField slotProps={inputProps} sx={textFieldSx} min="0" type="number" id="amount" name="amount" label="Menge" onWheel={(e) => e.target.blur()} onChange={onChangeAmount} value={ingredient.amount} />
-            <TextField slotProps={inputProps} sx={textFieldSx} select label="Einheit" id="unit" name="unit" defaultValue={"g"} onChange={onChangeUnit} value={ingredient.unit} >
+            <TextField slotProps={inputProps} sx={{ ...textFieldSx, width: 110, flexShrink: 0 }} select label="Einheit" id="unit" name="unit" defaultValue={"g"} onChange={onChangeUnit} value={ingredient.unit} >
                 {measureUnits.map((option) => (
                     <MenuItem key={option} value={option} sx={{ color: 'var(--text-color)', '&:hover': { backgroundColor: 'var(--input-border)' } }}>
                         {unitLabels[option] ?? option}
