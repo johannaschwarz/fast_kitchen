@@ -9,7 +9,7 @@ import { Link } from 'react-router-dom';
 import { API_BASE } from './Config';
 import { AuthContext, ThemeModeContext } from './index.jsx';
 
-function Header({ setSearchInput }) {
+function Header({ searchInput = '', setSearchInput }) {
     const { loggedIn } = useContext(AuthContext);
     const [search, setSearch] = useState('');
     const [results, setResults] = useState([]);
@@ -100,6 +100,7 @@ function Header({ setSearchInput }) {
             }
             {setSearchInput !== undefined && <TextField
                 className='search-bar'
+                value={searchInput}
                 placeholder="Search for recipes"
                 InputProps={{
                     ...inputProps,

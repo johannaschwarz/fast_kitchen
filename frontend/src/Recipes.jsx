@@ -14,10 +14,8 @@ import MenuItem from '@mui/material/MenuItem';
 import Select from '@mui/material/Select';
 import Stack from '@mui/material/Stack';
 
-function Recipes({ filters, search }) {
+function Recipes({ filters, search, sortByOption, sortOrder, setSortByOption, setSortOrder }) {
     const [recipes, setRecipies] = useState(null)
-    const [sortByOption, setSortByOption] = useState('Clicks');
-    const [sortOrder, setSortOrder] = useState('DESC');
 
     const fetchSortedRecipes = async (sortByOption, sortOrder) => {
         setRecipies(null);
@@ -39,7 +37,7 @@ function Recipes({ filters, search }) {
     };
 
     const toggleSortOrder = () => {
-        setSortOrder((prevOrder) => prevOrder === 'ASC' ? 'DESC' : 'ASC');
+        setSortOrder(sortOrder === 'ASC' ? 'DESC' : 'ASC');
     }
 
     useEffect(() => {

@@ -4,7 +4,7 @@ import { API_BASE } from './Config';
 import Filter from './Filter';
 
 const defaultFilters = ['Vegan', 'Vegetarian', 'Quick & Easy'];
-function Filters({ setFilter }) {
+function Filters({ activeFilters, setFilter }) {
     const [filters, setFilters] = useState(defaultFilters);
 
     useEffect(() => {
@@ -22,7 +22,7 @@ function Filters({ setFilter }) {
     return (
         <div className="filters">
             {filters.map((filter, index) => (
-                <Filter key={index} label={filter} setFilter={setFilter} />
+                <Filter key={index} label={filter} active={activeFilters.includes(filter)} setFilter={setFilter} />
             ))}
         </div>
     );

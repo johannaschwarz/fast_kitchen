@@ -1,12 +1,9 @@
 // Filter.js
-import React, { useState } from 'react';
+import React from 'react';
 import './Filter.css';
 
-function Filter({ label, setFilter }) {
-    const [active, setActive] = useState(false);
-
+function Filter({ label, active, setFilter }) {
     const handleClick = () => {
-        setActive(!active);
         setFilter(label, !active);
     };
 
