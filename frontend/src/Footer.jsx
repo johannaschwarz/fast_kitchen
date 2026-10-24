@@ -9,11 +9,11 @@ function Footer() {
     return (
         <footer>
             <Stack direction={"column"} spacing={2}>
-                <Stack direction={"row"} spacing={2} justifyContent={"center"}>
-                    {loggedIn && <span className="link" onClick={logout}>Log out</span>}
-                    {(loggedIn && isAdmin) && <Link className="link" to="/register">Create user</Link>}
-                    <Link className="link" to="/legalnotice">Legal notice / Impressum</Link>
-                    <Link className="link" to="/privacy">Privacy policy / Datenschutzerklärung</Link>
+                <Stack direction={"row"} spacing={2} useFlexGap sx={{ flexWrap: 'wrap' }} justifyContent={"center"}>
+                    {loggedIn && <span className="link" onClick={logout}>Abmelden</span>}
+                    {(loggedIn && isAdmin) && <Link className="link" to="/register">Benutzer anlegen</Link>}
+                    <Link className="link" to="/legalnotice">Impressum</Link>
+                    <Link className="link" to="/privacy">Datenschutzerklärung</Link>
                 </Stack>
                 <span>© 2026 FlotteKüche {FASTKITCHEN_VERSION}</span>
             </Stack>

@@ -17,13 +17,14 @@ import Header from './Header.jsx';
 import './Recipe.css';
 import { AuthContext } from './index.jsx';
 import { getYeastConversion } from './yeastConversion.js';
+import { unitLabels } from './recipeDisplayLabels.js';
 
 // Constants
 const ROUNDING_DECIMAL_PLACES = 2;
 const WARNING_MESSAGES = {
-    INVALID_NUMBER: 'Please enter a valid number',
-    AMOUNT_TOO_SMALL: 'Amount must be greater than 0',
-    PORTIONS_TOO_SMALL: 'Portions must be greater than 0'
+    INVALID_NUMBER: 'Bitte gib eine gültige Zahl ein.',
+    AMOUNT_TOO_SMALL: 'Die Menge muss größer als 0 sein.',
+    PORTIONS_TOO_SMALL: 'Die Portionsanzahl muss größer als 0 sein.'
 };
 
 function Recipe({ recipe }) {
@@ -44,7 +45,7 @@ function RecipeContent({ recipe }) {
     const [ingredients] = useState(() => {
         const groups = {};
         (recipe.ingredients || []).forEach((ingredient, index) => {
-            const group = ingredient.group || 'Main';
+            const group = ingredient.group || '';
             if (!groups[group]) {
                 groups[group] = [];
             }
@@ -234,6 +235,7 @@ function RecipeContent({ recipe }) {
                                 }
                             }}
                             autoFocus
+                            aria-label={"Menge für " + ingredient.name}
                             className="amount-input"
                         />
                     )}
@@ -243,7 +245,7 @@ function RecipeContent({ recipe }) {
                                 className="clickable-amount"
                                 onClick={() => setEditingIngredient(ingredient.id)}
                             >
-                                {getDisplayAmount(ingredient)} {ingredient.unit}
+                                {getDisplayAmount(ingredient)} {unitLabels[ingredient.unit] ?? ingredient.unit}
                             </span>
                         </div>
                     )}
@@ -271,7 +273,7 @@ function RecipeContent({ recipe }) {
                 {galleryImages.length > 0 &&
                     <ImageCarousel>
                         {galleryImages.map((image, index) =>
-                            <img key={index} className="carousel-image" src={API_BASE + "image/" + image} alt={recipe.name} />
+                            <img key={index} className="carousel-image" src={API_BASE + "image/" + image} alt={recipe.title} />
                         )}
                     </ImageCarousel>
                 }
@@ -280,7 +282,7 @@ function RecipeContent({ recipe }) {
                     {
                         (isAdmin || parseInt(user) === recipe.creator_id) &&
                         <Stack direction="row" alignItems="center" gap={1}>
-                            <IconButton component={Link} to={"/edit/" + recipe.id_} aria-label="edit">
+                            <IconButton component={Link} to={"/edit/" + recipe.id_} aria-label="Rezept bearbeiten">
                                 <EditIcon />
                             </IconButton>
                             <DeleteAlertDialog recipe_id={recipe.id_} token={token} />
@@ -296,7 +298,7 @@ function RecipeContent({ recipe }) {
                 <p className='recipeDescription'>{recipe.description}</p>
             </div>
             <div className='card'>
-                <h2>Ingredients:</h2>
+                <h2>Zutaten:</h2>
                 <div className="ingredients-list">
                     <div className="portions-row">
                         <div className="portions-amount-and-label">
@@ -317,6 +319,7 @@ function RecipeContent({ recipe }) {
                                         }
                                     }}
                                     autoFocus
+                                    aria-label="Portionsanzahl"
                                     className="portions-input"
                                 />
                             )}
@@ -331,7 +334,7 @@ function RecipeContent({ recipe }) {
                                 </div>
                             )}
                             <div className="portions-label-container">
-                                <span className="portions-label">Portions</span>
+                                <span className="portions-label">Portionen</span>
                             </div>
                         </div>
 
@@ -346,7 +349,7 @@ function RecipeContent({ recipe }) {
                             <div key={groupIndex}>
                                 {ingredients.length > 1 &&
                                     <div>
-                                        <h3>{ingredientGroup.group}</h3>
+                                        <h3>{ingredientGroup.group || 'Zutaten'}</h3>
                                         {ingredientGroup.ingredients.map((ingredient, ingredientIndex) => (
                                             <div key={ingredientIndex} className="ingredient-item">
                                                 {renderIngredientInput(ingredient)}
@@ -386,7 +389,7 @@ function RecipeContent({ recipe }) {
                         <div className='imageCard recipeStepContent'>
                             {step.images.length > 0 && <ImageCarousel className="recipeStepCarousel">
                                 {step.images.map((image, imgIndex) => (
-                                    <img key={imgIndex} className="carousel-image" src={API_BASE + "image/" + image} alt={"Step" + index + " image " + imgIndex} />
+                                    <img key={imgIndex} className="carousel-image" src={API_BASE + "image/" + image} alt={"Schritt " + (index + 1) + ", Bild " + (imgIndex + 1)} />
                                 ))}
                             </ImageCarousel>}
                             <span className="instructionText">{step.step}</span>
@@ -424,7 +427,7 @@ function DeleteAlertDialog({ recipe_id, token }) {
 
     return (
         <React.Fragment>
-            <IconButton onClick={handleClickOpen} aria-label="delete" color="error">
+            <IconButton onClick={handleClickOpen} aria-label="Rezept löschen" color="error">
                 <DeleteIcon />
             </IconButton>
             <Dialog
@@ -434,12 +437,12 @@ function DeleteAlertDialog({ recipe_id, token }) {
                 aria-describedby="alert-dialog-description"
             >
                 <DialogTitle id="alert-dialog-title" style={{ color: 'var(--text-color)' }}>
-                    {"Are you sure you want to delete this recipe?"}
+                    {"Möchtest du dieses Rezept wirklich löschen?"}
                 </DialogTitle>
                 <DialogActions>
-                    <button onClick={handleDeleteTrue} className="deleteButton">Delete</button>
+                    <button onClick={handleDeleteTrue} className="deleteButton">Löschen</button>
                     <button onClick={handleClose} autoFocus>
-                        No
+                        Abbrechen
                     </button>
                 </DialogActions>
             </Dialog >
@@ -489,7 +492,7 @@ function RecipePage() {
                     width="80"
                     color="var(--dark-green)"
                     radius="9"
-                    ariaLabel="three-dots-loading"
+                    ariaLabel="Rezept wird geladen"
                     wrapperStyle={{}}
                     wrapperClass=""
                 />

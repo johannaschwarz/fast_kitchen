@@ -10,7 +10,7 @@ function RecipeCard({ recipe }) {
         <div className="recipe-card">
             <div className="image-container">
                 {recipe.cover_image !== null ? (
-                    <img src={API_BASE + "image/" + recipe.cover_image} alt={recipe.name} />
+                    <img src={API_BASE + "image/" + recipe.cover_image} alt={recipe.title} />
                 ) : (
                     <div className="missingImage"><RamenDiningOutlinedIcon /></div>
                 )}
@@ -25,7 +25,7 @@ function RecipeCard({ recipe }) {
             </div>
 
             <h3>{recipe.title}</h3>
-            <span className="creator">by {recipe.creator ? recipe.creator : "an unknown cook"}</span>
+            <span className="creator">von {recipe.creator ? recipe.creator : "Unbekannt"}</span>
             <p className="rating">{recipe.rating}</p>
             {recipe.categories.map((label, index) => (
                 <span key={index} className="label">{label}</span>

@@ -1,4 +1,5 @@
 import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { deDE } from '@mui/material/locale';
 import Cookies from 'js-cookie';
 import { createContext, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
@@ -110,7 +111,7 @@ const ThemeModeProvider = ({ children }) => {
     palette: {
       mode,
     },
-  });
+  }, deDE);
   const toggleThemeMode = () => {
     setMode((prevMode) => (prevMode === 'light' ? 'dark' : 'light'));
   };

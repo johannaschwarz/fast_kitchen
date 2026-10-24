@@ -42,15 +42,15 @@ function Registration() {
             });
             console.log(newUserIsAdmin);
             if (response.ok) {
-                setCreateUserInfo("User created successfully")
+                setCreateUserInfo("Benutzer erfolgreich angelegt.")
             } else {
                 const data = await response.json();
                 console.log(data);
-                setCreateUserError('Login failed: ' + data.detail);
+                setCreateUserError('Benutzer konnte nicht angelegt werden: ' + data.detail);
             }
         } catch (err) {
             console.error(err);
-            setCreateUserError('Login failed, please try again later.');
+            setCreateUserError('Der Benutzer konnte nicht angelegt werden. Bitte versuch es später erneut.');
         }
         setLoading(false);
     }
@@ -63,12 +63,12 @@ function Registration() {
                 {createUserInfo && <Alert severity="info">{createUserInfo}</Alert>}
                 <form onSubmit={handleCreation}>
                     <Stack>
-                        <h3>Create a user</h3>
-                        <TextField type="text" label="Username" value={username} required onChange={(event) => setUsername(event.target.value)} /><br />
-                        <TextField type="password" label="Password" value={password} required onChange={(event) => setPassword(event.target.value)} /><br />
-                        <FormControlLabel control={<Checkbox checked={newUserIsAdmin} onChange={(e) => setNewUserIsAdmin(e.target.checked)} />} label="Is Admin" /><br />
-                        {!loading && <button type="submit" className="btn">Create</button>}
-                        {loading && <Stack direction={"row"} alignSelf="center"><CircularProgress /></Stack>}
+                        <h3>Benutzer anlegen</h3>
+                        <TextField type="text" label="Benutzername" value={username} required onChange={(event) => setUsername(event.target.value)} /><br />
+                        <TextField type="password" label="Passwort" value={password} required onChange={(event) => setPassword(event.target.value)} /><br />
+                        <FormControlLabel control={<Checkbox checked={newUserIsAdmin} onChange={(e) => setNewUserIsAdmin(e.target.checked)} />} label="Administratorrechte" /><br />
+                        {!loading && <button type="submit" className="btn">Anlegen</button>}
+                        {loading && <Stack direction={"row"} alignSelf="center"><CircularProgress aria-label="Benutzer wird angelegt" /></Stack>}
                     </Stack>
                 </form>
             </div>

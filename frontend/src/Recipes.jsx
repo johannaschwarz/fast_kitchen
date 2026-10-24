@@ -63,21 +63,21 @@ function Recipes({ filters, search, sortByOption, sortOrder, setSortByOption, se
                     alignItems: "center",
                 }}>
                 <FormControl size="small">
-                    <InputLabel id="sort-label">Sorting</InputLabel>
+                    <InputLabel id="sort-label">Sortierung</InputLabel>
                     <Select
                         labelId="sort-label"
                         id="sort-select"
                         value={sortByOption}
-                        label="Sorting"
+                        label="Sortierung"
                         onChange={handleSortByChange}
                     >
-                        <MenuItem value={"Clicks"}>Clicks</MenuItem>
-                        <MenuItem value={"RecipeID"}>Date Created</MenuItem>
-                        <MenuItem value={"Title"}>Title</MenuItem>
-                        <MenuItem value={"CookingTime"}>Cooking Time</MenuItem>
+                        <MenuItem value={"Clicks"}>Aufrufe</MenuItem>
+                        <MenuItem value={"RecipeID"}>Erstellungsdatum</MenuItem>
+                        <MenuItem value={"Title"}>Titel</MenuItem>
+                        <MenuItem value={"CookingTime"}>Zubereitungszeit</MenuItem>
                     </Select>
                 </FormControl>
-                <ToggleButton value="ASC" onClick={toggleSortOrder} size="small">
+                <ToggleButton aria-label={sortOrder === 'ASC' ? 'Absteigend sortieren' : 'Aufsteigend sortieren'} value="ASC" onClick={toggleSortOrder} size="small">
                     {sortOrder === 'ASC' ? <ArrowDownward /> : <ArrowUpward />}
                 </ToggleButton>
 
@@ -90,7 +90,7 @@ function Recipes({ filters, search, sortByOption, sortOrder, setSortByOption, se
             </section>
 
             {recipes != null && recipes.length === 0 && <div>
-                <p>There are no recipes{filters != null || search != null ? " with those properties" : ""} yet, <Link className='link' to="/create">create the first one</Link>!</p>
+                <p>{filters?.length > 0 || search ? "Keine passenden Rezepte gefunden. " : "Es gibt noch keine Rezepte. "}<Link className='link' to="/create">Erstelle das erste Rezept</Link>!</p>
             </div>}
 
             <div style={{
@@ -105,7 +105,7 @@ function Recipes({ filters, search, sortByOption, sortOrder, setSortByOption, se
                     width="80"
                     color="var(--dark-green)"
                     radius="9"
-                    ariaLabel="three-dots-loading"
+                    ariaLabel="Rezepte werden geladen"
                     wrapperStyle={{}}
                     wrapperClass="" />
             </div>
