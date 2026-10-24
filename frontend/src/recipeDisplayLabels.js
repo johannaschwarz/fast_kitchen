@@ -2,7 +2,7 @@
 export const unitLabels = {
     g: 'g',
     kg: 'kg',
-    ml: 'Ml',
+    ml: 'mL',
     l: 'L',
     pcs: 'Stk.',
     tbsp: 'EL',
