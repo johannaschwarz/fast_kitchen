@@ -551,8 +551,10 @@ class MySQLDatabase(Database):
         """
         async with self.pool.acquire() as conn:
             async with conn.cursor() as cursor:
-                sql = "INSERT INTO Images (Image) VALUES (%s)"
-                val = (image,)
+                # aiomysql's bytes escaper is incompatible with PyMySQL 1.2.3.
+                # Bind hex text and decode in MySQL to preserve the original bytes.
+                sql = "INSERT INTO Images (Image) VALUES (UNHEX(%s))"
+                val = (image.hex(),)
                 await cursor.execute(sql, val)
 
                 id_ = cursor.lastrowid
