@@ -4,13 +4,11 @@ import Filters from './Filters.jsx';
 import Footer from './Footer.jsx';
 import Header from './Header.jsx';
 import Recipes from './Recipes.jsx';
+import { parseRecipeListParams } from './recipeListParams.js';
 
 function Main() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const filters = searchParams.getAll('categories');
-  const search = searchParams.get('search') || '';
-  const sortByOption = searchParams.get('sort_by') || 'Clicks';
-  const sortOrder = searchParams.get('sort_order') || 'DESC';
+  const { filters, search, sortByOption, sortOrder } = parseRecipeListParams(searchParams);
 
   const setParam = (name, value) => {
     setSearchParams((previous) => {

@@ -2,8 +2,9 @@
 import React, { useEffect, useState } from 'react';
 import { API_BASE } from './Config';
 import Filter from './Filter';
+import { recipeCategories } from './recipeListParams.js';
 
-const defaultFilters = ['Vegan', 'Vegetarian', 'Quick & Easy'];
+const defaultFilters = ['Vegan', 'Vegetarisch'];
 function Filters({ activeFilters, setFilter }) {
     const [filters, setFilters] = useState(defaultFilters);
 
@@ -11,7 +12,8 @@ function Filters({ activeFilters, setFilter }) {
         fetch(API_BASE + 'category/all')
             .then((response) => response.json())
             .then((categories) => {
-                let newFilters = [...new Set([...defaultFilters, ...categories])];
+                let newFilters = [...new Set([...defaultFilters, ...categories])]
+                    .filter((category) => recipeCategories.includes(category));
                 setFilters(newFilters);
             })
             .catch((err) => {
