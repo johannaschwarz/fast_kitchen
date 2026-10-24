@@ -7,7 +7,7 @@ import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogTitle from '@mui/material/DialogTitle';
 import IconButton from '@mui/material/IconButton';
-import React, { useContext, useEffect, useState, useMemo } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
 import ImageCarousel from './ImageCarousel.jsx';
 import { Link, useParams } from 'react-router-dom';
@@ -27,22 +27,23 @@ const WARNING_MESSAGES = {
 };
 
 function Recipe({ recipe }) {
+    if (recipe === null || recipe.id_ === undefined) {
+        return null;
+    }
+
+    return <RecipeContent key={recipe.id_} recipe={recipe} />;
+}
+
+function RecipeContent({ recipe }) {
     const { token, user, isAdmin } = useContext(AuthContext);
 
-    const [wishedPortions, setWishedPortions] = useState(1);
-    const [galleryImages, setGalleryImages] = useState([]);
-    const [ingredients, setIngredients] = useState([]);
-    const [customAmounts, setCustomAmounts] = useState({});
-    const [editingIngredient, setEditingIngredient] = useState(null);
-    const [editingPortions, setEditingPortions] = useState(false);
-    const [warnings, setWarnings] = useState({});
-
-    // Memoized ingredient grouping
-    const groupedIngredients = useMemo(() => {
-        if (!recipe?.ingredients) return [];
-
+    const [wishedPortions, setWishedPortions] = useState(recipe.portions);
+    const galleryImages = recipe.cover_image === null
+        ? recipe.gallery_images
+        : [recipe.cover_image, ...recipe.gallery_images];
+    const [ingredients] = useState(() => {
         const groups = {};
-        recipe.ingredients.forEach((ingredient, index) => {
+        (recipe.ingredients || []).forEach((ingredient, index) => {
             const group = ingredient.group || 'Main';
             if (!groups[group]) {
                 groups[group] = [];
@@ -57,20 +58,11 @@ function Recipe({ recipe }) {
             group: groupName,
             ingredients: groupIngredients
         }));
-    }, [recipe?.ingredients]);
-
-    useEffect(() => {
-        if (recipe) {
-            setWishedPortions(recipe.portions);
-            setGalleryImages(recipe.cover_image === null
-                ? recipe.gallery_images
-                : [recipe.cover_image, ...recipe.gallery_images]
-            );
-            setIngredients(groupedIngredients);
-            setCustomAmounts({});
-            setWarnings({});
-        }
-    }, [recipe, groupedIngredients]);
+    });
+    const [customAmounts, setCustomAmounts] = useState({});
+    const [editingIngredient, setEditingIngredient] = useState(null);
+    const [editingPortions, setEditingPortions] = useState(false);
+    const [warnings, setWarnings] = useState({});
 
     const calculateAmount = (ingredient, portions) => {
         const baseAmount = ingredient.amount;
@@ -273,10 +265,6 @@ function Recipe({ recipe }) {
         );
     };
 
-    if (recipe === null || recipe.id_ === undefined) {
-        return null;
-    }
-
     return (
         <div>
             <div className='imageCard'>
@@ -396,7 +384,7 @@ function Recipe({ recipe }) {
                             <div className="stepCounterBottomLine"></div>
                         </div>
                         <div className='imageCard recipeStepContent'>
-                            {step.images.length > 0 && <ImageCarousel autoPlay={false} className="recipeStepCarousel">
+                            {step.images.length > 0 && <ImageCarousel className="recipeStepCarousel">
                                 {step.images.map((image, imgIndex) => (
                                     <img key={imgIndex} className="carousel-image" src={API_BASE + "image/" + image} alt={"Step" + index + " image " + imgIndex} />
                                 ))}
