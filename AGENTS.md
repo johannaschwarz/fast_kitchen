@@ -24,6 +24,9 @@
 - Run relevant backend tests for backend changes.
 - Run `git diff --check` before finishing; report any checks you could not run.
 
+## Merge
+- When asked to merge PRs, always delete the branch on the remote once merged.
+
 ## Release
 - Frontend: bump `version` in `frontend/package.json` and update the lockfile, commit the changes, then run `task publish-fe` from the repo root.
 - Backend: bump `__version__` in `backend/app.py`, commit the changes, then run `task publish-api` from the repo root.
