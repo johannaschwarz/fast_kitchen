@@ -685,7 +685,7 @@ function RecipeEditor() {
                         <br />
 
                         <UploadButton component="label" variant="contained" htmlFor="gallery_images" startIcon={<CloudUploadIcon />}>
-                            Galeriebilder
+                            Bilder Galerie
                             <VisuallyHiddenInput type="file" id="gallery_images" name="gallery_images" accept="image/*" onChange={uploadGalleryImageOnChange} />
                         </UploadButton><br />
                         {galleryImages.length > 0 && imagesList(galleryImages, "galleryImg", deleteGalleryImageOnChange)}<br />

@@ -25,7 +25,7 @@ function RecipeCard({ recipe }) {
             </div>
 
             <h3>{recipe.title}</h3>
-            <span className="creator">von {recipe.creator ? recipe.creator : "Unbekannt"}</span>
+            <span className="creator">{recipe.creator ? <>von {recipe.creator}</> : "Ein unbekannter Koch"}</span>
             <p className="rating">{recipe.rating}</p>
             {recipe.categories.map((label, index) => (
                 <span key={index} className="label">{label}</span>
