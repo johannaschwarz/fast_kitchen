@@ -25,6 +25,7 @@
 - Run `git diff --check` before finishing; report any checks you could not run.
 
 ## Merge
+- Always create a PR on the remote when asked to merge something and merge the PR if instructed.
 - When asked to merge PRs, always delete the branch on the remote once merged.
 
 ## Release
