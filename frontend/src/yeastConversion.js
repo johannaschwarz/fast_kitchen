@@ -28,13 +28,9 @@ export function getYeastConversion(ingredient, amount) {
         const formatted = converted < 0.01
             ? (german ? '< 0,01' : '< 0.01')
             : new Intl.NumberFormat(german ? 'de-DE' : 'en-GB', { maximumFractionDigits: 2 }).format(converted);
-        const label = german
-            ? (sourceIsDry ? 'frische Hefe' : 'Trockenhefe')
-            : (sourceIsDry ? 'fresh yeast' : 'dry yeast');
+        const label = sourceIsDry ? 'frische Hefe' : 'Trockenhefe';
         const condition = ambiguous
-            ? (german
-                ? (sourceIsDry ? 'Falls trocken: ' : 'Falls frisch: ')
-                : (sourceIsDry ? 'If dry: ' : 'If fresh: '))
+            ? (sourceIsDry ? 'Falls trocken: ' : 'Falls frisch: ')
             : '';
         return `${condition}≈ ${formatted} g ${label}`;
     });
@@ -42,8 +38,6 @@ export function getYeastConversion(ingredient, amount) {
 
     return {
         text: conversions.join('\n'),
-        title: german
-            ? 'Faustregel: 3 g frische Hefe ≈ 1 g Trockenhefe.'
-            : 'Rule of thumb: 3 g fresh yeast ≈ 1 g dry yeast.',
+        title: 'Faustregel: 3 g frische Hefe ≈ 1 g Trockenhefe.',
     };
 }

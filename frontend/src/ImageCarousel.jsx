@@ -35,14 +35,14 @@ function ImageCarousel({ children, className = '' }) {
                     <button
                         className="image-carousel-btn image-carousel-btn-prev"
                         onClick={goToPrev}
-                        aria-label="Previous image"
+                        aria-label="Vorheriges Bild"
                     >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
                     </button>
                     <button
                         className="image-carousel-btn image-carousel-btn-next"
                         onClick={goToNext}
-                        aria-label="Next image"
+                        aria-label="Nächstes Bild"
                     >
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
@@ -52,7 +52,7 @@ function ImageCarousel({ children, className = '' }) {
                                 key={index}
                                 className={`image-carousel-dot ${index === currentIndex ? 'active' : ''}`}
                                 onClick={() => setCurrentIndex(index)}
-                                aria-label={`Go to image ${index + 1}`}
+                                aria-label={`Bild ${index + 1} anzeigen`}
                             />
                         ))}
                     </div>

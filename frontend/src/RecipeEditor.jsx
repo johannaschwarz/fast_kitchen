@@ -12,6 +12,7 @@ import Header from "./Header";
 import { AuthContext } from './index.jsx';
 
 import './RecipeEditor.css';
+import { unitLabels } from './recipeDisplayLabels.js';
 
 
 const uploadImage = async (file, token) => {
@@ -56,8 +57,8 @@ const imagesList = (images, imgClass, deleteStepImageOnChange, iconClass = "dele
             {images.map((image) => (
                 <div key={image}>
                     <div className='uploadImgContainer'>
-                        <img className={imgClass} src={API_BASE + "image/" + image} alt={image} />
-                        <button type="button" onClick={() => deleteStepImageOnChange(image)} className={iconClass}>
+                        <img className={imgClass} src={API_BASE + "image/" + image} alt="Rezeptbild" />
+                        <button type="button" onClick={() => deleteStepImageOnChange(image)} aria-label="Bild entfernen" className={iconClass}>
                             <RemoveCircleOutlineOutlinedIcon />
                         </button>
                     </div>
@@ -128,16 +129,16 @@ function Ingredient({ ingredient, onChangeIngredient, onChangeAmount, onChangeUn
     }
     return (
         <Stack direction="row" spacing={2}>
-            <TextField slotProps={inputProps} sx={textFieldSx} type="text" id="ingredient" name="ingredient" label="Ingredient" onChange={onChangeIngredient} value={ingredient.name} />
-            <TextField slotProps={inputProps} sx={textFieldSx} min="0" type="number" id="amount" name="amount" label="Amount" onWheel={(e) => e.target.blur()} onChange={onChangeAmount} value={ingredient.amount} />
-            <TextField slotProps={inputProps} sx={textFieldSx} select label="Select" id="unit" name="unit" defaultValue={"g"} onChange={onChangeUnit} value={ingredient.unit} >
+            <TextField slotProps={inputProps} sx={textFieldSx} type="text" id="ingredient" name="ingredient" label="Zutat" onChange={onChangeIngredient} value={ingredient.name} />
+            <TextField slotProps={inputProps} sx={textFieldSx} min="0" type="number" id="amount" name="amount" label="Menge" onWheel={(e) => e.target.blur()} onChange={onChangeAmount} value={ingredient.amount} />
+            <TextField slotProps={inputProps} sx={{ ...textFieldSx, width: 110, flexShrink: 0 }} select label="Einheit" id="unit" name="unit" defaultValue={"g"} onChange={onChangeUnit} value={ingredient.unit} >
                 {measureUnits.map((option) => (
                     <MenuItem key={option} value={option} sx={{ color: 'var(--text-color)', '&:hover': { backgroundColor: 'var(--input-border)' } }}>
-                        {option}
+                        {unitLabels[option] ?? option}
                     </MenuItem>
                 ))}
             </TextField>
-            {ingredient.name !== "" && < button type='button' onClick={onDelete} className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>}
+            {ingredient.name !== "" && < button type='button' onClick={onDelete} aria-label="Zutat entfernen" className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>}
         </Stack>
     )
 }
@@ -204,8 +205,8 @@ const IngredientList = ({ ingredients, setIngredients }) => {
             {ingredients.map((ingredientGroup, groupIndex) => (
                 <Stack spacing={2} key={groupIndex}>
                     {ingredients.length > 1 && <Stack direction="row" spacing={2}>
-                        <TextField id={"group_name_" + groupIndex} name="group" label="Ingredient Group" onChange={handleGroupNameChange(groupIndex)} value={ingredientGroup["group"]} /><br />
-                        {ingredients.length > 1 && < button type='button' onClick={deleteIngredientGroup(groupIndex)} className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>}
+                        <TextField id={"group_name_" + groupIndex} name="group" label="Zutatengruppe" onChange={handleGroupNameChange(groupIndex)} value={ingredientGroup["group"]} /><br />
+                        {ingredients.length > 1 && < button type='button' onClick={deleteIngredientGroup(groupIndex)} aria-label="Zutatengruppe entfernen" className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>}
                     </Stack>}
                     {ingredientGroup["ingredients"].map((ingredient, index) => (
                         <Ingredient
@@ -222,7 +223,7 @@ const IngredientList = ({ ingredients, setIngredients }) => {
                     <br />
                 </Stack>))}
             <br />
-            <button type="button" onClick={addIngredientGroup}>Add ingredient group</button>
+            <button type="button" onClick={addIngredientGroup}>Zutatengruppe hinzufügen</button>
         </Stack>
     );
 };
@@ -241,7 +242,7 @@ function Step({ index, step, onChangeDesciption, onDelete, onUploadImage, onDele
                             type="text"
                             id="step"
                             name="step"
-                            label="Instruction"
+                            label="Schritt"
                             onChange={onChangeDesciption}
                             value={step.description}
                             sx={{
@@ -254,10 +255,10 @@ function Step({ index, step, onChangeDesciption, onDelete, onUploadImage, onDele
                         />
                         <Stack direction="row" spacing={1} alignItems="center" style={{ flexShrink: 0 }}>
                             <UploadButton component="label" variant="contained" htmlFor={"step_image" + index} startIcon={<CloudUploadIcon />}>
-                                Image
+                                Bild
                                 <VisuallyHiddenInput type="file" id={"step_image" + index} name="step_image" accept="image/*" onChange={onUploadImage} />
                             </UploadButton>
-                            {step.description !== "" && <button type='button' onClick={onDelete} className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>}
+                            {step.description !== "" && <button type='button' onClick={onDelete} aria-label="Schritt entfernen" className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>}
                         </Stack>
                     </Stack>
                     {step.images.length > 0 && imagesList(step.images, "stepImg", onDeleteImage, "deleteIconStep")}
@@ -333,7 +334,7 @@ const StepsList = ({ steps, setSteps }) => {
     );
 };
 
-const defaultFilters = ['Vegan', 'Vegetarian', 'Quick & Easy'];
+const defaultFilters = ['Vegan', 'Vegetarisch'];
 function RecipeEditor() {
     const { loggedIn, token } = useContext(AuthContext);
     const navigate = useNavigate();
@@ -421,40 +422,40 @@ function RecipeEditor() {
 
     const recipeChecks = () => {
         if (title.trim() === "") {
-            setAlertMessage("Please enter a title");
+            setAlertMessage("Bitte gib einen Titel ein.");
             return false;
         }
 
         if (description.trim() === "") {
-            setAlertMessage("Please enter a description");
+            setAlertMessage("Bitte gib eine Beschreibung ein.");
             return false;
         }
 
         if (categories.length === 0) {
-            setAlertMessage("Please enter at least one category");
+            setAlertMessage("Bitte wähle mindestens eine Kategorie aus.");
             return false;
         }
 
         if (cookingTime <= 0) {
-            setAlertMessage("Please enter a valid cooking time");
+            setAlertMessage("Bitte gib eine gültige Zubereitungszeit ein.");
             return false;
         }
 
         // check for distinct ingredient groups
         let groupNames = ingredients.map(group => group.group);
         if (groupNames.length !== new Set(groupNames).size) {
-            setAlertMessage("Ingredient groups must have different names");
+            setAlertMessage("Die Zutatengruppen müssen unterschiedliche Namen haben.");
             return false;
         }
 
         // check if all groups have a name if there is more than one
         if (ingredients.length > 1 && ingredients.filter(group => group.group === "").length > 0) {
-            setAlertMessage("Ingredient groups must have a name");
+            setAlertMessage("Bitte gib jeder Zutatengruppe einen Namen.");
             return false;
         }
 
         if (steps.filter(step => step.description.trim() !== "").length === 0) {
-            setAlertMessage("Please enter at least one step");
+            setAlertMessage("Bitte gib mindestens einen Schritt ein.");
             return false;
         }
         return true;
@@ -515,14 +516,14 @@ function RecipeEditor() {
             response.text().then(text => {
                 console.log("Form submission failed")
                 console.log(text);
-                setAlertMessage("An error occured: " + text);
+                setAlertMessage("Ein Fehler ist aufgetreten: " + text);
             });
         }
     };
 
     const handleImport = async () => {
         if (!importUrl) {
-            setAlertMessage("Please enter a URL to import");
+            setAlertMessage("Bitte gib eine URL zum Importieren ein.");
             setAlertSeverity("error");
             return;
         }
@@ -545,12 +546,12 @@ function RecipeEditor() {
                 navigate('/edit/' + data.id_);
             } else {
                 const error = await response.json();
-                setAlertMessage('Import failed: ' + error.detail);
+                setAlertMessage('Import fehlgeschlagen: ' + error.detail);
                 setAlertSeverity("error");
             }
         } catch (err) {
             console.error(err);
-            setAlertMessage('Import failed, please try again later.');
+            setAlertMessage('Der Import ist fehlgeschlagen. Bitte versuch es später erneut.');
             setAlertSeverity("error");
         }
 
@@ -559,7 +560,7 @@ function RecipeEditor() {
 
     const handleTextImport = async () => {
         if (!importText.trim()) {
-            setAlertMessage("Please enter recipe text to parse");
+            setAlertMessage("Bitte gib einen Rezepttext ein.");
             setAlertSeverity("error");
             return;
         }
@@ -583,12 +584,12 @@ function RecipeEditor() {
                 navigate('/edit/' + data.id_);
             } else {
                 const error = await response.json();
-                setAlertMessage('Parsing failed: ' + error.detail);
+                setAlertMessage('Rezept konnte nicht verarbeitet werden: ' + error.detail);
                 setAlertSeverity("error");
             }
         } catch (err) {
             console.error(err);
-            setAlertMessage('Parsing failed, please try again later.');
+            setAlertMessage('Das Rezept konnte nicht verarbeitet werden. Bitte versuch es später erneut.');
             setAlertSeverity("error");
         }
 
@@ -617,7 +618,7 @@ function RecipeEditor() {
         <div className="main">
             <Header />
             <div className={"content " + ((storing || importing || (recipeId !== undefined && !loaded)) ? 'hidden' : '')}>
-                <h1>{recipeId === undefined ? "Create a new recipe" : "Edit your recipe"}</h1>
+                <h1>{recipeId === undefined ? "Neues Rezept erstellen" : "Rezept bearbeiten"}</h1>
                 <form onSubmit={handleSubmit}>
                     <Stack>
                         {recipeId === undefined && (
@@ -625,7 +626,7 @@ function RecipeEditor() {
                                 <TextField
                                     slotProps={inputProps}
                                     sx={{ ...textFieldSx, flexGrow: 1 }}
-                                    placeholder="Enter URL to import recipe"
+                                    placeholder="Rezept-URL zum Importieren eingeben"
                                     value={importUrl}
                                     onChange={(e) => setImportUrl(e.target.value)}
                                     disabled={importing}
@@ -645,19 +646,19 @@ function RecipeEditor() {
                                         borderRadius: 20,
                                     }}
                                 >
-                                    Import
+                                    Importieren
                                 </Button>
                             </Stack>
                         )}
 
                         {alertMessage && <Alert severity={alertSeverity} style={{ marginBottom: 20 }}>
-                            <AlertTitle>{alertSeverity === "error" ? "Error" : "Info"}</AlertTitle>
+                            <AlertTitle>{alertSeverity === "error" ? "Fehler" : "Hinweis"}</AlertTitle>
                             {alertMessage}
                         </Alert>}
 
-                        <TextField slotProps={inputProps} sx={textFieldSx} id="title" name="title" label="Title" value={title} onChange={e => setTitle(e.target.value)} required /><br />
-                        <TextField slotProps={inputProps} sx={textFieldSx} id="description" name="description" label="Description" value={description} onChange={e => setDescription(e.target.value)} required /><br />
-                        <TextField slotProps={inputProps} sx={textFieldSx} id="cookingTime" name="cookingTime" label="Cooking time in minutes" type="number" value={cookingTime} onWheel={(e) => e.target.blur()} onChange={e => setCookingTime(e.target.value)} required /><br />
+                        <TextField slotProps={inputProps} sx={textFieldSx} id="title" name="title" label="Titel" value={title} onChange={e => setTitle(e.target.value)} required /><br />
+                        <TextField slotProps={inputProps} sx={textFieldSx} id="description" name="description" label="Beschreibung" value={description} onChange={e => setDescription(e.target.value)} required /><br />
+                        <TextField slotProps={inputProps} sx={textFieldSx} id="cookingTime" name="cookingTime" label="Zubereitungszeit in Minuten" type="number" value={cookingTime} onWheel={(e) => e.target.blur()} onChange={e => setCookingTime(e.target.value)} required /><br />
                         <Autocomplete
                             disablePortal
                             options={filters}
@@ -666,25 +667,25 @@ function RecipeEditor() {
                             multiple
                             value={categories}
                             onChange={(_, value) => { setCategories(value) }}
-                            renderInput={(params) => <TextField {...params} slotProps={{ ...params.InputProps, ...inputProps }} sx={textFieldSx} label="Categories" />}
+                            renderInput={(params) => <TextField {...params} slotProps={{ ...params.InputProps, ...inputProps }} sx={textFieldSx} label="Kategorien" />}
                         /><br />
                         <Divider sx={{ borderColor: 'var(--input-border)' }} />
 
-                        <h3>Images:</h3>
-                        <UploadButton component="label" variant="contained" htmlFor="cover_image" startIcon={<CloudUploadIcon />}>
-                            Cover Image
+                        <h3>Bilder:</h3>
+                        <UploadButton component="label" variant="contained" htmlFor="cover_image" startIcon={<CloudUploadIcon />} sx={{ textTransform: 'none' }}>
+                            Titelbild
                             <VisuallyHiddenInput type="file" id="cover_image" name="cover_image" accept="image/*" onChange={uploadCoverImageOnChange} />
                         </UploadButton><br />
                         {coverImage &&
                             <div className="uploadImgContainer">
-                                <img className='coverImg' src={API_BASE + "image/" + coverImage} alt={"Recipe Cover"} />
-                                <button type='button' onClick={() => deleteCoverImageOnChange(coverImage)} className='deleteIcon'><RemoveCircleOutlineOutlinedIcon /></button>
+                                <img className='coverImg' src={API_BASE + "image/" + coverImage} alt="Titelbild des Rezepts" />
+                                <button type='button' onClick={() => deleteCoverImageOnChange(coverImage)} aria-label="Titelbild entfernen" className='deleteIcon'><RemoveCircleOutlineOutlinedIcon /></button>
                             </div>
                         }
                         <br />
 
-                        <UploadButton component="label" variant="contained" htmlFor="gallery_images" startIcon={<CloudUploadIcon />}>
-                            Gallery Images
+                        <UploadButton component="label" variant="contained" htmlFor="gallery_images" startIcon={<CloudUploadIcon />} sx={{ textTransform: 'none' }}>
+                            Bilder Galerie
                             <VisuallyHiddenInput type="file" id="gallery_images" name="gallery_images" accept="image/*" onChange={uploadGalleryImageOnChange} />
                         </UploadButton><br />
                         {galleryImages.length > 0 && imagesList(galleryImages, "galleryImg", deleteGalleryImageOnChange)}<br />
@@ -693,7 +694,7 @@ function RecipeEditor() {
 
                         {recipeId === undefined && (
                             <Stack direction="row" spacing={0} sx={{ mt: 2, mb: 0 }}>
-                                {['Manual', 'From Text'].map((label, i) => (
+                                {['Manuell', 'Aus Text'].map((label, i) => (
                                     <Box
                                         key={label}
                                         onClick={() => setInputMode(i)}
@@ -719,14 +720,14 @@ function RecipeEditor() {
 
                         {inputMode === 0 ? (
                             <>
-                                <h3>Ingredients:</h3>
+                                <h3>Zutaten:</h3>
                                 <Stack spacing={2} marginBottom={2}>
-                                    <TextField value={portions} min="1" type="number" id="portions" name="portions" label="Portions" onWheel={(e) => e.target.blur()} onChange={e => setPortions(e.target.value)} required /><br />
+                                    <TextField value={portions} min="1" type="number" id="portions" name="portions" label="Portionen" onWheel={(e) => e.target.blur()} onChange={e => setPortions(e.target.value)} required /><br />
                                     <IngredientList ingredients={ingredients} setIngredients={setIngredients} />
                                 </Stack>
                                 <Divider sx={{ borderColor: 'var(--input-border)' }} />
 
-                                <h3>Steps:</h3>
+                                <h3>Anleitung:</h3>
                                 <div>
                                     <StepsList steps={steps} setSteps={setSteps} />
                                 </div>
@@ -734,13 +735,13 @@ function RecipeEditor() {
                         ) : (
                             <Stack spacing={1.5} sx={{ mt: 1 }}>
                                 <span style={{ color: 'var(--text-color)', fontSize: '0.82rem', opacity: 0.55, fontStyle: 'italic' }}>
-                                    Your text will be parsed into a structured recipe - this may take a moment.
+                                    Dein Text wird in ein strukturiertes Rezept umgewandelt. Das kann einen Moment dauern.
                                 </span>
                                 <TextField
                                     multiline
                                     minRows={10}
                                     maxRows={25}
-                                    placeholder={"e.g.\n\nSpaghetti Carbonara\n\n400g spaghetti\n200g pancetta\n4 eggs\n100g parmesan\n\n1. Cook spaghetti…\n2. Fry pancetta…"}
+                                    placeholder={"Zum Beispiel:\n\nSpaghetti Carbonara\n\n400g Spaghetti\n200g Pancetta\n4 Eier\n100g Parmesan\n\n1. Spaghetti kochen…\n2. Pancetta anbraten…"}
                                     value={importText}
                                     onChange={(e) => setImportText(e.target.value)}
                                     disabled={importing}
@@ -767,10 +768,10 @@ function RecipeEditor() {
                                 alignSelf: 'center',
                             }}
                         >
-                            {recipeId === undefined ? "Create" : "Change"}
+                            {recipeId === undefined ? "Erstellen" : "Speichern"}
                         </Button><br />
                         {alertMessage && <Alert severity={alertSeverity}>
-                            <AlertTitle>{alertSeverity === "error" ? "Error" : "Info"}</AlertTitle>
+                            <AlertTitle>{alertSeverity === "error" ? "Fehler" : "Hinweis"}</AlertTitle>
                             {alertMessage}
                         </Alert>}
                     </Stack>
@@ -782,14 +783,14 @@ function RecipeEditor() {
                     <div className="loading-card">
                         <div className="loading-spinner" />
                         <p className="loading-title">
-                            {importing ? 'Importing recipe…' : storing ? 'Saving recipe…' : 'Loading recipe…'}
+                            {importing ? 'Rezept wird importiert…' : storing ? 'Rezept wird gespeichert…' : 'Rezept wird geladen…'}
                         </p>
                         <p className="loading-hint">
                             {importing
-                                ? 'Parsing your recipe — this may take a moment'
+                                ? 'Dein Rezept wird verarbeitet. Das kann einen Moment dauern.'
                                 : storing
-                                    ? 'Almost there…'
-                                    : 'Fetching recipe details…'}
+                                    ? 'Fast geschafft…'
+                                    : 'Rezeptdetails werden abgerufen…'}
                         </p>
                     </div>
                 </div>

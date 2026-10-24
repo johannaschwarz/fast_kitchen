@@ -38,11 +38,11 @@ const Login = () => {
                 window.location.href = '/';
             } else {
                 const data = await response.json();
-                setLoginError('Login failed: ' + data.detail);
+                setLoginError('Anmeldung fehlgeschlagen: ' + data.detail);
             }
         } catch (err) {
             console.error(err);
-            setLoginError('Login failed, please try again later.');
+            setLoginError('Die Anmeldung ist fehlgeschlagen. Bitte versuch es später erneut.');
         }
         setLoading(false);
     }
@@ -53,11 +53,11 @@ const Login = () => {
                 {loginError && <Alert severity="error">{loginError}</Alert>}
                 <form onSubmit={handleLogin}>
                     <Stack>
-                        <h3>Login</h3>
-                        <TextField type="text" label="Username" required value={username} onChange={(event) => setUsername(event.target.value)} /><br />
-                        <TextField type="password" label="Password" required value={password} onChange={(event) => setPassword(event.target.value)} /><br />
-                        {!loading && <button type="submit" className="btn">Login</button>}
-                        {loading && <Stack direction={"row"} alignSelf="center"><CircularProgress /></Stack>}
+                        <h3>Anmelden</h3>
+                        <TextField type="text" label="Benutzername" required value={username} onChange={(event) => setUsername(event.target.value)} /><br />
+                        <TextField type="password" label="Passwort" required value={password} onChange={(event) => setPassword(event.target.value)} /><br />
+                        {!loading && <button type="submit" className="btn">Anmelden</button>}
+                        {loading && <Stack direction={"row"} alignSelf="center"><CircularProgress aria-label="Anmeldung läuft" /></Stack>}
                     </Stack>
                 </form>
             </div>

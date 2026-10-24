@@ -58,7 +58,7 @@ function Header({ searchInput = '', setSearchInput }) {
     return (
         <header>
             <div id="logo">
-                <Link to="/"><img src="/logo_text.png" alt="Fast Kitchen" /></Link>
+                <Link to="/"><img src="/logo_text.png" alt="FlotteKüche" /></Link>
             </div>
             {setSearchInput === undefined && <Autocomplete
                 className='search-bar'
@@ -77,9 +77,9 @@ function Header({ searchInput = '', setSearchInput }) {
                     );
                 }}
                 loading={loading}
-                noOptionsText="No matching recipes found."
+                noOptionsText="Keine passenden Rezepte gefunden."
                 popupIcon={null}
-                renderInput={(params) => <TextField {...params} placeholder="Search for recipes" InputProps={{
+                renderInput={(params) => <TextField {...params} placeholder="Rezepte suchen" InputProps={{
                     ...params.InputProps,
                     ...inputProps,
                     style: { color: 'var(--text-color)' },
@@ -103,7 +103,7 @@ function Header({ searchInput = '', setSearchInput }) {
             {setSearchInput !== undefined && <TextField
                 className='search-bar'
                 value={searchInput}
-                placeholder="Search for recipes"
+                placeholder="Rezepte suchen"
                 InputProps={{
                     ...inputProps,
                     startAdornment: (<InputAdornment position="start" sx={{ color: 'var(--text-color)' }}> <SearchIcon />
@@ -127,11 +127,11 @@ function Header({ searchInput = '', setSearchInput }) {
                     setSearchInput(e.target.value)
                 }} />}
             <div className="header-buttons">
-                <button onClick={toggleThemeMode} className="theme-toggle" aria-label="Toggle dark mode">
+                <button onClick={toggleThemeMode} className="theme-toggle" aria-label={mode === 'dark' ? 'Helles Design aktivieren' : 'Dunkles Design aktivieren'}>
                     {mode !== 'dark' ? <DarkModeIcon /> : <LightModeIcon />}
                 </button>
-                {!loggedIn && <Link id="login" to="/login"><button>Login</button></Link>}
-                {loggedIn && <Link id="create-recipe" to="/create"><button>New Recipe</button></Link>}
+                {!loggedIn && <Link id="login" to="/login"><button>Anmelden</button></Link>}
+                {loggedIn && <Link id="create-recipe" to="/create"><button>Neues Rezept</button></Link>}
             </div>
         </header>
     );
