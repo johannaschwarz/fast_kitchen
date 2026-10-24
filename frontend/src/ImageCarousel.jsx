@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './ImageCarousel.css';
 
-function ImageCarousel({ children, autoPlay = true, className = '' }) {
+function ImageCarousel({ children, className = '' }) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const items = React.Children.toArray(children);
 

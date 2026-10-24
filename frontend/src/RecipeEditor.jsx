@@ -147,7 +147,7 @@ const IngredientList = ({ ingredients, setIngredients }) => {
         // If the last ingredient is filled, add a new empty ingredient
         let newIngredients = [...ingredients];
         let change = false;
-        newIngredients.forEach((group, groupIndex) => {
+        newIngredients.forEach((group) => {
             if (group.ingredients.length === 0 || group.ingredients[group.ingredients.length - 1].name !== "") {
                 group.ingredients.push({ name: "", amount: 0, unit: "g", group: "" });
                 change = true;
@@ -175,7 +175,7 @@ const IngredientList = ({ ingredients, setIngredients }) => {
         setIngredients(newIngredients);
     };
 
-    const handleDeleteIngredient = (groupIndex, index) => (_event) => {
+    const handleDeleteIngredient = (groupIndex, index) => () => {
         const newGroupIngredients = [...ingredients[groupIndex]["ingredients"]];
         newGroupIngredients.splice(index, 1);
 
@@ -194,7 +194,7 @@ const IngredientList = ({ ingredients, setIngredients }) => {
         setIngredients([...ingredients, { group: "", ingredients: [{ name: "", amount: 0, unit: "g", group: "" }] }]);
     };
 
-    const deleteIngredientGroup = (groupIndex) => (_event) => {
+    const deleteIngredientGroup = (groupIndex) => () => {
         const newIngredients = [...ingredients];
         newIngredients.splice(groupIndex, 1);
         setIngredients(newIngredients);
@@ -287,7 +287,7 @@ const StepsList = ({ steps, setSteps }) => {
         setSteps(newSteps);
     };
 
-    const handleDeleteStep = (index) => (_event) => {
+    const handleDeleteStep = (index) => () => {
         const newSteps = [...steps];
         newSteps.splice(index, 1);
         setSteps(newSteps);
