@@ -1,14 +1,14 @@
-import { CircularProgress, Stack, TextField } from '@mui/material';
+import { CircularProgress, Stack } from '@mui/material';
 import { useContext, useEffect, useState } from 'react';
 import { API_BASE } from './Config';
 import Footer from './Footer.jsx';
+import './Gate.css';
 import Header from './Header.jsx';
 import { AuthContext } from './index.jsx';
-import './Gate.css';
 
 const GATE_PROMPT = 'Bitte gib zuerst den geheimen Zauberspruch ein, um das Portal zur unerschöpflichen Quelle kulinarischer Schriften freizuschalten.';
 const FAILED_ATTEMPT_MESSAGES = [
-    'Falsch. Das Zauberwort schützt uns vor der nächsten Abmahnung, nicht vor deinen Tippfehlern.',
+    'Falsch. Das Zauberwort schützt uns vor Post, nicht vor deinen Tippfehlern.',
     'Immer noch falsch. Genau wegen so etwas gibt es überhaupt ein Zauberwort.',
     'Nein. Ohne Zauberwort gibt es keine Rezepte – nur die nächste Abmahnung.',
     'Falsch. Le Grand Guardien hält die Abmahnung nur noch mit Mühe zurück.',
@@ -127,15 +127,21 @@ function Gate() {
                         <Stack>
                             <h3>Halt Stop!</h3>
                             <TypedPrompt key={promptText} text={promptText} reserveText={GATE_PROMPT} />
-                            <TextField
-                                type="password"
-                                label="Zauberspruch"
-                                required
-                                autoFocus
-                                value={passphrase}
-                                onChange={(event) => setPassphrase(event.target.value)}
-                            /><br />
-                            {!loading && <button type="submit" className="btn">Entsperren</button>}
+                            <div className="gate-field">
+                                <label htmlFor="gate-passphrase">Zauberspruch</label>
+                                <input
+                                    id="gate-passphrase"
+                                    className="gate-input"
+                                    type="password"
+                                    required
+                                    autoFocus
+                                    autoComplete="current-password"
+                                    placeholder="Das geheime Wort …"
+                                    value={passphrase}
+                                    onChange={(event) => setPassphrase(event.target.value)}
+                                />
+                            </div>
+                            {!loading && <button type="submit" className="gate-submit">Entsperren</button>}
                             {loading && <Stack direction={"row"} alignSelf="center"><CircularProgress /></Stack>}
                         </Stack>
                     </form>
