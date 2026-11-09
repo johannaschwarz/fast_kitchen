@@ -10,7 +10,7 @@ import { API_BASE, gateFetch } from './Config';
 import { AuthContext, ThemeModeContext } from './index.jsx';
 
 function Header({ searchInput = '', setSearchInput, showSearch = true }) {
-    const { loggedIn } = useContext(AuthContext);
+    const { loggedIn, gateUnlocked } = useContext(AuthContext);
     const [search, setSearch] = useState('');
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -130,8 +130,8 @@ function Header({ searchInput = '', setSearchInput, showSearch = true }) {
                 <button onClick={toggleThemeMode} className="theme-toggle" aria-label={mode === 'dark' ? 'Helles Design aktivieren' : 'Dunkles Design aktivieren'}>
                     {mode !== 'dark' ? <DarkModeIcon /> : <LightModeIcon />}
                 </button>
-                {!loggedIn && <Link id="login" to="/login"><button>Anmelden</button></Link>}
-                {loggedIn && <Link id="create-recipe" to="/create"><button>Neues Rezept</button></Link>}
+                {gateUnlocked && !loggedIn && <Link id="login" to="/login"><button>Anmelden</button></Link>}
+                {gateUnlocked && loggedIn && <Link id="create-recipe" to="/create"><button>Neues Rezept</button></Link>}
             </div>
         </header>
     );

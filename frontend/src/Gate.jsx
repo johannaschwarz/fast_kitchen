@@ -1,10 +1,49 @@
 import { Alert, CircularProgress, Stack, TextField } from '@mui/material';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { API_BASE } from './Config';
 import Footer from './Footer.jsx';
 import Header from './Header.jsx';
 import { AuthContext } from './index.jsx';
 import './Gate.css';
+
+const GATE_PROMPT = 'Bitte gib zuerst den geheimen Zauberspruch ein, um das Portal zur unerschöpflichen Quelle kulinarischer Schriften freizuschalten.';
+
+function TypedPrompt({ text }) {
+    const [reducedMotion] = useState(() => (
+        typeof window !== 'undefined'
+        && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ));
+    const [visibleText, setVisibleText] = useState(reducedMotion ? text : '');
+
+    useEffect(() => {
+        if (reducedMotion) {
+            return;
+        }
+
+        let index = 0;
+        const interval = window.setInterval(() => {
+            index += 1;
+            setVisibleText(text.slice(0, index));
+
+            if (index >= text.length) {
+                window.clearInterval(interval);
+            }
+        }, 24);
+
+        return () => window.clearInterval(interval);
+    }, [reducedMotion, text]);
+
+    return (
+        <p className="gate-prompt">
+            <span className="gate-prompt-placeholder" aria-hidden="true">{text}</span>
+            <span className="gate-prompt-typed" aria-hidden="true">
+                {visibleText}
+                <span className="gate-typewriter-cursor" />
+            </span>
+            <span className="sr-only">{text}</span>
+        </p>
+    );
+}
 
 function Gate() {
     const { setGateUnlocked } = useContext(AuthContext);
@@ -60,7 +99,7 @@ function Gate() {
                     <form onSubmit={handleSubmit}>
                         <Stack>
                             <h3>Halt Stop!</h3>
-                            <p>Bitte gib zuerst den geheimen Zauberspruch ein, um das Portal zur unerschöpflichen Quelle kulinarischer Schriften freizuschalten.</p>
+                            <TypedPrompt text={GATE_PROMPT} />
                             <TextField
                                 type="password"
                                 label="Zugangspasswort"
