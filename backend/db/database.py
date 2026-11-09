@@ -1,4 +1,5 @@
 import asyncio
+import os
 from abc import ABC, abstractmethod
 from enum import StrEnum
 
@@ -179,8 +180,11 @@ class MySQLDatabase(Database):
 
     CONFIG = load_config()
     CREDENTIALS = load_credentials()
-    # MySQL user connection limit; shared across all requests via a single pool.
-    MAX_POOL_SIZE = 7
+    # The pool is per backend process and keeps idle connections open. Two
+    # processes with 7 connections each can exhaust a small MySQL user limit.
+    MAX_POOL_SIZE = max(1, int(os.getenv("DB_POOL_SIZE", "2")))
+    # Recycle idle connections before MySQL's wait_timeout closes them.
+    POOL_RECYCLE_SECONDS = max(1, int(os.getenv("DB_POOL_RECYCLE_SECONDS", "30")))
 
     def __init__(self, mysql_pool):
         self.pool = mysql_pool
@@ -188,13 +192,16 @@ class MySQLDatabase(Database):
     @staticmethod
     async def create():
         pool = await aiomysql.create_pool(
+            minsize=1,
             maxsize=MySQLDatabase.MAX_POOL_SIZE,
+            pool_recycle=MySQLDatabase.POOL_RECYCLE_SECONDS,
             host=MySQLDatabase.CONFIG["database_ip"],
             port=int(MySQLDatabase.CONFIG["database_port"]),
             user=MySQLDatabase.CREDENTIALS["database_user"],
             password=MySQLDatabase.CREDENTIALS["database_password"],
             db=MySQLDatabase.CREDENTIALS["database_name"],
             autocommit=True,
+            connect_timeout=10,
         )
         return MySQLDatabase(pool)
 

@@ -75,3 +75,29 @@ GATE_LOCKOUT_SECONDS=300
 Set `GATE_MAX_FAILED_ATTEMPTS=0` to disable the limiter. The client IP is taken
 from the last `X-Forwarded-For` value (the one added by the trusted reverse
 proxy), falling back to the socket address.
+
+### Database connections
+
+The MySQL pool is created once per backend process. Idle connections stay open,
+so the maximum number of connections used is `DB_POOL_SIZE` per process. The
+production and local backends share the same MySQL user and therefore the same
+`max_user_connections` budget.
+
+The default pool size is conservative (`2`). For local development use one
+connection only:
+
+```bash
+DB_POOL_SIZE=1 task backend
+```
+
+Idle connections are recycled every 30 seconds so MySQL's `wait_timeout` does
+not turn them into `Lost connection to MySQL server during query` errors. Both
+values can be overridden:
+
+```text
+DB_POOL_SIZE=2
+DB_POOL_RECYCLE_SECONDS=30
+```
+
+Do not raise `DB_POOL_SIZE` without accounting for every backend process and
+the MySQL user connection limit.
