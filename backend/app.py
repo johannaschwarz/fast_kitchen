@@ -10,7 +10,7 @@ from routers import user_router
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-__version__ = "0.6.0"
+__version__ = "0.6.1"
 
 
 @asynccontextmanager
