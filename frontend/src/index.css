@@ -356,8 +356,11 @@ body:has(.mystical) {
   --mystic-btn-text: #fffaf0;
   --mystic-shadow: rgba(63, 84, 57, 0.14);
 
+  position: relative;
+  isolation: isolate;
   font-family: 'Palatino Linotype', Palatino, Georgia, 'Times New Roman', serif;
   line-height: 1.6;
+  letter-spacing: 0.012em;
   color: var(--text-color);
   background:
     radial-gradient(circle at 12% 18%, rgba(184, 137, 47, 0.12), transparent 30%),
@@ -366,6 +369,42 @@ body:has(.mystical) {
     var(--bg-color);
   background-attachment: fixed;
   transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.mystical::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 50% 42%, transparent 42%, rgba(15, 23, 18, 0.18) 100%),
+    radial-gradient(circle, rgba(184, 137, 47, 0.35) 0 1px, transparent 1.6px) 0 0 / 170px 170px,
+    radial-gradient(circle, rgba(63, 84, 57, 0.18) 0 1px, transparent 1.4px) 85px 90px / 260px 260px;
+  opacity: 0.55;
+}
+
+.mystical > * {
+  position: relative;
+  z-index: 1;
+}
+
+.mystical ::selection {
+  background: var(--mystic-gold-soft);
+  color: var(--text-color);
+}
+
+.mystical {
+  scrollbar-color: var(--mystic-gold-soft) transparent;
+}
+
+.mystical .content > h1::after {
+  content: "";
+  display: block;
+  width: 6rem;
+  height: 1px;
+  margin-top: 0.6rem;
+  background: linear-gradient(90deg, var(--mystic-gold), transparent);
 }
 
 :root[data-theme="dark"] .mystical {
@@ -402,12 +441,21 @@ body:has(.mystical) {
     var(--bg-color);
 }
 
+:root[data-theme="dark"] .mystical::before {
+  background:
+    radial-gradient(circle at 50% 42%, transparent 38%, rgba(0, 0, 0, 0.42) 100%),
+    radial-gradient(circle, rgba(216, 192, 138, 0.45) 0 1px, transparent 1.6px) 0 0 / 170px 170px,
+    radial-gradient(circle, rgba(216, 192, 138, 0.22) 0 1px, transparent 1.4px) 85px 90px / 260px 260px;
+  opacity: 0.6;
+}
+
 .mystical h1,
 .mystical h2,
 .mystical h3,
 .mystical h4 {
   font-family: Georgia, 'Times New Roman', serif;
-  letter-spacing: 0.03em;
+  font-variant: small-caps;
+  letter-spacing: 0.07em;
   color: var(--dark-green);
   text-shadow: 0 0 18px var(--mystic-glow);
 }
@@ -427,6 +475,21 @@ body:has(.mystical) {
   background: linear-gradient(180deg, var(--mystic-panel), transparent);
   border-bottom: 1px solid var(--mystic-border);
   box-shadow: 0 12px 30px var(--mystic-shadow);
+}
+
+.mystical header::after {
+  content: "✦";
+  position: absolute;
+  left: 50%;
+  bottom: -0.85rem;
+  transform: translateX(-50%);
+  padding: 0 0.65rem;
+  background: var(--bg-color);
+  color: var(--mystic-gold);
+  font-size: 1rem;
+  line-height: 1;
+  text-shadow: 0 0 14px var(--mystic-glow);
+  pointer-events: none;
 }
 
 .mystical #logo img {
@@ -508,7 +571,7 @@ body:has(.mystical) {
 .mystical .btn {
   padding: 0.7rem 1.2rem;
   border: 1px solid var(--mystic-border);
-  border-radius: 999px;
+  border-radius: 16px 4px 16px 4px;
   background: linear-gradient(135deg, var(--mystic-btn-from), var(--mystic-btn-to));
   color: var(--mystic-btn-text);
   font-family: Georgia, 'Times New Roman', serif;
@@ -540,7 +603,7 @@ body:has(.mystical) {
 
 .mystical .filter-chip {
   border: 1px solid var(--mystic-border);
-  border-radius: 999px;
+  border-radius: 14px 4px 14px 4px;
   background: var(--mystic-panel);
   color: var(--dark-green);
   letter-spacing: 0.04em;
@@ -565,13 +628,26 @@ body:has(.mystical) {
 .mystical .card,
 .mystical .imageCard,
 .mystical .recipe-card {
+  position: relative;
   background: linear-gradient(160deg, var(--mystic-panel-strong), var(--mystic-panel));
   border: 1px solid var(--mystic-border);
-  border-radius: 26px;
+  border-radius: 8px 28px 8px 28px;
   box-shadow:
     0 18px 40px var(--mystic-shadow),
     inset 0 0 40px rgba(184, 137, 47, 0.04);
   transition: background 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.mystical .card::before,
+.mystical .imageCard::before,
+.mystical .recipe-card::before {
+  content: "";
+  position: absolute;
+  inset: 6px;
+  border: 1px solid var(--mystic-gold-soft);
+  border-radius: 4px 22px 4px 22px;
+  opacity: 0.55;
+  pointer-events: none;
 }
 
 .mystical .recipe-card:hover {
@@ -598,6 +674,7 @@ body:has(.mystical) {
 .mystical .label {
   background: linear-gradient(135deg, var(--mystic-btn-from), var(--mystic-btn-to));
   border: 1px solid var(--mystic-border);
+  border-radius: 10px 3px 10px 3px;
   color: var(--mystic-btn-text);
   box-shadow: 0 0 10px var(--mystic-glow);
 }
@@ -691,10 +768,69 @@ body:has(.mystical) {
   box-shadow: 0 0 0 3px var(--mystic-glow);
 }
 
+.mystical .gate-figure img {
+  filter:
+    drop-shadow(0 0 26px var(--mystic-glow))
+    drop-shadow(0 12px 24px var(--shadow-color));
+  animation: mystic-float 6s ease-in-out infinite;
+}
+
+.mystical .gate-panel {
+  position: relative;
+}
+
+.mystical .gate-panel::before {
+  content: "";
+  position: absolute;
+  inset: -1.5rem;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 50% 40%, var(--mystic-glow), transparent 72%);
+  opacity: 0.5;
+}
+
+.mystical .gate-panel > * {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes mystic-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mystical .gate-figure img {
+    animation: none;
+  }
+}
+
 .mystical footer {
+  position: relative;
   border-top: 1px solid var(--mystic-border);
   background: linear-gradient(0deg, var(--mystic-panel), transparent);
   color: var(--mystic-muted);
+}
+
+.mystical footer::before {
+  content: "✦";
+  position: absolute;
+  top: -0.7rem;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 0.65rem;
+  background: var(--bg-color);
+  color: var(--mystic-gold);
+  font-size: 0.95rem;
+  line-height: 1;
+  text-shadow: 0 0 14px var(--mystic-glow);
+  pointer-events: none;
 }
 
 .mystical footer .link {
