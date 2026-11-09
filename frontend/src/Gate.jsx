@@ -8,13 +8,13 @@ import './Gate.css';
 
 const GATE_PROMPT = 'Bitte gib zuerst den geheimen Zauberspruch ein, um das Portal zur unerschöpflichen Quelle kulinarischer Schriften freizuschalten.';
 const FAILED_ATTEMPT_MESSAGES = [
-    'Hm. Das war’s nicht. Der Große Gärtner hebt skeptisch eine Augenbraue.',
-    'Immer noch falsch. Das riecht langsam nach einer Abmahnung – gärtnerisch, versteht sich.',
-    'Nein. Der Große Gärtner hat das Abmahnungsformular bereits aus der Schublade geholt.',
-    'Falsch. Eine Abmahnung wegen wiederholter Zauberspruchverletzung ist schon in Arbeit.',
+    'Falsch. Die Passphrase schützt uns vor der nächsten Abmahnung, nicht vor deinen Tippfehlern.',
+    'Immer noch falsch. Genau wegen so etwas haben wir überhaupt eine Passphrase.',
+    'Nein. Ohne Passphrase gibt es keine Rezepte – nur die nächste Abmahnung.',
+    'Falsch. Le Grand Guardien hält die Abmahnung nur noch mit Mühe zurück.',
 ];
-const RATE_LIMIT_MESSAGE = 'Jetzt reicht’s. Der Große Gärtner hat die Abmahnung bereits unterschrieben. Bitte versuche es später noch einmal.';
-const CONNECTION_ERROR_MESSAGE = 'Der Große Gärtner schaut verwirrt. Das Portal antwortet gerade nicht. Bitte versuche es später erneut.';
+const RATE_LIMIT_MESSAGE = 'Jetzt reicht’s. Le Grand Guardien hat die Abmahnung bereits unterschrieben. Bitte versuche es später noch einmal.';
+const CONNECTION_ERROR_MESSAGE = 'Le Grand Guardien schaut verwirrt. Das Portal antwortet gerade nicht. Bitte versuche es später erneut.';
 
 function TypedPrompt({ text, reserveText = text }) {
     const [reducedMotion] = useState(() => (
@@ -117,7 +117,7 @@ function Gate() {
                 <div className="gate-figure">
                     <img
                         src={guardianFurious ? '/le-grand-gardien-furieux.png' : '/le-grand-gardien.png'}
-                        alt={guardianFurious ? 'Le Grand Gardien furieux' : 'Le Grand Gardien, Wächter der Rezepte'}
+                        alt={guardianFurious ? 'Le Grand Guardien furieux' : 'Le Grand Guardien, Wächter der Rezepte'}
                         width="1024"
                         height="1536"
                     />
