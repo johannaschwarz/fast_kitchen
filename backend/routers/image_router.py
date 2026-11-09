@@ -6,6 +6,7 @@ from db.database_handler import get_database_connection
 from exceptions import NotFoundException
 from fastapi import Depends, HTTPException, Response, UploadFile, status
 from fastapi.routing import APIRouter
+from gate import GateRequired
 from services.image_tools import process_image
 from models.recipe import ImageID
 from models.user import UserInDB
@@ -23,6 +24,7 @@ async def create_image(
     image: UploadFile,
     database: Annotated[Database, Depends(get_database_connection)],
     _: Annotated[UserInDB, Depends(get_current_active_user)],
+    _gate: GateRequired,
 ) -> ImageID:
     image = PILImage.open(image.file)
     data = process_image(image)
@@ -34,13 +36,19 @@ async def create_image(
 
 @image_router.get("/image/{image_id}")
 async def get_image(
-    image_id: int, database: Annotated[Database, Depends(get_database_connection)]
+    image_id: int,
+    database: Annotated[Database, Depends(get_database_connection)],
+    _gate: GateRequired,
 ) -> Response:
 
     try:
         data = await database.get_image(image_id)
         img = PILImage.open(io.BytesIO(data))
-        return Response(content=data, media_type=f"image/{img.format.lower()}")
+        return Response(
+            content=data,
+            media_type=f"image/{img.format.lower()}",
+            headers={"Cache-Control": "private, no-store"},
+        )
     except NotFoundException as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e)) from e
     except Exception as e:
@@ -51,7 +59,9 @@ async def get_image(
 
 @image_router.get("/image/recipe/{recipe_id}")
 async def get_images_by_recipe(
-    recipe_id: int, database: Annotated[Database, Depends(get_database_connection)]
+    recipe_id: int,
+    database: Annotated[Database, Depends(get_database_connection)],
+    _gate: GateRequired,
 ) -> list[int]:
 
     return await database.get_images_by_recipe(recipe_id)
@@ -62,6 +72,7 @@ async def delete_image(
     image_id: int,
     database: Annotated[Database, Depends(get_database_connection)],
     _: Annotated[UserInDB, Depends(get_current_active_user)],
+    _gate: GateRequired,
 ) -> None:
 
     try:

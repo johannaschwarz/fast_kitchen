@@ -1,6 +1,6 @@
 import RamenDiningOutlinedIcon from '@mui/icons-material/RamenDiningOutlined';
 import React from 'react';
-import { API_BASE } from './Config';
+import { API_BASE, gateImageUrl } from './Config';
 import './RecipeCard.css';
 import { Stack } from '@mui/material';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
@@ -10,7 +10,7 @@ function RecipeCard({ recipe }) {
         <div className="recipe-card">
             <div className="image-container">
                 {recipe.cover_image !== null ? (
-                    <img src={API_BASE + "image/" + recipe.cover_image} alt={recipe.title} />
+                    <img src={gateImageUrl(API_BASE + "image/" + recipe.cover_image)} alt={recipe.title} />
                 ) : (
                     <div className="missingImage"><RamenDiningOutlinedIcon /></div>
                 )}

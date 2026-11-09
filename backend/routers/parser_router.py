@@ -4,6 +4,7 @@ from db.database import Database
 from db.database_handler import get_database_connection
 from services.extractor import extract_from_url, extract_from_text
 from fastapi import APIRouter, Depends, HTTPException
+from gate import GateRequired
 from models.recipe import LLMRecipe, Recipe, RecipeBase
 from models.user import UserInDB
 from routers.user_router import get_current_active_user
@@ -29,6 +30,7 @@ async def parse_external_recipe(
     url: str,
     user: Annotated[UserInDB, Depends(get_current_active_user)],
     database: Annotated[Database, Depends(get_database_connection)],
+    _gate: GateRequired,
 ) -> Recipe:
     if not url:
         raise HTTPException(status_code=400, detail="URL is required")
@@ -48,6 +50,7 @@ async def parse_recipe_text(
     text: str,
     user: Annotated[UserInDB, Depends(get_current_active_user)],
     database: Annotated[Database, Depends(get_database_connection)],
+    _gate: GateRequired,
 ) -> Recipe:
     if not text:
         raise HTTPException(status_code=400, detail="Text is required")

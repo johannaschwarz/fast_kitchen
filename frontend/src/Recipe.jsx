@@ -11,7 +11,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
 import ImageCarousel from './ImageCarousel.jsx';
 import { Link, useParams } from 'react-router-dom';
-import { API_BASE } from './Config';
+import { API_BASE, gateFetch, gateImageUrl } from './Config';
 import Footer from './Footer.jsx';
 import Header from './Header.jsx';
 import './Recipe.css';
@@ -273,7 +273,7 @@ function RecipeContent({ recipe }) {
                 {galleryImages.length > 0 &&
                     <ImageCarousel>
                         {galleryImages.map((image, index) =>
-                            <img key={index} className="carousel-image" src={API_BASE + "image/" + image} alt={recipe.title} />
+                            <img key={index} className="carousel-image" src={gateImageUrl(API_BASE + "image/" + image)} alt={recipe.title} />
                         )}
                     </ImageCarousel>
                 }
@@ -389,7 +389,7 @@ function RecipeContent({ recipe }) {
                         <div className='imageCard recipeStepContent'>
                             {step.images.length > 0 && <ImageCarousel className="recipeStepCarousel">
                                 {step.images.map((image, imgIndex) => (
-                                    <img key={imgIndex} className="carousel-image" src={API_BASE + "image/" + image} alt={"Schritt " + (index + 1) + ", Bild " + (imgIndex + 1)} />
+                                    <img key={imgIndex} className="carousel-image" src={gateImageUrl(API_BASE + "image/" + image)} alt={"Schritt " + (index + 1) + ", Bild " + (imgIndex + 1)} />
                                 ))}
                             </ImageCarousel>}
                             <span className="instructionText">{step.step}</span>
@@ -413,7 +413,7 @@ function DeleteAlertDialog({ recipe_id, token }) {
     };
 
     const handleDeleteTrue = async () => {
-        const response = await fetch(API_BASE + 'recipe/' + recipe_id, {
+        const response = await gateFetch(API_BASE + 'recipe/' + recipe_id, {
             method: 'DELETE',
             headers: {
                 "Authorization": "Bearer " + token,
@@ -456,7 +456,7 @@ function RecipePage() {
     const [recipe, setRecipe] = useState(null);
 
     useEffect(() => {
-        fetch(API_BASE + 'recipe/specific/' + recipeId)
+        gateFetch(API_BASE + 'recipe/specific/' + recipeId)
             .then((response) => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');

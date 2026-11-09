@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { ThreeDots } from 'react-loader-spinner';
 import { Link } from "react-router-dom";
-import { API_BASE } from './Config';
+import { API_BASE, gateFetch } from './Config';
 import RecipeCard from './RecipeCard';
 import './Recipes.css';
 
@@ -40,7 +40,7 @@ function Recipes({ filters, search, sortByOption, sortOrder, setSortByOption, se
             params.append("search", search);
         }
 
-        fetch(API_BASE + (filtered ? 'recipe/filtered?' : 'recipe/all?') + params)
+        gateFetch(API_BASE + (filtered ? 'recipe/filtered?' : 'recipe/all?') + params)
             .then((response) => response.json())
             .then((data) => {
                 if (!ignore) setResult({ key: queryKey, recipes: data });

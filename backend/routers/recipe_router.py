@@ -6,6 +6,7 @@ from exceptions import NotFoundException, UpdateFailedException
 from fastapi import BackgroundTasks, Depends, HTTPException, Query, status
 from fastapi.routing import APIRouter
 from fastapi.security import OAuth2PasswordBearer
+from gate import GateRequired
 from models.recipe import CategoryEnum, Recipe, RecipeBase, RecipeListing
 from models.user import UserInDB
 from pydantic import ValidationError
@@ -27,6 +28,7 @@ async def create_recipe(
     database: Annotated[Database, Depends(get_database_connection)],
     user: Annotated[UserInDB, Depends(get_current_active_user)],
     background_tasks: BackgroundTasks,
+    _gate: GateRequired,
 ) -> Recipe:
     id_ = await database.create_recipe(recipe, user)
 
@@ -37,7 +39,9 @@ async def create_recipe(
 
 @recipe_router.get("/recipe/specific/{recipe_id}")
 async def get_recipe(
-    recipe_id: int, database: Annotated[Database, Depends(get_database_connection)]
+    recipe_id: int,
+    database: Annotated[Database, Depends(get_database_connection)],
+    _gate: GateRequired,
 ) -> Recipe:
     try:
         return await database.get_recipe(recipe_id)
@@ -52,6 +56,7 @@ async def get_recipe(
 @recipe_router.get("/recipe/all")
 async def get_all_recipes(
     database: Annotated[Database, Depends(get_database_connection)],
+    _gate: GateRequired,
     limit: Annotated[
         int,
         Query(
@@ -88,6 +93,7 @@ async def get_all_recipes(
 @recipe_router.get("/recipe/filtered")
 async def get_filtered_recipes(
     database: Annotated[Database, Depends(get_database_connection)],
+    _gate: GateRequired,
     categories: Annotated[
         list[CategoryEnum],
         Query(
@@ -148,6 +154,7 @@ async def update_recipe(
     database: Annotated[Database, Depends(get_database_connection)],
     user: Annotated[UserInDB, Depends(get_current_active_user)],
     background_tasks: BackgroundTasks,
+    _gate: GateRequired,
 ) -> Recipe:
     if not await database.is_authorized(user.id_, recipe.id_):
         raise HTTPException(
@@ -171,6 +178,7 @@ async def delete_recipe(
     recipe_id: int,
     database: Annotated[Database, Depends(get_database_connection)],
     user: Annotated[UserInDB, Depends(get_current_active_user)],
+    _gate: GateRequired,
 ):
     if not await database.is_authorized(user.id_, recipe_id):
         raise HTTPException(
@@ -187,6 +195,7 @@ async def delete_recipe(
 async def get_recipes_by_category(
     category: CategoryEnum,
     database: Annotated[Database, Depends(get_database_connection)],
+    _gate: GateRequired,
 ) -> list[int]:
     return await database.get_recipes_by_category(category)
 
@@ -194,5 +203,6 @@ async def get_recipes_by_category(
 @recipe_router.get("/category/all")
 async def get_all_categories(
     database: Annotated[Database, Depends(get_database_connection)],
+    _gate: GateRequired,
 ) -> list[CategoryEnum]:
     return await database.get_categories()

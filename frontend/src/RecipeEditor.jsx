@@ -6,7 +6,7 @@ import { styled } from '@mui/material/styles';
 import React, { useContext, useEffect, useState } from 'react';
 
 import { Navigate, useNavigate, useParams } from "react-router-dom";
-import { API_BASE } from './Config';
+import { API_BASE, gateFetch, gateImageUrl } from './Config';
 import Footer from './Footer';
 import Header from "./Header";
 import { AuthContext } from './index.jsx';
@@ -19,7 +19,7 @@ const uploadImage = async (file, token) => {
     const formData = new FormData();
     formData.append('image', file);
 
-    const response = await fetch(API_BASE + 'image/create', {
+    const response = await gateFetch(API_BASE + 'image/create', {
         method: 'POST',
         headers: {
             "Authorization": "Bearer " + token,
@@ -37,7 +37,7 @@ const uploadImage = async (file, token) => {
 }
 
 const deleteImage = async (id, token) => {
-    const response = await fetch(API_BASE + 'image/' + id, {
+    const response = await gateFetch(API_BASE + 'image/' + id, {
         method: 'DELETE',
         headers: {
             "Authorization": "Bearer " + token,
@@ -57,7 +57,7 @@ const imagesList = (images, imgClass, deleteStepImageOnChange, iconClass = "dele
             {images.map((image) => (
                 <div key={image}>
                     <div className='uploadImgContainer'>
-                        <img className={imgClass} src={API_BASE + "image/" + image} alt="Rezeptbild" />
+                        <img className={imgClass} src={gateImageUrl(API_BASE + "image/" + image)} alt="Rezeptbild" />
                         <button type="button" onClick={() => deleteStepImageOnChange(image)} aria-label="Bild entfernen" className={iconClass}>
                             <RemoveCircleOutlineOutlinedIcon />
                         </button>
@@ -359,7 +359,7 @@ function RecipeEditor() {
     const [inputMode, setInputMode] = useState(0); // 0 = manual, 1 = from text
 
     useEffect(() => {
-        fetch(API_BASE + 'category/all')
+        gateFetch(API_BASE + 'category/all')
             .then((response) => response.json())
             .then((all_categories) => {
                 let newFilters = [...new Set([...defaultFilters, ...all_categories])];
@@ -374,7 +374,7 @@ function RecipeEditor() {
         if (recipeId === undefined) {
             return;
         }
-        fetch(API_BASE + 'recipe/specific/' + recipeId)
+        gateFetch(API_BASE + 'recipe/specific/' + recipeId)
             .then((response) => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -495,7 +495,7 @@ function RecipeEditor() {
         console.log(data)
 
         // Post form data
-        const response = await fetch(API_BASE + (recipeId === undefined ? 'recipe/create' : 'recipe/' + recipeId), {
+        const response = await gateFetch(API_BASE + (recipeId === undefined ? 'recipe/create' : 'recipe/' + recipeId), {
             method: recipeId === undefined ? 'POST' : 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -532,7 +532,7 @@ function RecipeEditor() {
         setAlertMessage("");
 
         try {
-            const response = await fetch(API_BASE + 'parse-external-recipe?' + new URLSearchParams({
+            const response = await gateFetch(API_BASE + 'parse-external-recipe?' + new URLSearchParams({
                 url: importUrl
             }), {
                 method: 'POST',
@@ -569,7 +569,7 @@ function RecipeEditor() {
         setAlertMessage("");
 
         try {
-            const response = await fetch(API_BASE + 'parse-recipe-text?' + new URLSearchParams({
+            const response = await gateFetch(API_BASE + 'parse-recipe-text?' + new URLSearchParams({
                 text: importText
             }), {
                 method: 'POST',
@@ -678,7 +678,7 @@ function RecipeEditor() {
                         </UploadButton><br />
                         {coverImage &&
                             <div className="uploadImgContainer">
-                                <img className='coverImg' src={API_BASE + "image/" + coverImage} alt="Titelbild des Rezepts" />
+                                <img className='coverImg' src={gateImageUrl(API_BASE + "image/" + coverImage)} alt="Titelbild des Rezepts" />
                                 <button type='button' onClick={() => deleteCoverImageOnChange(coverImage)} aria-label="Titelbild entfernen" className='deleteIcon'><RemoveCircleOutlineOutlinedIcon /></button>
                             </div>
                         }

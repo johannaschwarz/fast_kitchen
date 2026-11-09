@@ -5,7 +5,7 @@ import Header from './Header.jsx';
 function PrivacyPolicy() {
     return (
         <div className="main">
-            <Header />
+            <Header showSearch={false} />
             <div className='content'>
                 <h1>Datenschutzerklärung</h1>
 
@@ -20,8 +20,10 @@ function PrivacyPolicy() {
 
                 <h2>2. Cookies und Analyse-Tools</h2>
                 <p>
-                    Diese Website ist so datensparsam wie möglich konzipiert. Wir verwenden <strong>keinerlei Cookies</strong> – weder Tracking-Cookies, noch Marketing-Cookies oder technisch notwendige Cookies.
-                    Zudem setzen wir keine Web-Analytics-Dienste (wie z. B. Google Analytics) ein und es werden keine Nutzungsprofile der Besucher erstellt.
+                    Diese Website ist so datensparsam wie möglich konzipiert. Wir verwenden <strong>keine Tracking-, Marketing- oder Analyse-Cookies</strong> und setzen keine Web-Analytics-Dienste (wie z. B. Google Analytics) ein. Es werden keine Nutzungsprofile der Besucher erstellt.
+                </p>
+                <p>
+                    Technisch notwendige Cookies werden ausschließlich verwendet, um die Anmeldung und den passwortgeschützten Zugriff auf die Rezeptsammlung zu ermöglichen. Dazu gehören das Anmelde-Cookie (<em>token</em>) für die Dauer der Sitzung sowie das Zugriffs-Cookie (<em>gate_token</em>), das nach Eingabe des Zugangspassworts für die konfigurierte Speicherdauer (standardmäßig bis zu 90 Tage) gespeichert wird. Das Zugriffs-Cookie wird von der API-Domain gesetzt, ist für JavaScript nicht lesbar (HttpOnly) und wird ausschließlich an die API gesendet. Diese Cookies werden nicht für Werbung oder Analyse verwendet.
                 </p>
 
                 <h2>3. Server-Logfiles</h2>

@@ -6,10 +6,10 @@ import { Autocomplete, TextField } from '@mui/material';
 import InputAdornment from '@mui/material/InputAdornment';
 import { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { API_BASE } from './Config';
+import { API_BASE, gateFetch } from './Config';
 import { AuthContext, ThemeModeContext } from './index.jsx';
 
-function Header({ searchInput = '', setSearchInput }) {
+function Header({ searchInput = '', setSearchInput, showSearch = true }) {
     const { loggedIn } = useContext(AuthContext);
     const [search, setSearch] = useState('');
     const [results, setResults] = useState([]);
@@ -36,7 +36,7 @@ function Header({ searchInput = '', setSearchInput }) {
         // Limit the number of results to 10
         params.append("limit", 10)
 
-        fetch(API_BASE + 'recipe/filtered?' + new URLSearchParams(params))
+        gateFetch(API_BASE + 'recipe/filtered?' + new URLSearchParams(params))
             .then((response) => response.json())
             .then((data) => {
                 setResults(data)
@@ -60,7 +60,7 @@ function Header({ searchInput = '', setSearchInput }) {
             <div id="logo">
                 <Link to="/"><img src="/logo_text.png" alt="FlotteKüche" /></Link>
             </div>
-            {setSearchInput === undefined && <Autocomplete
+            {showSearch && setSearchInput === undefined && <Autocomplete
                 className='search-bar'
                 options={results}
                 getOptionLabel={(option) =>
@@ -100,7 +100,7 @@ function Header({ searchInput = '', setSearchInput }) {
                     },
                 }} />} />
             }
-            {setSearchInput !== undefined && <TextField
+            {showSearch && setSearchInput !== undefined && <TextField
                 className='search-bar'
                 value={searchInput}
                 placeholder="Rezepte suchen"
