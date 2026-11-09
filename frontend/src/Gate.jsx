@@ -4,6 +4,7 @@ import { API_BASE } from './Config';
 import Footer from './Footer.jsx';
 import Header from './Header.jsx';
 import { AuthContext } from './index.jsx';
+import './Gate.css';
 
 function Gate() {
     const { setGateUnlocked } = useContext(AuthContext);
@@ -45,24 +46,34 @@ function Gate() {
     return (
         <div className="main">
             <Header showSearch={false} />
-            <div className='content'>
-                {error && <Alert severity="error">{error}</Alert>}
-                <form onSubmit={handleSubmit}>
-                    <Stack>
-                        <h3>Private Rezeptsammlung</h3>
-                        <p>Bitte gib das gemeinsame Zugangspasswort ein, um die Rezepte zu sehen.</p>
-                        <TextField
-                            type="password"
-                            label="Zugangspasswort"
-                            required
-                            autoFocus
-                            value={passphrase}
-                            onChange={(event) => setPassphrase(event.target.value)}
-                        /><br />
-                        {!loading && <button type="submit" className="btn">Entsperren</button>}
-                        {loading && <Stack direction={"row"} alignSelf="center"><CircularProgress /></Stack>}
-                    </Stack>
-                </form>
+            <div className='content gate-content'>
+                <div className="gate-figure">
+                    <img
+                        src="/le-grand-gardien.png"
+                        alt="Le Grand Gardien, Wächter der Rezepte"
+                        width="1024"
+                        height="1536"
+                    />
+                </div>
+                <div className="gate-panel">
+                    {error && <Alert severity="error">{error}</Alert>}
+                    <form onSubmit={handleSubmit}>
+                        <Stack>
+                            <h3>Halt Stop!</h3>
+                            <p>Bitte gib zuerst den geheimen Zauberspruch ein, um das Portal zur unerschöpflichen Quelle kulinarischer Schriften freizuschalten.</p>
+                            <TextField
+                                type="password"
+                                label="Zugangspasswort"
+                                required
+                                autoFocus
+                                value={passphrase}
+                                onChange={(event) => setPassphrase(event.target.value)}
+                            /><br />
+                            {!loading && <button type="submit" className="btn">Entsperren</button>}
+                            {loading && <Stack direction={"row"} alignSelf="center"><CircularProgress /></Stack>}
+                        </Stack>
+                    </form>
+                </div>
             </div>
             <Footer />
         </div>

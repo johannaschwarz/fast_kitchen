@@ -1,0 +1,45 @@
+.gate-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3rem;
+    min-height: 60vh;
+}
+
+.gate-figure {
+    flex: 0 1 320px;
+    max-width: 320px;
+}
+
+.gate-figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+    filter: drop-shadow(0 12px 24px var(--shadow-color));
+}
+
+.gate-panel {
+    flex: 0 1 440px;
+    width: 100%;
+}
+
+.gate-panel form {
+    width: 100%;
+}
+
+@media screen and (max-width: 800px) {
+    .gate-content {
+        flex-direction: column;
+        gap: 1rem;
+        padding-top: 1rem;
+    }
+
+    .gate-figure {
+        flex-basis: auto;
+        max-width: 200px;
+    }
+
+    .gate-panel {
+        flex-basis: auto;
+    }
+}
