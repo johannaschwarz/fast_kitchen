@@ -1,4 +1,4 @@
-import { Alert, CircularProgress, Stack, TextField } from '@mui/material';
+import { CircularProgress, Stack, TextField } from '@mui/material';
 import { useContext, useEffect, useState } from 'react';
 import { API_BASE } from './Config';
 import Footer from './Footer.jsx';
@@ -7,8 +7,16 @@ import { AuthContext } from './index.jsx';
 import './Gate.css';
 
 const GATE_PROMPT = 'Bitte gib zuerst den geheimen Zauberspruch ein, um das Portal zur unerschöpflichen Quelle kulinarischer Schriften freizuschalten.';
+const FAILED_ATTEMPT_MESSAGES = [
+    'Hm. Das war’s nicht. Der Große Gärtner hebt skeptisch eine Augenbraue.',
+    'Immer noch falsch. Das riecht langsam nach einer Abmahnung – gärtnerisch, versteht sich.',
+    'Nein. Der Große Gärtner hat das Abmahnungsformular bereits aus der Schublade geholt.',
+    'Falsch. Eine Abmahnung wegen wiederholter Zauberspruchverletzung ist schon in Arbeit.',
+];
+const RATE_LIMIT_MESSAGE = 'Jetzt reicht’s. Der Große Gärtner hat die Abmahnung bereits unterschrieben. Bitte versuche es später noch einmal.';
+const CONNECTION_ERROR_MESSAGE = 'Der Große Gärtner schaut verwirrt. Das Portal antwortet gerade nicht. Bitte versuche es später erneut.';
 
-function TypedPrompt({ text }) {
+function TypedPrompt({ text, reserveText = text }) {
     const [reducedMotion] = useState(() => (
         typeof window !== 'undefined'
         && window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -35,7 +43,7 @@ function TypedPrompt({ text }) {
 
     return (
         <p className="gate-prompt">
-            <span className="gate-prompt-placeholder" aria-hidden="true">{text}</span>
+            <span className="gate-prompt-placeholder" aria-hidden="true">{reserveText}</span>
             <span className="gate-prompt-typed" aria-hidden="true">
                 {visibleText}
                 <span className="gate-typewriter-cursor" />
@@ -48,12 +56,16 @@ function TypedPrompt({ text }) {
 function Gate() {
     const { setGateUnlocked } = useContext(AuthContext);
     const [passphrase, setPassphrase] = useState('');
-    const [error, setError] = useState('');
+    const [promptText, setPromptText] = useState(GATE_PROMPT);
+    const [failureCount, setFailureCount] = useState(0);
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        setError('');
+        if (loading) {
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -72,11 +84,23 @@ function Gate() {
                 return;
             }
 
-            const data = await response.json().catch(() => ({}));
-            setError(data.detail || 'Das Zugangspasswort ist nicht korrekt.');
+            if (response.status === 429) {
+                setPromptText(RATE_LIMIT_MESSAGE);
+                return;
+            }
+
+            if (response.status === 401) {
+                const nextFailure = failureCount + 1;
+                const messageIndex = (nextFailure - 1) % FAILED_ATTEMPT_MESSAGES.length;
+                setFailureCount(nextFailure);
+                setPromptText(FAILED_ATTEMPT_MESSAGES[messageIndex]);
+                return;
+            }
+
+            setPromptText(CONNECTION_ERROR_MESSAGE);
         } catch (err) {
             console.error(err);
-            setError('Die Rezepte konnten nicht entsperrt werden. Bitte versuche es später erneut.');
+            setPromptText(CONNECTION_ERROR_MESSAGE);
         } finally {
             setLoading(false);
         }
@@ -95,14 +119,13 @@ function Gate() {
                     />
                 </div>
                 <div className="gate-panel">
-                    {error && <Alert severity="error">{error}</Alert>}
                     <form onSubmit={handleSubmit}>
                         <Stack>
                             <h3>Halt Stop!</h3>
-                            <TypedPrompt text={GATE_PROMPT} />
+                            <TypedPrompt key={promptText} text={promptText} reserveText={GATE_PROMPT} />
                             <TextField
                                 type="password"
-                                label="Zugangspasswort"
+                                label="Zauberspruch"
                                 required
                                 autoFocus
                                 value={passphrase}
