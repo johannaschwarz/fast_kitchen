@@ -475,7 +475,7 @@ function RecipePage() {
     }, [recipeId]);
 
     return (
-        <div className="recipePage main mystical">
+        <div className="recipePage main">
             <Header />
             <div className='content'>
                 <Recipe recipe={recipe} />

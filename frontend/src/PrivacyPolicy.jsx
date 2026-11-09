@@ -4,7 +4,7 @@ import Header from './Header.jsx';
 
 function PrivacyPolicy() {
     return (
-        <div className="main mystical">
+        <div className="main">
             <Header showSearch={false} />
             <div className='content'>
                 <h1>Datenschutzerklärung</h1>

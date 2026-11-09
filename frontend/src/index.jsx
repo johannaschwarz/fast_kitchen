@@ -106,7 +106,7 @@ const GateLayout = () => {
 
   if (gateChecking) {
     return (
-      <div className="main mystical">
+      <div className="main">
         <div className="content" style={{ display: 'flex', justifyContent: 'center' }}>
           <CircularProgress />
         </div>

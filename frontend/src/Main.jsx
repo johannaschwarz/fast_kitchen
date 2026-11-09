@@ -25,7 +25,7 @@ function Main() {
   }
 
   return (
-    <div className="main mystical">
+    <div className="main">
       <Header searchInput={search} setSearchInput={(value) => setParam('search', value)} />
       <div className='content'>
         <Filters activeFilters={filters} setFilter={setFilter} />

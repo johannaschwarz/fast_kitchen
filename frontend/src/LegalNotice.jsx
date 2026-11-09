@@ -4,7 +4,7 @@ import Header from './Header.jsx';
 
 function LegalNotice() {
     return (
-        <div className="main mystical">
+        <div className="main">
             <Header showSearch={false} />
             <div className='content'>
                 <h1>Impressum</h1>
