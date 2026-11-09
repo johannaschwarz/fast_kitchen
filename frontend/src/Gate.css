@@ -122,8 +122,29 @@
     outline-offset: 3px;
 }
 
+.gate-panel h3 {
+    font-family: Georgia, 'Times New Roman', serif;
+    letter-spacing: 0.06em;
+    color: var(--dark-green);
+    text-shadow: 0 0 20px rgba(201, 162, 74, 0.18);
+}
+
 .gate-prompt {
     position: relative;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 1.02rem;
+    font-style: italic;
+    font-weight: 500;
+    line-height: 1.6;
+    letter-spacing: 0.015em;
+    color: var(--dark-green);
+    text-shadow: 0 0 18px rgba(201, 162, 74, 0.16);
+}
+
+:root[data-theme="dark"] .gate-panel h3,
+:root[data-theme="dark"] .gate-prompt {
+    color: #d8c08a;
+    text-shadow: 0 0 22px rgba(201, 162, 74, 0.24);
 }
 
 .gate-prompt-placeholder {
