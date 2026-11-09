@@ -58,6 +58,7 @@ function Gate() {
     const [passphrase, setPassphrase] = useState('');
     const [promptText, setPromptText] = useState(GATE_PROMPT);
     const [failureCount, setFailureCount] = useState(0);
+    const [guardianFurious, setGuardianFurious] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const handleSubmit = async (event) => {
@@ -84,6 +85,8 @@ function Gate() {
                 return;
             }
 
+            setGuardianFurious(true);
+
             if (response.status === 429) {
                 setPromptText(RATE_LIMIT_MESSAGE);
                 return;
@@ -100,6 +103,7 @@ function Gate() {
             setPromptText(CONNECTION_ERROR_MESSAGE);
         } catch (err) {
             console.error(err);
+            setGuardianFurious(true);
             setPromptText(CONNECTION_ERROR_MESSAGE);
         } finally {
             setLoading(false);
@@ -112,8 +116,8 @@ function Gate() {
             <div className='content gate-content'>
                 <div className="gate-figure">
                     <img
-                        src="/le-grand-gardien.png"
-                        alt="Le Grand Gardien, Wächter der Rezepte"
+                        src={guardianFurious ? '/le-grand-gardien-furieux.png' : '/le-grand-gardien.png'}
+                        alt={guardianFurious ? 'Le Grand Gardien furieux' : 'Le Grand Gardien, Wächter der Rezepte'}
                         width="1024"
                         height="1536"
                     />
