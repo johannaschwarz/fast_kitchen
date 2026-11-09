@@ -10,8 +10,8 @@ const GATE_PROMPT = 'Bitte gib zuerst den geheimen Zauberspruch ein, um das Port
 const FAILED_ATTEMPT_MESSAGES = [
     'Falsch. Das Zauberwort schützt uns vor Post, nicht vor deinen Tippfehlern.',
     'Immer noch falsch. Genau wegen so etwas gibt es überhaupt ein Zauberwort.',
-    'Nein. Ohne Zauberwort gibt es keine Rezepte – nur die nächste Abmahnung.',
-    'Falsch. Le Grand Guardien hält die Abmahnung nur noch mit Mühe zurück.',
+    'Nein. Ohne Zauberwort gibt es keine Rezepte!',
+    'Falsch. Le Grand Guardien hält sich nur noch mit Mühe zurück.',
 ];
 const RATE_LIMIT_MESSAGE = 'Jetzt reicht’s. Le Grand Guardien hat die Abmahnung bereits unterschrieben. Bitte versuche es später noch einmal.';
 const CONNECTION_ERROR_MESSAGE = 'Le Grand Guardien schaut verwirrt. Das Portal antwortet gerade nicht. Bitte versuche es später erneut.';
@@ -46,7 +46,6 @@ function TypedPrompt({ text, reserveText = text }) {
             <span className="gate-prompt-placeholder" aria-hidden="true">{reserveText}</span>
             <span className="gate-prompt-typed" aria-hidden="true">
                 {visibleText}
-                <span className="gate-typewriter-cursor" />
             </span>
             <span className="sr-only">{text}</span>
         </p>
