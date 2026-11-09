@@ -58,3 +58,20 @@ comma-separated `FRONTEND_ORIGINS` environment variable if needed.
 For local HTTP development the cookie is automatically non-`Secure`. If you
 run behind a TLS-terminating proxy that does not forward `X-Forwarded-Proto`,
 set `GATE_COOKIE_SECURE=true` explicitly (or `false` for plain HTTP).
+
+### Unlock rate limiting
+
+Failed passphrase attempts are limited in memory per client IP. The state is
+not stored in the database and resets when the backend restarts; with multiple
+worker processes each process has its own counters. Defaults are 5 failed
+attempts per 5 minutes, followed by a 5-minute lockout. Configure them with:
+
+```text
+GATE_MAX_FAILED_ATTEMPTS=5
+GATE_ATTEMPT_WINDOW_SECONDS=300
+GATE_LOCKOUT_SECONDS=300
+```
+
+Set `GATE_MAX_FAILED_ATTEMPTS=0` to disable the limiter. The client IP is taken
+from the last `X-Forwarded-For` value (the one added by the trusted reverse
+proxy), falling back to the socket address.
