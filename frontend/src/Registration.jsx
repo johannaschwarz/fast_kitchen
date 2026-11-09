@@ -56,7 +56,7 @@ function Registration() {
     }
 
     return (
-        <div className="main">
+        <div className="main mystical">
             <Header />
             <div className='content'>
                 {createUserError && <Alert severity="error">{createUserError}</Alert>}

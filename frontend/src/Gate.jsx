@@ -110,7 +110,7 @@ function Gate() {
     };
 
     return (
-        <div className="main">
+        <div className="main mystical">
             <Header showSearch={false} />
             <div className='content gate-content'>
                 <div className="gate-figure">

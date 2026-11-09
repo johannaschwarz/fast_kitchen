@@ -47,7 +47,7 @@ const Login = () => {
         setLoading(false);
     }
     return (
-        <div className="main">
+        <div className="main mystical">
             <Header />
             <div className='content'>
                 {loginError && <Alert severity="error">{loginError}</Alert>}
