@@ -8,9 +8,9 @@ import './Gate.css';
 
 const GATE_PROMPT = 'Bitte gib zuerst den geheimen Zauberspruch ein, um das Portal zur unerschöpflichen Quelle kulinarischer Schriften freizuschalten.';
 const FAILED_ATTEMPT_MESSAGES = [
-    'Falsch. Die Passphrase schützt uns vor der nächsten Abmahnung, nicht vor deinen Tippfehlern.',
-    'Immer noch falsch. Genau wegen so etwas haben wir überhaupt eine Passphrase.',
-    'Nein. Ohne Passphrase gibt es keine Rezepte – nur die nächste Abmahnung.',
+    'Falsch. Das Zauberwort schützt uns vor der nächsten Abmahnung, nicht vor deinen Tippfehlern.',
+    'Immer noch falsch. Genau wegen so etwas gibt es überhaupt ein Zauberwort.',
+    'Nein. Ohne Zauberwort gibt es keine Rezepte – nur die nächste Abmahnung.',
     'Falsch. Le Grand Guardien hält die Abmahnung nur noch mit Mühe zurück.',
 ];
 const RATE_LIMIT_MESSAGE = 'Jetzt reicht’s. Le Grand Guardien hat die Abmahnung bereits unterschrieben. Bitte versuche es später noch einmal.';
