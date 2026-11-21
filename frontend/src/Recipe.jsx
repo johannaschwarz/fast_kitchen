@@ -15,7 +15,7 @@ import { API_BASE, gateFetch, gateImageUrl } from './Config';
 import Footer from './Footer.jsx';
 import Header from './Header.jsx';
 import './Recipe.css';
-import { AuthContext } from './index.jsx';
+import { AuthContext } from './contexts.js';
 import { getYeastConversion } from './yeastConversion.js';
 import { unitLabels } from './recipeDisplayLabels.js';
 

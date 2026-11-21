@@ -2,7 +2,7 @@ import { Stack } from "@mui/material";
 import { useContext } from "react";
 import { Link } from "react-router-dom";
 import { FASTKITCHEN_VERSION } from "./Config";
-import { AuthContext } from "./index";
+import { AuthContext } from "./contexts.js";
 
 function Footer() {
     const { loggedIn, logout, isAdmin } = useContext(AuthContext);

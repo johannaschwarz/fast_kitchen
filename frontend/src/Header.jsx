@@ -7,7 +7,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { API_BASE, gateFetch } from './Config';
-import { AuthContext, ThemeModeContext } from './index.jsx';
+import { AuthContext, ThemeModeContext } from './contexts.js';
 
 function Header({ searchInput = '', setSearchInput, showSearch = true }) {
     const { loggedIn, gateUnlocked } = useContext(AuthContext);
@@ -79,12 +79,14 @@ function Header({ searchInput = '', setSearchInput, showSearch = true }) {
                 loading={loading}
                 noOptionsText="Keine passenden Rezepte gefunden."
                 popupIcon={null}
-                renderInput={(params) => <TextField {...params} placeholder="Rezepte suchen" InputProps={{
-                    ...params.InputProps,
-                    ...inputProps,
-                    style: { color: 'var(--text-color)' },
-                    startAdornment: (<InputAdornment position="start" sx={{ color: 'var(--text-color)' }}> <SearchIcon />
-                    </InputAdornment>)
+                renderInput={(params) => <TextField {...params} placeholder="Rezepte suchen" slotProps={{
+                    ...params.slotProps,
+                    input: {
+                        ...params.slotProps.input,
+                        ...inputProps,
+                        startAdornment: (<InputAdornment position="start" sx={{ color: 'var(--text-color)' }}> <SearchIcon />
+                        </InputAdornment>)
+                    }
                 }} sx={{
                     '& .MuiOutlinedInput-root': {
                         '& fieldset': {
@@ -104,10 +106,12 @@ function Header({ searchInput = '', setSearchInput, showSearch = true }) {
                 className='search-bar'
                 value={searchInput}
                 placeholder="Rezepte suchen"
-                InputProps={{
-                    ...inputProps,
-                    startAdornment: (<InputAdornment position="start" sx={{ color: 'var(--text-color)' }}> <SearchIcon />
-                    </InputAdornment>)
+                slotProps={{
+                    input: {
+                        ...inputProps,
+                        startAdornment: (<InputAdornment position="start" sx={{ color: 'var(--text-color)' }}> <SearchIcon />
+                        </InputAdornment>)
+                    }
                 }}
                 sx={{
                     '& .MuiOutlinedInput-root': {

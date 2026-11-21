@@ -4,7 +4,7 @@ import { API_BASE } from './Config';
 import Footer from './Footer.jsx';
 import './Gate.css';
 import Header from './Header.jsx';
-import { AuthContext } from './index.jsx';
+import { AuthContext } from './contexts.js';
 
 const GATE_PROMPT = 'Bitte gib zuerst den geheimen Zauberspruch ein, um das Portal zur unerschöpflichen Quelle kulinarischer Schriften freizuschalten.';
 const FAILED_ATTEMPT_MESSAGES = [

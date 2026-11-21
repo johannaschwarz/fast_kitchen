@@ -9,7 +9,7 @@ import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { API_BASE, gateFetch, gateImageUrl } from './Config';
 import Footer from './Footer';
 import Header from "./Header";
-import { AuthContext } from './index.jsx';
+import { AuthContext } from './contexts.js';
 
 import './RecipeEditor.css';
 import { newStep, isPlaceholder, moveStep, updateStep, stepPayload } from './recipeSteps.js';
@@ -704,7 +704,7 @@ function RecipeEditor() {
                             multiple
                             value={categories}
                             onChange={(_, value) => { setCategories(value) }}
-                            renderInput={(params) => <TextField {...params} slotProps={{ ...params.InputProps, ...inputProps }} sx={textFieldSx} label="Kategorien" />}
+                            renderInput={(params) => <TextField {...params} slotProps={{ ...params.slotProps, ...inputProps }} sx={textFieldSx} label="Kategorien" />}
                         /><br />
                         <Divider sx={{ borderColor: 'var(--input-border)' }} />
 

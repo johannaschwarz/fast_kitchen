@@ -2,7 +2,7 @@ import { CircularProgress } from '@mui/material';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { deDE } from '@mui/material/locale';
 import Cookies from 'js-cookie';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom/client';
 import {
   Outlet,
@@ -10,6 +10,7 @@ import {
   createBrowserRouter,
 } from "react-router-dom";
 import { API_BASE, gateFetch } from './Config';
+import { AuthContext, ThemeModeContext } from './contexts.js';
 import Gate from './Gate.jsx';
 import LegalNotice from './LegalNotice.jsx';
 import Login from './Login.jsx';
@@ -20,8 +21,6 @@ import RecipeEditor from './RecipeEditor.jsx';
 import Registration from './Registration.jsx';
 import './index.css';
 
-
-const AuthContext = createContext();
 
 const AuthContextProvider = ({ children }) => {
   const [loggedIn, setLoggedIn] = useState(Cookies.get('token') !== undefined ? true : false);
@@ -162,8 +161,6 @@ const router = createBrowserRouter([
 ]);
 
 
-const ThemeModeContext = createContext({ mode: 'light', toggleThemeMode: () => { } });
-
 const ThemeModeProvider = ({ children }) => {
   const [mode, setMode] = useState('light');
   const theme = createTheme({
@@ -189,6 +186,3 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     </AuthContextProvider>
   </ThemeModeProvider>
 );
-
-
-export { AuthContext, AuthContextProvider, ThemeModeContext };
