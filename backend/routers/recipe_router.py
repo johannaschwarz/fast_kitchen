@@ -62,18 +62,18 @@ async def get_all_recipes(
         Query(
             title="Limit",
             description="The maximum number of recipes to return",
-            example=10,
+            examples=[10],
         ),
     ] = None,
     page: Annotated[
-        int, Query(title="Page", description="The page number", example=1)
+        int, Query(title="Page", description="The page number", examples=[1])
     ] = None,
     sort_by: Annotated[
         SortByEnum,
         Query(
             title="Sort by",
             description="The field to sort by",
-            example=SortByEnum.CLICKS,
+            examples=[SortByEnum.CLICKS],
         ),
     ] = SortByEnum.CLICKS,
     sort_order: Annotated[
@@ -81,7 +81,7 @@ async def get_all_recipes(
         Query(
             title="Sort order",
             description="The order to sort by",
-            example=SortOrderEnum.DESC,
+            examples=[SortOrderEnum.DESC],
         ),
     ] = SortOrderEnum.DESC,
 ) -> list[RecipeListing]:
@@ -99,7 +99,7 @@ async def get_filtered_recipes(
         Query(
             title="Categories",
             description="A list of categories to filter recipes by",
-            example=[CategoryEnum.ASIAN, CategoryEnum.VEGETARIAN],
+            examples=[[CategoryEnum.ASIAN, CategoryEnum.VEGETARIAN]],
         ),
     ] = None,
     search: Annotated[
@@ -107,7 +107,7 @@ async def get_filtered_recipes(
         Query(
             title="Search string",
             description="A custom search string to filter recipes by",
-            example="Spaghetti",
+            examples=["Spaghetti"],
         ),
     ] = None,
     limit: Annotated[
@@ -115,18 +115,18 @@ async def get_filtered_recipes(
         Query(
             title="Limit",
             description="The maximum number of recipes to return",
-            example=10,
+            examples=[10],
         ),
     ] = None,
     page: Annotated[
-        int, Query(title="Page", description="The page number", example=1)
+        int, Query(title="Page", description="The page number", examples=[1])
     ] = None,
     sort_by: Annotated[
         SortByEnum,
         Query(
             title="Sort by",
             description="The field to sort by",
-            example=SortByEnum.CLICKS,
+            examples=[SortByEnum.CLICKS],
         ),
     ] = SortByEnum.CLICKS,
     sort_order: Annotated[
@@ -134,7 +134,7 @@ async def get_filtered_recipes(
         Query(
             title="Sort order",
             description="The order to sort by",
-            example=SortOrderEnum.DESC,
+            examples=[SortOrderEnum.DESC],
         ),
     ] = SortOrderEnum.DESC,
 ) -> list[RecipeListing]:

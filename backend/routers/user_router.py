@@ -7,7 +7,8 @@ from db.database_handler import get_database_connection
 from exceptions import CredentialsException, NotFoundException
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from jose import JWTError, jwt
+import jwt
+from jwt import PyJWTError
 from models.user import Authorization, NewUser, UserInDB
 from utils import load_credentials
 
@@ -20,12 +21,23 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 360
 
 
+# bcrypt only uses the first 72 bytes. bcrypt>=5 raises instead of truncating, so
+# truncate explicitly to keep existing hashes of longer passwords valid.
+BCRYPT_MAX_PASSWORD_BYTES = 72
+
+
+def _encode_password(password: str) -> bytes:
+    return password.encode()[:BCRYPT_MAX_PASSWORD_BYTES]
+
+
 def verify_password(plain_password, hashed_password) -> bool:
-    return bcrypt.checkpw(plain_password.encode(), hashed_password.encode())
+    return bcrypt.checkpw(_encode_password(plain_password), hashed_password.encode())
 
 
 def get_password_hash(password: str) -> str:
-    return str(bcrypt.hashpw(password.encode(), bcrypt.gensalt()), encoding="utf-8")
+    return str(
+        bcrypt.hashpw(_encode_password(password), bcrypt.gensalt()), encoding="utf-8"
+    )
 
 
 async def authenticate_user(
@@ -60,7 +72,7 @@ async def get_current_user(
             raise CredentialsException()
 
         return await database.get_user_by_id(user_id)
-    except (JWTError, NotFoundException) as e:
+    except (PyJWTError, NotFoundException) as e:
         raise CredentialsException() from e
 
 

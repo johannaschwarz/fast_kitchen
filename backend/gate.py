@@ -3,7 +3,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Annotated
 
 from fastapi import Cookie, Depends, Header, HTTPException, Query, Response, status
-from jose import JWTError, jwt
+import jwt
+from jwt import PyJWTError
 
 from utils import load_credentials
 
@@ -123,7 +124,7 @@ def require_gate_token(
 
     try:
         payload = jwt.decode(token, settings["secret"], algorithms=[ALGORITHM])
-    except (JWTError, ValueError) as e:
+    except (PyJWTError, ValueError) as e:
         raise _unauthorized("The access token is invalid or has expired.") from e
 
     if payload.get("scope") != GATE_SCOPE or payload.get("sub") != "gate":
