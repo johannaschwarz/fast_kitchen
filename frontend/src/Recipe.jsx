@@ -223,6 +223,8 @@ function RecipeContent({ recipe }) {
                             type="number"
                             step="any"
                             inputMode="decimal"
+                            // iOS Safari ignores autocomplete="off"; a "search" name keeps it from offering passwords
+                            name="ingredient-amount-search"
                             autoComplete="off"
                             data-1p-ignore
                             data-lpignore="true"
@@ -311,6 +313,8 @@ function RecipeContent({ recipe }) {
                                     type="number"
                                     step="any"
                                     inputMode="decimal"
+                                    // iOS Safari ignores autocomplete="off"; a "search" name keeps it from offering passwords
+                                    name="portions-search"
                                     autoComplete="off"
                                     data-1p-ignore
                                     data-lpignore="true"
