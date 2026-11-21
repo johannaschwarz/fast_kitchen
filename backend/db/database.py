@@ -131,6 +131,15 @@ class Database(ABC):
         """
 
     @abstractmethod
+    async def get_images_by_recipe(self, recipe_id: int) -> list[int]:
+        """
+        Get the IDs of all images (cover, gallery and step images) of a recipe.
+
+        Returns:
+            A list of image IDs.
+        """
+
+    @abstractmethod
     async def get_categories(self) -> list[CategoryEnum]:
         """
         Get all categories from the database.
@@ -598,6 +607,17 @@ class MySQLDatabase(Database):
             NotFoundException: if the image could not be found.
         """
         await self._run_query("DELETE FROM Images WHERE ImageID = %s", (image_id,))
+
+    async def get_images_by_recipe(self, recipe_id: int) -> list[int]:
+        """
+        Get the IDs of all images (cover, gallery and step images) of a recipe.
+
+        Returns:
+            A list of image IDs.
+        """
+        sql = "SELECT ImageID FROM Images WHERE RecipeID = %s ORDER BY ImageID"
+        result = await self._run_query(sql, (recipe_id,))
+        return [image_id for (image_id,) in result]
 
     async def _get_gallery_images_by_recipe(self, recipe_id: int) -> list[int]:
         """
