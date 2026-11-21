@@ -3,7 +3,7 @@ import LinkIcon from '@mui/icons-material/Link';
 import RemoveCircleOutlineOutlinedIcon from '@mui/icons-material/RemoveCircleOutlineOutlined';
 import { Alert, AlertTitle, Autocomplete, Box, Button, Divider, MenuItem, Stack, TextField } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { API_BASE, gateFetch, gateImageUrl } from './Config';
@@ -12,6 +12,7 @@ import Header from "./Header";
 import { AuthContext } from './index.jsx';
 
 import './RecipeEditor.css';
+import { newStep, isPlaceholder, moveStep, updateStep, stepPayload } from './recipeSteps.js';
 import { unitLabels } from './recipeDisplayLabels.js';
 
 
@@ -228,12 +229,13 @@ const IngredientList = ({ ingredients, setIngredients }) => {
     );
 };
 
-function Step({ index, step, onChangeDesciption, onDelete, onUploadImage, onDeleteImage }) {
+function Step({ index, step, onChangeDesciption, onDelete, onUploadImage, onDeleteImage, dragHandle, dropBefore }) {
     return (
-        <div>
+        <div data-step-id={step.editorId} className="recipeStepRow">
+            {dropBefore && <span className="stepDropIndicator" />}
             <Stack direction={'row'} spacing={2} style={{ marginBottom: 10 }}>
-                <span>{index}.</span>
-                <Stack direction={'column'} spacing={1} style={{ width: '100%' }}>
+                <span style={{ width: 32, flexShrink: 0 }}>{dragHandle}</span>
+                <Stack direction={'column'} spacing={1} style={{ width: '100%', minWidth: 0 }}>
                     <Stack direction={'row'} spacing={2} alignItems="center" style={{ marginBottom: 10 }}>
                         <TextField
                             multiline
@@ -258,7 +260,7 @@ function Step({ index, step, onChangeDesciption, onDelete, onUploadImage, onDele
                                 Bild
                                 <VisuallyHiddenInput type="file" id={"step_image" + index} name="step_image" accept="image/*" onChange={onUploadImage} />
                             </UploadButton>
-                            {step.description !== "" && <button type='button' onClick={onDelete} aria-label="Schritt entfernen" className='clearBtn'><RemoveCircleOutlineOutlinedIcon /></button>}
+                            <button type="button" onClick={onDelete} aria-label="Schritt entfernen" className="clearBtn" disabled={step.description === ""} style={{ visibility: step.description === "" ? "hidden" : "visible" }}><RemoveCircleOutlineOutlinedIcon /></button>
                         </Stack>
                     </Stack>
                     {step.images.length > 0 && imagesList(step.images, "stepImg", onDeleteImage, "deleteIconStep")}
@@ -271,63 +273,98 @@ function Step({ index, step, onChangeDesciption, onDelete, onUploadImage, onDele
 const StepsList = ({ steps, setSteps }) => {
     const { token } = useContext(AuthContext);
 
+    const [drag, setDrag] = useState(null);
+    const dragRef = useRef(null);
+    const movable = steps.filter(step => !isPlaceholder(step));
     useEffect(() => {
-        // If the last step is filled, add a new empty step
-        if (steps.length > 0 && steps[steps.length - 1].description !== "") {
-            setSteps([...steps, { description: "", images: [] }]);
-        }
-        // If there are two empty steps at the end, remove the last one
-        else if (steps.length > 1 && steps[steps.length - 2].description === "") {
-            setSteps(steps.slice(0, -1));
+        if (!steps.length || !isPlaceholder(steps[steps.length - 1])) {
+            setSteps(current => [...current, newStep()]);
         }
     }, [steps, setSteps]);
 
-    const handleStepChange = (index, key) => (event) => {
-        const newSteps = [...steps];
-        newSteps[index][key] = event.target.value;
-        setSteps(newSteps);
+    const finishDrag = (commit) => {
+        const current = dragRef.current;
+        if (commit && current?.target && current.validDestination) {
+            setSteps(previous => moveStep(previous, current.id, current.target, current.after));
+        }
+        dragRef.current = null;
+        setDrag(null);
     };
+    useEffect(() => {
+        if (!drag) return;
+        let frame;
+        const tick = () => {
+            const current = dragRef.current;
+            if (!current) return;
+            const speed = current.y < 80 ? -12 : current.y > window.innerHeight - 80 ? 12 : 0;
+            if (speed) window.scrollBy(0, speed);
+            const row = document.elementFromPoint(current.x, current.y)?.closest('[data-step-id]');
+            const target = row && movable.find(step => step.editorId === row.dataset.stepId);
+            current.validDestination = Boolean(target);
+            if (target) {
+                current.target = target.editorId;
+                current.after = current.y > row.getBoundingClientRect().top + row.getBoundingClientRect().height / 2;
+            }
+            setDrag({ ...current });
+            frame = requestAnimationFrame(tick);
+        };
+        frame = requestAnimationFrame(tick);
+        const cancel = event => { if (event.key === 'Escape') finishDrag(false); };
+        window.addEventListener('keydown', cancel);
+        return () => { cancelAnimationFrame(frame); window.removeEventListener('keydown', cancel); };
+    }, [Boolean(drag), steps]);
 
-    const handleDeleteStep = (index) => () => {
-        const newSteps = [...steps];
-        newSteps.splice(index, 1);
-        setSteps(newSteps);
-    }
-
-    const uploadStepImageOnChange = (index) => (event) => {
-        const newSteps = [...steps];
+    const handleStepChange = id => event => {
+        const description = event.target.value;
+        setSteps(current => updateStep(current, id, step => ({ ...step, description })));
+    };
+    const handleDeleteStep = id => () => setSteps(current => current.filter(step => step.editorId !== id));
+    const uploadStepImageOnChange = id => async event => {
         const file = event.target.files[0];
-        uploadImage(file, token).then(id_ => {
-            let step = newSteps[index];
-            step.images.push(id_);
-            newSteps[index] = step;
-            setSteps(newSteps);
-            event.target.value = null;
-        });
-    }
-
-    const deleteStepImageOnChange = (index) => async (id) => {
-        const newSteps = [...steps];
-        deleteImage(id, token).then(() => {
-            let step = newSteps[index];
-            const newImages = step.images.filter(image => image !== id);
-            step.images = newImages;
-            newSteps[index] = step;
-            setSteps(newSteps);
-        });
-    }
+        event.target.value = '';
+        if (!file) return;
+        setSteps(current => updateStep(current, id, step => ({ ...step, pending: (step.pending || 0) + 1 })));
+        try {
+            const image = await uploadImage(file, token);
+            setSteps(current => updateStep(current, id, step => ({ ...step, images: image === -1 ? step.images : [...step.images, image] })));
+        } finally {
+            setSteps(current => updateStep(current, id, step => ({ ...step, pending: Math.max(0, (step.pending || 0) - 1) })));
+        }
+    };
+    const deleteStepImageOnChange = id => async image => {
+        await deleteImage(image, token);
+        setSteps(current => updateStep(current, id, step => ({ ...step, images: step.images.filter(value => value !== image) })));
+    };
 
     return (
         <Stack spacing={2} style={{ marginBottom: 30 }}>
             {steps.map((step, index) => (
                 <Step
-                    key={index}
+                    key={step.editorId}
+                    dropBefore={Boolean(drag?.target) && (
+                        (!drag.after && drag.target === step.editorId) ||
+                        (drag.after && index > 0 && drag.target === steps[index - 1].editorId)
+                    )}
+                    dragHandle={movable.length > 1 && !isPlaceholder(step) && <span
+                        className="stepDragHandle" aria-label="Schritt verschieben"
+                        onPointerDown={event => {
+                            if (event.button !== 0) return;
+                            event.preventDefault();
+                            event.currentTarget.setPointerCapture(event.pointerId);
+                            dragRef.current = { id: step.editorId, x: event.clientX, y: event.clientY };
+                            setDrag({ ...dragRef.current });
+                        }}
+                        onPointerMove={event => { if (dragRef.current) Object.assign(dragRef.current, { x: event.clientX, y: event.clientY }); }}
+                        onPointerUp={() => finishDrag(true)}
+                        onPointerCancel={() => finishDrag(false)}
+                        onLostPointerCapture={() => finishDrag(false)}
+                    ><span className="stepGripLines" aria-hidden="true">{Array.from({ length: 3 }, (_, index) => <i key={index} />)}</span></span>}
                     index={index + 1}
                     step={step}
-                    onChangeDesciption={handleStepChange(index, "description")}
-                    onDelete={handleDeleteStep(index)}
-                    onDeleteImage={deleteStepImageOnChange(index)}
-                    onUploadImage={uploadStepImageOnChange(index)}
+                    onChangeDesciption={handleStepChange(step.editorId)}
+                    onDelete={handleDeleteStep(step.editorId)}
+                    onDeleteImage={deleteStepImageOnChange(step.editorId)}
+                    onUploadImage={uploadStepImageOnChange(step.editorId)}
                 />
             ))}
         </Stack>
@@ -340,7 +377,7 @@ function RecipeEditor() {
     const navigate = useNavigate();
     const { recipeId } = useParams();
     const [ingredients, setIngredients] = useState([{ group: "", ingredients: [{ name: "", amount: 0, unit: "g", group: "" }] }]);
-    const [steps, setSteps] = useState([{ order_id: 0, description: "", images: [] }]);
+    const [steps, setSteps] = useState(() => [newStep()]);
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [cookingTime, setCookingTime] = useState(20);
@@ -405,7 +442,7 @@ function RecipeEditor() {
                     setIngredients(newIngredients);
                 }
                 if (data.steps.length > 0)
-                    setSteps(data.steps.map(step => ({ order_id: step.order_id, description: step.step, images: step.images })));
+                    setSteps([...data.steps].sort((a, b) => a.order_id - b.order_id).map(step => newStep({ description: step.step, images: step.images })));
                 setGalleryImages(data.gallery_images);
                 setCoverImage(data.cover_image);
                 setLoaded(true);
@@ -482,7 +519,7 @@ function RecipeEditor() {
             portions: portions,
             cooking_time: parseInt(cookingTime),
             ingredients: flattenedIngredients,
-            steps: steps.filter(step => step.description.trim() !== "").map((step, index) => ({ order_id: index, step: step.description.trim(), images: step.images })),
+            steps: stepPayload(steps),
             cover_image: coverImage !== "" ? Number(coverImage) : -1,
             gallery_images: galleryImages.map(image => Number(image)),
         }

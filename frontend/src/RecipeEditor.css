@@ -114,3 +114,53 @@
     color: var(--text-color);
     opacity: 0.4;
 }
+
+.stepDragHandle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    width: 26px;
+    height: 34px;
+    margin: 0 auto;
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--text-color);
+    background: color-mix(in srgb, currentColor 10%, transparent);
+    border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+    border-radius: 6px;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+.stepDragHandle:hover {
+    background: color-mix(in srgb, currentColor 18%, transparent);
+    border-color: currentColor;
+}
+.stepDragHandle:active { cursor: grabbing; }
+
+.stepGripLines {
+    display: grid;
+    gap: 3px;
+}
+.stepGripLines i {
+    width: 14px;
+    height: 2px;
+    border-radius: 1px;
+    background: currentColor;
+}
+
+.recipeStepRow {
+    position: relative;
+}
+.stepDropIndicator {
+    position: absolute;
+    top: -14px;
+    left: 48px;
+    right: 0;
+    height: 3px;
+    background: #708238;
+    border-radius: 2px;
+    pointer-events: none;
+}
