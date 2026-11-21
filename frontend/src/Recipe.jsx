@@ -220,8 +220,12 @@ function RecipeContent({ recipe }) {
                 <div className="ingredient-amount-and-name">
                     {editingIngredient === ingredient.id && (
                         <input
-                            type="text"
+                            type="number"
+                            step="any"
                             inputMode="decimal"
+                            autoComplete="off"
+                            data-1p-ignore
+                            data-lpignore="true"
                             value={getDisplayAmountForInput(ingredient)}
                             onChange={(e) => handleIngredientAmountChange(ingredient.id, e.target.value)}
                             onBlur={() => {
@@ -304,8 +308,12 @@ function RecipeContent({ recipe }) {
                         <div className="portions-amount-and-label">
                             {editingPortions && (
                                 <input
-                                    type="text"
+                                    type="number"
+                                    step="any"
                                     inputMode="decimal"
+                                    autoComplete="off"
+                                    data-1p-ignore
+                                    data-lpignore="true"
                                     value={getDisplayPortionsForInput()}
                                     onChange={e => handlePortionsChange(e.target.value)}
                                     onBlur={() => {
